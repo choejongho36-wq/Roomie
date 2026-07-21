@@ -1,0 +1,42 @@
+.navbar {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 10;
+}
+
+.navbar-auth {
+  display: flex;
+  gap: 16px;
+}
+
+.navbar-auth-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f16526;
+  cursor: pointer;
+}
+
+.navbar-menu {
+  display: flex;
+  gap: 32px;
+}
+
+.navbar-menu a {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+}
+
+.navbar-menu a:hover {
+  color: #f16526;
+}

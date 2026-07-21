@@ -1,7 +1,7 @@
-.page {
+.hero {
   position: relative;
   overflow: hidden;
-  min-height: 100vh;
+  min-height: calc(100vh - 72px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,6 +9,64 @@
   gap: 32px;
   text-align: center;
   background: #f16526;
+}
+
+.info-section {
+  padding: 96px 24px;
+}
+
+.info-section-alt {
+  background: #f7f7f7;
+}
+
+.info-content {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.info-content.reverse {
+  flex-direction: row-reverse;
+}
+
+.info-image {
+  flex: 1;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  background: repeating-linear-gradient(
+    45deg,
+    #eee,
+    #eee 10px,
+    #e4e4e4 10px,
+    #e4e4e4 20px
+  );
+}
+
+.info-text {
+  flex: 1;
+}
+
+.info-text h2 {
+  font-size: 32px;
+  margin: 0 0 16px;
+  color: #222;
+}
+
+.info-text p {
+  color: #555;
+  font-size: 16px;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .info-content,
+  .info-content.reverse {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
 .bubbles {
@@ -107,9 +165,13 @@
 
 .btn-outline {
   background: #fff;
-  color: #ff7a1a;
+  color: #f16526;
 }
 
 .btn-outline:hover {
   background: #fff3e9;
+}
+
+.info-section-alt {
+  background: #f16526;
 }
