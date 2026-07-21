@@ -1,0 +1,15 @@
+# Gradle
+.gradle/
+build/
+**/build/
+*.lock
+*.bin
+
+# Node
+node_modules/
+
+# 기타
+*.log
+.idea/
+*.iml
+out/
