@@ -19,9 +19,11 @@ export const login = async (email: string, password: string): Promise<string> =>
 export const signup = async (
   email: string,
   password: string,
-  nickname: string
+  nickname: string,
+  gender: string,
+  birthDate: string
 ): Promise<void> => {
-  await axios.post(`${API_BASE_URL}/auth/signup`, { email, password, nickname });
+  await axios.post(`${API_BASE_URL}/auth/signup`, { email, password, nickname, gender, birthDate, });
 };
 
 export const getMyProfile = async (token: string): Promise<User> => {

@@ -40,16 +40,34 @@
   color: #333;
 }
 
-.signup-box input {
+.signup-box input,
+.signup-box select {
   padding: 10px 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 400;
+  font-family: inherit;
+  background: #fff;
+}
+
+.birth-select-group {
+  display: flex;
+  gap: 8px;
+}
+
+.birth-select-group select {
+  flex: 1;
+  min-width: 0;
 }
 
 .signup-error {
   color: #e03131;
   font-size: 13px;
   margin: 0;
+}
+.signup-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
 }
