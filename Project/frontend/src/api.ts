@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Post } from "./types";
+import type { Post, User } from "./types";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
@@ -22,4 +22,11 @@ export const signup = async (
   nickname: string
 ): Promise<void> => {
   await axios.post(`${API_BASE_URL}/auth/signup`, { email, password, nickname });
+};
+
+export const getMyProfile = async (token: string): Promise<User> => {
+  const response = await axios.get<User>(`${API_BASE_URL}/users/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
 };

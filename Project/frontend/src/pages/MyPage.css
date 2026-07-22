@@ -1,0 +1,57 @@
+.mypage {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7f7;
+  padding: 24px;
+}
+
+.mypage-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.mypage-box h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.mypage-box p {
+  color: #666;
+  margin: 0 0 12px;
+}
+
+.mypage-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f16526;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.mypage-avatar svg {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.mypage-error {
+  color: #e03131;
+  font-size: 14px;
+}
