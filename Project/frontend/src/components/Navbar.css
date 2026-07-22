@@ -47,7 +47,17 @@
 
 .navbar-menu {
   display: flex;
+  align-items: center;
   gap: 32px;
+}
+
+.navbar-logo {
+  margin-left: -20px;
+}
+
+.navbar-logo img {
+  height: 70px;
+  display: block;
 }
 
 .navbar-menu a {
