@@ -15,9 +15,7 @@ function Navbar() {
         <a href="#">문의</a>
       </nav>
       <div className="navbar-auth">
-        <Link to="/signup" className="navbar-auth-link">
-          회원가입
-        </Link>
+        
         <button className="navbar-auth-link" onClick={() => setIsLoginOpen(true)}>
           로그인
         </button>
