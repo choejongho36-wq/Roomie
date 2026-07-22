@@ -5,3 +5,8 @@ export interface Post {
   viewCount: number;
   createdAt: string;
 }
+
+export interface User {
+  email: string;
+  nickname: string;
+}

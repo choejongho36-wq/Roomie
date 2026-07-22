@@ -26,6 +26,25 @@
   cursor: pointer;
 }
 
+.navbar-profile-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f16526;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-profile-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 .navbar-menu {
   display: flex;
   gap: 32px;
