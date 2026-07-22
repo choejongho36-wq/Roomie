@@ -9,6 +9,7 @@ import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,14 @@ public class AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
-        User user = new User(request.email(), passwordEncoder.encode(request.password()), request.nickname());
+        User user = new User(
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                request.nickname(),
+                request.gender(),
+                request.birthDate()
+
+        );
         userRepository.save(user);
     }
 

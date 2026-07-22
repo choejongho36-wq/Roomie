@@ -1,0 +1,16 @@
+spring.application.name=backend
+
+spring.datasource.url=jdbc:mysql://localhost:3306/roomie_db?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+spring.datasource.username=여기에_본인_계정
+spring.datasource.password=여기에_본인_비밀번호
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+
+server.port=8080
+
+jwt.secret=본인만의_32바이트_이상_랜덤_문자열로_교체
+jwt.expiration-ms=86400000
