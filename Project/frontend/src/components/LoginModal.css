@@ -1,0 +1,76 @@
+.login-modal {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  width: 320px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.login-modal::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.login-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 32px 24px 24px;
+  position: relative;
+}
+
+.login-modal-form h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.login-modal-form input {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.login-modal-form button[type="submit"] {
+  margin-top: 8px;
+  padding: 10px;
+  background: #f16526;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-modal-error {
+  color: #e03131;
+  font-size: 13px;
+  margin: 0;
+}
+
+.login-modal-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin: 4px 0 0;
+}
+
+.login-modal-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #f16526;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.login-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+}
