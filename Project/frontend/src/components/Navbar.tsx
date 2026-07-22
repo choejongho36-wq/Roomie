@@ -15,7 +15,7 @@ function Navbar() {
         <Link to="/" className="navbar-logo">
           <img src={logo} alt="Roomie" />
         </Link>
-        <a href="#">매칭</a>
+        <Link to="/survey">매칭</Link>
         <a href="#">모집글</a>
         <a href="#">문의</a>
       </nav>

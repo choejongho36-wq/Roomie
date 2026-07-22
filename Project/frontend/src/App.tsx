@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import MyPage from "./pages/MyPage";
+import SurveyPage from "./pages/SurveyPage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/survey" element={<SurveyPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
