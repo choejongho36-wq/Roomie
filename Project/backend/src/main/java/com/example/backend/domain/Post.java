@@ -3,38 +3,76 @@ package com.example.backend.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "posts")
+@Table(name = "POST")
 @Getter
 @NoArgsConstructor
 public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "post_id")
+    private Long postId;
 
-    @Column(nullable = false, length = 200)
-    private String title;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+    @Column(nullable = false, length = 50)
+    private String region;
 
-    @Column(nullable = false)
-    private Integer viewCount = 0;
+    @Column(name = "budget_min")
+    private Integer budgetMin;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "budget_max")
+    private Integer budgetMax;
+
+    @Column(name = "move_in_date")
+    private LocalDate moveInDate;
+
+    @Column(name = "room_type", length = 20)
+    private String roomType;
+
+    @Column(name = "recruit_count", nullable = false)
+    private Integer recruitCount;
+
+    @Column(length = 1000)
+    private String description;
+
+    @Column(nullable = false, length = 20)
+    private String status;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.status == null)
+            this.status = "RECRUITING";
     }
 
-    // 테스트용 생성자 (나중에 DTO/Service로 대체 예정)
-    public Post(String title, String content) {
-        this.title = title;
-        this.content = content;
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 게시글 작성용 생성자
+    public Post(Long userId, String region, Integer budgetMin, Integer budgetMax,
+            LocalDate moveInDate, String roomType, Integer recruitCount, String description) {
+        this.userId = userId;
+        this.region = region;
+        this.budgetMin = budgetMin;
+        this.budgetMax = budgetMax;
+        this.moveInDate = moveInDate;
+        this.roomType = roomType;
+        this.recruitCount = recruitCount;
+        this.description = description;
+        this.status = "RECRUITING";
     }
 }

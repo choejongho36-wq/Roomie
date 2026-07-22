@@ -175,3 +175,8 @@
 .info-section-alt {
   background: #f16526;
 }
+.mainpage-logo {
+  height: 200px;
+  margin-bottom: -70px;
+  display: block;
+}

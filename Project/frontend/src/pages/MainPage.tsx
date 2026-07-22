@@ -1,4 +1,5 @@
 import "./MainPage.css";
+import logo from "../assets/Roomie_logo2.png";
 
 const bubbles = [
   { left: "5%", size: 24, duration: 14, delay: 0 },
@@ -45,8 +46,8 @@ function MainPage() {
             />
           ))}
         </div>
+        <img className="mainpage-logo" src={logo} alt="Roomie" />
         <h1 className="logo">Roomie</h1>
-        <span>룸메이트를 찾아주는 내 친구</span>
       </section>
 
       {infoSections.map((section, i) => (

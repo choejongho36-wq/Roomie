@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
+import logo from "../assets/Roomie_logo.png";
 
 function Navbar() {
   const { token, login } = useAuth();
@@ -11,7 +12,9 @@ function Navbar() {
   return (
     <header className="navbar">
       <nav className="navbar-menu">
-        <Link to="/">홈</Link>
+        <Link to="/" className="navbar-logo">
+          <img src={logo} alt="Roomie" />
+        </Link>
         <a href="#">매칭</a>
         <a href="#">모집글</a>
         <a href="#">문의</a>
