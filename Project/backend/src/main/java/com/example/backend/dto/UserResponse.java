@@ -1,3 +1,13 @@
 package com.example.backend.dto;
 
-public record UserResponse(String email, String nickname) {}
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+public record UserResponse(
+        String email,
+        String nickname,
+        String gender,
+        LocalDate birthDate,
+        LocalDateTime createdAt,
+        String profileImageUrl
+) {}

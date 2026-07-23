@@ -9,4 +9,8 @@ export interface Post {
 export interface User {
   email: string;
   nickname: string;
+  gender: string;
+  birthDate: string;
+  createdAt: string;
+  profileImageUrl: string | null;
 }

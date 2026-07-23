@@ -2,6 +2,7 @@ import axios from "axios";
 import type { Post, User } from "./types";
 
 const API_BASE_URL = "http://localhost:8080/api";
+export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
 
 export const getPosts = async (): Promise<Post[]> => {
   const response = await axios.get<Post[]>(`${API_BASE_URL}/posts`);
@@ -28,6 +29,22 @@ export const signup = async (
 
 export const getMyProfile = async (token: string): Promise<User> => {
   const response = await axios.get<User>(`${API_BASE_URL}/users/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const uploadProfileImage = async (token: string, file: File): Promise<User> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axios.post<User>(`${API_BASE_URL}/users/me/profile-image`, formData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const deleteProfileImage = async (token: string): Promise<User> => {
+  const response = await axios.delete<User>(`${API_BASE_URL}/users/me/profile-image`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
