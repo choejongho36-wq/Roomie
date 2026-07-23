@@ -13,5 +13,6 @@ public record UserResponse(
         String phone,
         LocalDateTime createdAt,
         String profileImageUrl,
-        List<String> tags
+        List<String> tags,
+        String bio
 ) {}
