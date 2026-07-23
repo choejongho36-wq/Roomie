@@ -4,6 +4,7 @@ import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.LoginResponse;
 import com.example.backend.dto.SignupRequest;
 import com.example.backend.dto.EmailCheckResponse;
+import com.example.backend.dto.LoginIdCheckResponse;
 import com.example.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +33,10 @@ public class AuthController {
     @GetMapping("/check-email")
     public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam String email) {
         return ResponseEntity.ok(authService.checkEmail(email));
+    }
+
+    @GetMapping("/check-login-id")
+    public ResponseEntity<LoginIdCheckResponse> checkLoginId(@RequestParam String loginId) {
+        return ResponseEntity.ok(authService.checkLoginId(loginId));
     }
 }

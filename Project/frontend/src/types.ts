@@ -7,10 +7,12 @@ export interface Post {
 }
 
 export interface User {
+  loginId: string;
   email: string;
   nickname: string;
   gender: string;
   birthDate: string;
+  phone: string;
   createdAt: string;
   profileImageUrl: string | null;
   tags: string[];

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { signup, checkEmailAvailability } from "../api";
+import { signup, checkEmailAvailability, checkLoginIdAvailability } from "../api";
 import "./SignupPage.css";
 
 const currentYear = new Date().getFullYear();
@@ -13,14 +13,20 @@ const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
 };
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+const LOGIN_ID_PATTERN = /^[a-z0-9]{4,20}$/;
+const PHONE_PATTERN = /^[0-9]{10,11}$/;
 
-type EmailCheckStatus = "idle" | "checking" | "available" | "taken" | "error";
+type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
 function SignupPage() {
   const navigate = useNavigate();
+  const [loginId, setLoginId] = useState("");
+  const [loginIdCheckStatus, setLoginIdCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedLoginId, setCheckedLoginId] = useState(""); // 마지막으로 중복확인에 통과한 아이디 값
   const [email, setEmail] = useState("");
-  const [emailCheckStatus, setEmailCheckStatus] = useState<EmailCheckStatus>("idle");
+  const [emailCheckStatus, setEmailCheckStatus] = useState<CheckStatus>("idle");
   const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
@@ -36,6 +42,34 @@ function SignupPage() {
     const count = getDaysInMonth(Number(birthYear), Number(birthMonth));
     return Array.from({ length: count }, (_, i) => i + 1);
   })();
+
+  const handleLoginIdChange = (value: string) => {
+    setLoginId(value);
+    // 중복확인 통과한 값과 지금 값이 달라지면, 다시 확인해야 하니 상태 초기화
+    if (value !== checkedLoginId) {
+      setLoginIdCheckStatus("idle");
+    }
+  };
+
+  const handleCheckLoginId = async () => {
+    setError("");
+    if (!loginId) {
+      setError("아이디를 먼저 입력해주세요.");
+      return;
+    }
+    if (!LOGIN_ID_PATTERN.test(loginId)) {
+      setLoginIdCheckStatus("error");
+      return;
+    }
+    setLoginIdCheckStatus("checking");
+    try {
+      const available = await checkLoginIdAvailability(loginId);
+      setCheckedLoginId(loginId);
+      setLoginIdCheckStatus(available ? "available" : "taken");
+    } catch {
+      setLoginIdCheckStatus("error");
+    }
+  };
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
@@ -65,6 +99,10 @@ function SignupPage() {
     e.preventDefault();
     setError("");
 
+    if (loginIdCheckStatus !== "available" || loginId !== checkedLoginId) {
+      setError("아이디 중복확인을 완료해주세요.");
+      return;
+    }
     if (emailCheckStatus !== "available" || email !== checkedEmail) {
       setError("이메일 중복확인을 완료해주세요.");
       return;
@@ -81,13 +119,17 @@ function SignupPage() {
       setError("생년월일을 모두 선택해주세요.");
       return;
     }
+    if (!PHONE_PATTERN.test(phone)) {
+      setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
+      return;
+    }
 
     const paddedMonth = birthMonth.padStart(2, "0");
     const paddedDay = birthDay.padStart(2, "0");
     const birthDate = `${birthYear}-${paddedMonth}-${paddedDay}`;
 
     try {
-      await signup(email, password, nickname, gender, birthDate);
+      await signup(loginId, email, password, nickname, gender, birthDate, phone);
       setSuccess(true);
     } catch (err) {
       const message =
@@ -117,6 +159,36 @@ function SignupPage() {
       <form className="signup-box" onSubmit={handleSubmit}>
         <h1>회원가입</h1>
         <label>
+          아이디
+          <div className="email-check-group">
+            <input
+              type="text"
+              value={loginId}
+              onChange={(e) => handleLoginIdChange(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleCheckLoginId}
+              disabled={loginIdCheckStatus === "checking"}
+            >
+              {loginIdCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            </button>
+          </div>
+          {loginIdCheckStatus === "available" && loginId === checkedLoginId && (
+            <small className="signup-hint signup-hint-success">사용 가능한 아이디예요.</small>
+          )}
+          {loginIdCheckStatus === "taken" && (
+            <small className="signup-hint signup-hint-error">이미 사용 중인 아이디예요.</small>
+          )}
+          {loginIdCheckStatus === "error" && (
+            <small className="signup-hint signup-hint-error">
+              영문 소문자와 숫자로 4~20자로 입력해주세요.
+            </small>
+          )}
+        </label>
+        <label>
           이메일
           <div className="email-check-group">
             <input
@@ -145,6 +217,17 @@ function SignupPage() {
               형식을 확인해주세요 (예: name@example.com)
             </small>
           )}
+        </label>
+        <label>
+          휴대폰 번호
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="숫자만 입력 (예: 01012345678)"
+            maxLength={11}
+            required
+          />
         </label>
         <label>
           비밀번호
