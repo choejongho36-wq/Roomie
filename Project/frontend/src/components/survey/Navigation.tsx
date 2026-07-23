@@ -5,6 +5,7 @@ interface NavigationProps {
   onPrevious: () => void;
   onNext: () => void;
   onComplete: () => void;
+  completing?: boolean;
 }
 
 function Navigation({
@@ -14,6 +15,7 @@ function Navigation({
   onPrevious,
   onNext,
   onComplete,
+  completing = false,
 }: NavigationProps) {
   const isFirstQuestion = currentQuestion === 0;
   const isLastQuestion = currentQuestion === totalQuestions - 1;
@@ -34,9 +36,9 @@ function Navigation({
           type="button"
           className="nav-button nav-button-primary"
           onClick={onComplete}
-          disabled={!hasAnswer}
+          disabled={!hasAnswer || completing}
         >
-          완료
+          {completing ? "제출 중..." : "완료"}
         </button>
       ) : (
         <button

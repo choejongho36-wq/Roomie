@@ -9,3 +9,10 @@ export interface SurveyOption {
     question: string;
     options: SurveyOption[];
   }
+
+export interface SurveyResult {
+  id: number;
+  answers: number[];
+  totalScore: number;
+  completedAt: string;
+}

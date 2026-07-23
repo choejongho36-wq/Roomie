@@ -5,6 +5,7 @@ import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
+import SurveyCompletePage from "./pages/SurveyCompletePage";
 import ProfilePage from "./pages/mypage/ProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/survey" element={<SurveyPage />} />
+          <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
             <Route path="activity" element={<ActivityPage />} />
