@@ -51,6 +51,15 @@ export const deleteProfileImage = async (token: string): Promise<User> => {
   return response.data;
 };
 
+export const updateTags = async (token: string, tags: string[]): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/tags`,
+    { tags },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const submitSurvey = async (token: string, answers: number[]): Promise<SurveyResult> => {
   const response = await axios.post<SurveyResult>(
     `${API_BASE_URL}/surveys`,

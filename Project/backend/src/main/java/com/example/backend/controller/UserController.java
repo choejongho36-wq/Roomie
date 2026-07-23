@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.domain.User;
+import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -26,6 +31,12 @@ public class UserController {
     private static final Set<String> ALLOWED_IMAGE_TYPES =
             Set.of(MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, "image/webp");
     private static final long MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
+    private static final Set<String> ALLOWED_TAGS = Set.of(
+            "비흡연", "흡연", "안 마심", "가끔 음주", "자주 음주",
+            "아침형", "저녁형", "깔끔한 편", "자유로운 편", "반려동물 있음"
+    );
+    private static final int MAX_TAGS = 5;
 
     private final UserRepository userRepository;
 
@@ -71,6 +82,23 @@ public class UserController {
         return toResponse(user);
     }
 
+    @PutMapping("/me/tags")
+    public UserResponse updateTags(Authentication authentication, @RequestBody TagsRequest request) {
+        List<String> tags = request.tags() == null ? List.of() : request.tags();
+        Set<String> unique = new LinkedHashSet<>(tags);
+        if (unique.size() > MAX_TAGS) {
+            throw new IllegalArgumentException("태그는 최대 " + MAX_TAGS + "개까지 선택할 수 있습니다.");
+        }
+        if (!ALLOWED_TAGS.containsAll(unique)) {
+            throw new IllegalArgumentException("허용되지 않은 태그가 포함되어 있습니다.");
+        }
+
+        User user = findUser(authentication);
+        user.updateTags(unique.isEmpty() ? null : String.join(",", unique));
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
     @DeleteMapping("/me/profile-image")
     public UserResponse deleteProfileImage(Authentication authentication) {
         User user = findUser(authentication);
@@ -95,13 +123,17 @@ public class UserController {
     }
 
     private UserResponse toResponse(User user) {
+        List<String> tags = user.getTags() == null || user.getTags().isBlank()
+                ? List.of()
+                : Arrays.stream(user.getTags().split(",")).collect(Collectors.toList());
         return new UserResponse(
                 user.getEmail(),
                 user.getNickname(),
                 user.getGender(),
                 user.getBirthDate(),
                 user.getCreatedAt(),
-                user.getProfileImageUrl()
+                user.getProfileImageUrl(),
+                tags
         );
     }
 }

@@ -5,7 +5,7 @@ spring.datasource.username=여기에_본인_계정
 spring.datasource.password=여기에_본인_비밀번호
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
