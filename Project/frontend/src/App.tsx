@@ -9,6 +9,7 @@ import SurveyPage from "./pages/SurveyPage";
 import SurveyCompletePage from "./pages/SurveyCompletePage";
 import RecommendationPage from "./pages/RecommendationPage";
 import ProfilePage from "./pages/mypage/ProfilePage";
+import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
 
@@ -25,7 +26,9 @@ function App() {
           <Route path="/recommend" element={<RecommendationPage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
+            <Route path="edit" element={<EditProfilePage />} />
             <Route path="activity" element={<ActivityPage />} />
+            <Route path="my-activity" element={<PlaceholderPage title="내 활동" />} />
             <Route path="interests" element={<PlaceholderPage title="관심 목록" />} />
             <Route path="chat" element={<PlaceholderPage title="채팅" />} />
             <Route path="notifications" element={<PlaceholderPage title="알림" />} />

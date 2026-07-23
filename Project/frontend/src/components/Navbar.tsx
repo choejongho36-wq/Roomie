@@ -30,8 +30,8 @@ function Navbar() {
         <button type="button" className="navbar-menu-link" onClick={handleMatchClick}>
           매칭
         </button>
-        <a href="#">모집글</a>
-        <a href="#">문의</a>
+        <a href="#">모집</a>
+        <a href="#">고객센터</a>
       </nav>
       <div className="navbar-auth">
         {token ? (
