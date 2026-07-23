@@ -30,25 +30,40 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #f16526;
+  background: #fff;
+  border: 2px solid #f16526;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.navbar-profile-btn svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: #fff;
-  stroke-width: 2;
-  stroke-linecap: round;
+.navbar-profile-btn img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .navbar-menu {
   display: flex;
   align-items: center;
   gap: 32px;
+}
+
+.navbar-menu a,
+.navbar-menu button {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar-menu a:hover,
+.navbar-menu button:hover {
+  color: #f16526;
 }
 
 .navbar-logo {

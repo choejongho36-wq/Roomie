@@ -1,0 +1,259 @@
+.mypage-panel-title {
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+
+.mypage-panel-desc {
+  color: #888;
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+
+.mypage-notice {
+  background: #fff4ee;
+  border: 1px solid #ffd8bf;
+  color: #d9480f;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+
+.profile-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.profile-card-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-card-main h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.profile-card-meta {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
+}
+
+.mypage-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mypage-avatar-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid #f16526;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.mypage-avatar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.mypage-avatar-btn {
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.mypage-avatar-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.mypage-avatar-btn-change {
+  border: none;
+  background: #f16526;
+  color: #fff;
+}
+
+.mypage-avatar-btn-change:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.mypage-avatar-btn-delete {
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #888;
+}
+
+.mypage-avatar-btn-delete:hover:not(:disabled) {
+  background: #f7f7f7;
+}
+
+.mypage-avatar-input {
+  display: none;
+}
+
+.profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.profile-tag {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.profile-tags > .profile-tag:not(.profile-tag-selectable) {
+  background: #fff4ee;
+  color: #f16526;
+}
+
+.profile-tags-edit {
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.profile-tag-selectable {
+  background: #f7f7f7;
+  color: #888;
+  border: 1px solid #eee;
+  cursor: pointer;
+}
+
+.profile-tag-selected {
+  background: #f16526;
+  color: #fff;
+  border-color: #f16526;
+}
+
+.profile-tags-editor {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-tags-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.profile-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.profile-card-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: 14px;
+}
+
+.profile-card-info-row span:first-child {
+  color: #999;
+}
+
+.profile-card-info-row span:last-child {
+  color: #333;
+  font-weight: 600;
+}
+
+.mypage-error {
+  color: #e03131;
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.survey-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.survey-history-item {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 20px 24px;
+}
+
+.survey-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.survey-history-date {
+  margin: 0;
+  font-size: 13px;
+  color: #999;
+}
+
+.survey-history-answers {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid #f0f0f0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 24px;
+}
+
+.survey-history-answers li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.survey-history-category {
+  color: #999;
+  flex-shrink: 0;
+}
+
+.mypage-empty {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #888;
+}
