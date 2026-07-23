@@ -1,6 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { uploadProfileImage, deleteProfileImage, API_ORIGIN } from "../../api";
+import { uploadProfileImage, deleteProfileImage, getMySurveys, API_ORIGIN } from "../../api";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
 
@@ -23,6 +24,14 @@ function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    getMySurveys(token)
+      .then((surveys) => setHasSurvey(surveys.length > 0))
+      .catch(() => setHasSurvey(null));
+  }, [token]);
 
   if (!user) return null;
 
@@ -59,6 +68,14 @@ function ProfilePage() {
 
   return (
     <div className="mypage-panel">
+      {hasSurvey === false && (
+        <div className="mypage-notice">
+          <span>설문조사를 안했어요!!</span>
+          <Link to="/survey" className="btn btn-primary">
+            설문 시작하기
+          </Link>
+        </div>
+      )}
 
       <div className="profile-card">
         <div className="profile-card-main">

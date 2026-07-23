@@ -18,6 +18,35 @@
   box-shadow: 0 18px 45px rgba(241, 101, 38, 0.12);
 }
 
+.survey-error {
+  color: #e03131;
+  font-size: 14px;
+  text-align: center;
+  margin: 0;
+}
+
+.survey-complete {
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.survey-complete h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.survey-complete p {
+  margin: 0;
+  color: #888;
+}
+
+.survey-complete-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
 .survey-header {
   display: flex;
   flex-direction: column;

@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { Post, User } from "./types";
+import type { SurveyResult } from "./types/survey";
 
 const API_BASE_URL = "http://localhost:8080/api";
 export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
@@ -45,6 +46,22 @@ export const uploadProfileImage = async (token: string, file: File): Promise<Use
 
 export const deleteProfileImage = async (token: string): Promise<User> => {
   const response = await axios.delete<User>(`${API_BASE_URL}/users/me/profile-image`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const submitSurvey = async (token: string, answers: number[]): Promise<SurveyResult> => {
+  const response = await axios.post<SurveyResult>(
+    `${API_BASE_URL}/surveys`,
+    { answers },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
+  const response = await axios.get<SurveyResult[]>(`${API_BASE_URL}/surveys/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
