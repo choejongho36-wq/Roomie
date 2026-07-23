@@ -4,6 +4,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import InquiryPage from "./pages/InquiryPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import SignupPage from "./pages/SignupPage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
@@ -25,6 +27,8 @@ function App() {
           <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/recommend" element={<RecommendationPage />} />
           <Route path="/inquiry" element={<InquiryPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
             <Route path="activity" element={<ActivityPage />} />

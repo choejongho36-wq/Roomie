@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./Footer.css";
 import logo from "../assets/Roomie_logo.png";
 
@@ -7,10 +8,10 @@ function Footer() {
       <div className="footer-top">
         <img src={logo} alt="Roomie" className="footer-logo" />
         <nav className="footer-links">
-          <a href="#">이용약관</a>
-          <a href="#">개인정보처리방침</a>
+          <Link to="/terms">이용약관</Link>
+          <Link to="/privacy">개인정보처리방침</Link>
           <a href="#">고객센터</a>
-          <a href="#">문의하기</a>
+          <Link to="/inquiry">문의하기</Link>
         </nav>
       </div>
       <p className="footer-copyright">&copy; 2026 Roomie. All rights reserved.</p>
