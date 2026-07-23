@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
+import InquiryPage from "./pages/InquiryPage";
 import SignupPage from "./pages/SignupPage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
@@ -23,6 +24,7 @@ function App() {
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/recommend" element={<RecommendationPage />} />
+          <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
             <Route path="activity" element={<ActivityPage />} />

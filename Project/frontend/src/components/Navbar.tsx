@@ -31,7 +31,7 @@ function Navbar() {
           매칭
         </button>
         <a href="#">모집글</a>
-        <a href="#">문의</a>
+        <Link to="/inquiry">문의</Link>
       </nav>
       <div className="navbar-auth">
         {token ? (
