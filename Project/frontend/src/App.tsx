@@ -5,6 +5,9 @@ import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
+import ProfilePage from "./pages/mypage/ProfilePage";
+import ActivityPage from "./pages/mypage/ActivityPage";
+import PlaceholderPage from "./pages/mypage/PlaceholderPage";
 
 function App() {
   return (
@@ -14,8 +17,15 @@ function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/mypage" element={<MyPage />} />
           <Route path="/survey" element={<SurveyPage />} />
+          <Route path="/mypage" element={<MyPage />}>
+            <Route index element={<ProfilePage />} />
+            <Route path="activity" element={<ActivityPage />} />
+            <Route path="interests" element={<PlaceholderPage title="관심 목록" />} />
+            <Route path="chat" element={<PlaceholderPage title="채팅" />} />
+            <Route path="notifications" element={<PlaceholderPage title="알림" />} />
+            <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
+          </Route>
         </Routes>
       </AuthProvider>
     </BrowserRouter>
