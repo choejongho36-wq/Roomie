@@ -50,6 +50,22 @@
   gap: 32px;
 }
 
+.navbar-menu a,
+.navbar-menu button {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar-menu a:hover,
+.navbar-menu button:hover {
+  color: #f16526;
+}
+
 .navbar-logo {
   margin-left: -20px;
 }
