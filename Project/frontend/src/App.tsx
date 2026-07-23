@@ -12,6 +12,8 @@ import ProfilePage from "./pages/mypage/ProfilePage";
 import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/recommend" element={<RecommendationPage />} />
+           <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
             <Route path="edit" element={<EditProfilePage />} />

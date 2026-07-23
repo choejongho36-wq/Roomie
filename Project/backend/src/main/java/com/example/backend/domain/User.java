@@ -17,6 +17,9 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "login_id", nullable = false, unique = true, length = 20)
+    private String loginId;
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
@@ -32,7 +35,7 @@ public class User {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String phone;
 
     @Column(name = "profile_image_url", length = 255)
@@ -40,6 +43,9 @@ public class User {
 
     @Column(length = 255)
     private String tags;
+
+    @Column(length = 150)
+    private String bio;
 
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
@@ -76,13 +82,20 @@ public class User {
         this.tags = tags;
     }
 
+    public void updateBio(String bio) {
+        this.bio = bio;
+    }
+
     // 회원가입용 생성자
-    public User(String email, String password, String nickname, String gender, LocalDate birthDate) {
+    public User(String loginId, String email, String password, String nickname, String gender,
+                LocalDate birthDate, String phone) {
+        this.loginId = loginId;
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.gender = gender;
         this.birthDate = birthDate;
+        this.phone = phone;
         this.isVerified = false;
         this.emailVerified = false;
         this.status = "ACTIVE";

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, getMySurveys, API_ORIGIN } from "../../api";
+import { updateTags, updateBio, getMySurveys, API_ORIGIN } from "../../api";
 import { PROFILE_TAGS, MAX_PROFILE_TAGS } from "../../data/ProfileTags";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
 
 const GENDER_LABEL: Record<string, string> = { M: "남성", F: "여성" };
+const MAX_BIO_LENGTH = 150;
 
 function getAge(birthDate: string) {
   const birth = new Date(birthDate);
@@ -26,6 +27,10 @@ function ProfilePage() {
   const [draftTags, setDraftTags] = useState<string[]>([]);
   const [tagsSaving, setTagsSaving] = useState(false);
   const [tagsError, setTagsError] = useState("");
+  const [editingBio, setEditingBio] = useState(false);
+  const [draftBio, setDraftBio] = useState("");
+  const [bioSaving, setBioSaving] = useState(false);
+  const [bioError, setBioError] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -48,6 +53,27 @@ function ProfilePage() {
       if (prev.length >= MAX_PROFILE_TAGS) return prev;
       return [...prev, tag];
     });
+  };
+
+  const startEditBio = () => {
+    setDraftBio(user.bio ?? "");
+    setBioError("");
+    setEditingBio(true);
+  };
+
+  const handleSaveBio = async () => {
+    if (!token) return;
+    setBioSaving(true);
+    setBioError("");
+    try {
+      const updated = await updateBio(token, draftBio);
+      setUser(updated);
+      setEditingBio(false);
+    } catch {
+      setBioError("소개 저장에 실패했습니다.");
+    } finally {
+      setBioSaving(false);
+    }
   };
 
   const handleSaveTags = async () => {
@@ -90,6 +116,48 @@ function ProfilePage() {
         <p className="profile-card-meta">
           {getAge(user.birthDate)}세 · {GENDER_LABEL[user.gender] ?? user.gender}
         </p>
+
+        {!editingBio ? (
+          <div className="profile-bio">
+            <p className="profile-bio-text">{user.bio || "아직 소개를 작성하지 않았어요."}</p>
+            <button type="button" className="profile-tags-edit" onClick={startEditBio}>
+              소개 편집
+            </button>
+          </div>
+        ) : (
+          <div className="profile-bio-editor">
+            <textarea
+              className="profile-bio-textarea"
+              value={draftBio}
+              onChange={(e) => setDraftBio(e.target.value.slice(0, MAX_BIO_LENGTH))}
+              maxLength={MAX_BIO_LENGTH}
+              placeholder="나를 소개하는 한마디를 남겨보세요."
+              rows={3}
+            />
+            <span className="profile-bio-count">
+              {draftBio.length} / {MAX_BIO_LENGTH}
+            </span>
+            {bioError && <p className="mypage-error">{bioError}</p>}
+            <div className="profile-tags-actions">
+              <button
+                type="button"
+                className="mypage-avatar-btn mypage-avatar-btn-change"
+                onClick={handleSaveBio}
+                disabled={bioSaving}
+              >
+                {bioSaving ? "저장 중..." : "저장"}
+              </button>
+              <button
+                type="button"
+                className="mypage-avatar-btn mypage-avatar-btn-delete"
+                onClick={() => setEditingBio(false)}
+                disabled={bioSaving}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        )}
 
         {!editingTags ? (
           <div className="profile-tags profile-tags-centered">
