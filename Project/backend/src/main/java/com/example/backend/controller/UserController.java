@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.domain.User;
+import com.example.backend.dto.BioRequest;
 import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.repository.UserRepository;
@@ -37,6 +38,7 @@ public class UserController {
             "아침형", "저녁형", "깔끔한 편", "자유로운 편", "반려동물 있음"
     );
     private static final int MAX_TAGS = 5;
+    private static final int MAX_BIO_LENGTH = 150;
 
     private final UserRepository userRepository;
 
@@ -99,6 +101,19 @@ public class UserController {
         return toResponse(user);
     }
 
+    @PutMapping("/me/bio")
+    public UserResponse updateBio(Authentication authentication, @RequestBody BioRequest request) {
+        String bio = request.bio() == null ? "" : request.bio().trim();
+        if (bio.length() > MAX_BIO_LENGTH) {
+            throw new IllegalArgumentException("소개글은 " + MAX_BIO_LENGTH + "자를 넘을 수 없습니다.");
+        }
+
+        User user = findUser(authentication);
+        user.updateBio(bio.isEmpty() ? null : bio);
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
     @DeleteMapping("/me/profile-image")
     public UserResponse deleteProfileImage(Authentication authentication) {
         User user = findUser(authentication);
@@ -133,7 +148,8 @@ public class UserController {
                 user.getBirthDate(),
                 user.getCreatedAt(),
                 user.getProfileImageUrl(),
-                tags
+                tags,
+                user.getBio()
         );
     }
 }

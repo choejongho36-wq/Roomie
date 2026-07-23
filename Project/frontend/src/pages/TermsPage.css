@@ -1,0 +1,50 @@
+.terms-page {
+  background: #fff;
+  min-height: calc(100vh - 72px);
+  padding: 48px 24px;
+  text-align: left;
+}
+
+.terms-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.terms-title {
+  font-size: 30px;
+  margin: 0 0 32px;
+  color: #222;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f16526;
+}
+
+.terms-article {
+  margin-bottom: 28px;
+}
+
+.terms-article h2 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px;
+}
+
+.terms-article p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #555;
+  margin: 0;
+  white-space: pre-line; /* 제13조 줄바꿈(①②③) 유지 */
+}
+
+.terms-footer {
+  margin-top: 40px;
+  font-size: 14px;
+  color: #666;
+}
+
+.terms-company {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #999;
+}

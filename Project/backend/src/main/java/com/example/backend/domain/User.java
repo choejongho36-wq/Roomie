@@ -41,6 +41,9 @@ public class User {
     @Column(length = 255)
     private String tags;
 
+    @Column(length = 150)
+    private String bio;
+
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
 
@@ -74,6 +77,10 @@ public class User {
 
     public void updateTags(String tags) {
         this.tags = tags;
+    }
+
+    public void updateBio(String bio) {
+        this.bio = bio;
     }
 
     // 회원가입용 생성자

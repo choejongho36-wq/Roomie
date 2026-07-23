@@ -14,4 +14,5 @@ export interface User {
   createdAt: string;
   profileImageUrl: string | null;
   tags: string[];
+  bio: string | null;
 }

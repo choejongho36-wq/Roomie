@@ -60,6 +60,15 @@ export const updateTags = async (token: string, tags: string[]): Promise<User> =
   return response.data;
 };
 
+export const updateBio = async (token: string, bio: string): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/bio`,
+    { bio },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const submitSurvey = async (token: string, answers: number[]): Promise<SurveyResult> => {
   const response = await axios.post<SurveyResult>(
     `${API_BASE_URL}/surveys`,
