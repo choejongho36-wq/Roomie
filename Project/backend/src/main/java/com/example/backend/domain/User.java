@@ -38,6 +38,9 @@ public class User {
     @Column(name = "profile_image_url", length = 255)
     private String profileImageUrl;
 
+    @Column(length = 255)
+    private String tags;
+
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
 
@@ -67,6 +70,10 @@ public class User {
 
     public void updateProfileImage(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updateTags(String tags) {
+        this.tags = tags;
     }
 
     // 회원가입용 생성자

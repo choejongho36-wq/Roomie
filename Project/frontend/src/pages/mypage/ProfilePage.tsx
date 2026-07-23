@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { uploadProfileImage, deleteProfileImage, getMySurveys, API_ORIGIN } from "../../api";
+import { uploadProfileImage, deleteProfileImage, updateTags, getMySurveys, API_ORIGIN } from "../../api";
+import { PROFILE_TAGS, MAX_PROFILE_TAGS } from "../../data/ProfileTags";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
 
@@ -25,6 +26,10 @@ function ProfilePage() {
   const [deleting, setDeleting] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
+  const [editingTags, setEditingTags] = useState(false);
+  const [draftTags, setDraftTags] = useState<string[]>([]);
+  const [tagsSaving, setTagsSaving] = useState(false);
+  const [tagsError, setTagsError] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -49,6 +54,35 @@ function ProfilePage() {
       setUploadError("이미지 업로드에 실패했습니다.");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const startEditTags = () => {
+    setDraftTags(user.tags);
+    setTagsError("");
+    setEditingTags(true);
+  };
+
+  const toggleDraftTag = (tag: string) => {
+    setDraftTags((prev) => {
+      if (prev.includes(tag)) return prev.filter((t) => t !== tag);
+      if (prev.length >= MAX_PROFILE_TAGS) return prev;
+      return [...prev, tag];
+    });
+  };
+
+  const handleSaveTags = async () => {
+    if (!token) return;
+    setTagsSaving(true);
+    setTagsError("");
+    try {
+      const updated = await updateTags(token, draftTags);
+      setUser(updated);
+      setEditingTags(false);
+    } catch {
+      setTagsError("태그 저장에 실패했습니다.");
+    } finally {
+      setTagsSaving(false);
     }
   };
 
@@ -117,6 +151,55 @@ function ProfilePage() {
               {getAge(user.birthDate)}세 · {GENDER_LABEL[user.gender] ?? user.gender}
             </p>
             {uploadError && <p className="mypage-error">{uploadError}</p>}
+
+            {!editingTags ? (
+              <div className="profile-tags">
+                {user.tags.map((tag) => (
+                  <span key={tag} className="profile-tag">
+                    {tag}
+                  </span>
+                ))}
+                <button type="button" className="profile-tags-edit" onClick={startEditTags}>
+                  태그 편집
+                </button>
+              </div>
+            ) : (
+              <div className="profile-tags-editor">
+                <div className="profile-tags">
+                  {PROFILE_TAGS.map((tag) => (
+                    <button
+                      type="button"
+                      key={tag}
+                      className={`profile-tag profile-tag-selectable${
+                        draftTags.includes(tag) ? " profile-tag-selected" : ""
+                      }`}
+                      onClick={() => toggleDraftTag(tag)}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+                {tagsError && <p className="mypage-error">{tagsError}</p>}
+                <div className="profile-tags-actions">
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-change"
+                    onClick={handleSaveTags}
+                    disabled={tagsSaving}
+                  >
+                    {tagsSaving ? "저장 중..." : "저장"}
+                  </button>
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-delete"
+                    onClick={() => setEditingTags(false)}
+                    disabled={tagsSaving}
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
