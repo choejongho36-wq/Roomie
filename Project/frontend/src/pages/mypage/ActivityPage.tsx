@@ -20,7 +20,7 @@ function ActivityPage() {
 
   return (
     <div className="mypage-panel">
-      <h1 className="mypage-panel-title">내 활동</h1>
+      <h1 className="mypage-panel-title">설문 기록</h1>
       <p className="mypage-panel-desc">완료한 매칭 설문 기록을 확인할 수 있어요.</p>
 
       {error && <p className="mypage-error">{error}</p>}

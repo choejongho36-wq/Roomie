@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { signup } from "../api";
+import { signup, checkEmailAvailability } from "../api";
 import "./SignupPage.css";
 
 const currentYear = new Date().getFullYear();
@@ -14,9 +14,13 @@ const getDaysInMonth = (year: number, month: number): number => {
 };
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 
+type EmailCheckStatus = "idle" | "checking" | "available" | "taken" | "error";
+
 function SignupPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [emailCheckStatus, setEmailCheckStatus] = useState<EmailCheckStatus>("idle");
+  const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
@@ -33,11 +37,38 @@ function SignupPage() {
     return Array.from({ length: count }, (_, i) => i + 1);
   })();
 
-  
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    // 중복확인 통과한 값과 지금 값이 달라지면, 다시 확인해야 하니 상태 초기화
+    if (value !== checkedEmail) {
+      setEmailCheckStatus("idle");
+    }
+  };
+
+  const handleCheckEmail = async () => {
+    setError("");
+    if (!email) {
+      setError("이메일을 먼저 입력해주세요.");
+      return;
+    }
+    setEmailCheckStatus("checking");
+    try {
+      const available = await checkEmailAvailability(email);
+      setCheckedEmail(email);
+      setEmailCheckStatus(available ? "available" : "taken");
+    } catch {
+      setEmailCheckStatus("error");
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
+    if (emailCheckStatus !== "available" || email !== checkedEmail) {
+      setError("이메일 중복확인을 완료해주세요.");
+      return;
+    }
     if (!PASSWORD_PATTERN.test(password)) {
       setError("비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다.");
       return;
@@ -87,12 +118,33 @@ function SignupPage() {
         <h1>회원가입</h1>
         <label>
           이메일
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="email-check-group">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleCheckEmail}
+              disabled={emailCheckStatus === "checking"}
+            >
+              {emailCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            </button>
+          </div>
+          {emailCheckStatus === "available" && email === checkedEmail && (
+            <small className="signup-hint signup-hint-success">사용 가능한 이메일이에요.</small>
+          )}
+          {emailCheckStatus === "taken" && (
+            <small className="signup-hint signup-hint-error">이미 가입된 이메일이에요.</small>
+          )}
+          {emailCheckStatus === "error" && (
+            <small className="signup-hint signup-hint-error">
+              형식을 확인해주세요 (예: name@example.com)
+            </small>
+          )}
         </label>
         <label>
           비밀번호
