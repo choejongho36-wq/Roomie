@@ -2,6 +2,7 @@ package com.example.backend.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record UserResponse(
         String email,
@@ -9,5 +10,6 @@ public record UserResponse(
         String gender,
         LocalDate birthDate,
         LocalDateTime createdAt,
-        String profileImageUrl
+        String profileImageUrl,
+        List<String> tags
 ) {}
