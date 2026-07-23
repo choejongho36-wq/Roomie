@@ -1,18 +1,15 @@
 import { Link } from "react-router-dom";
 import "./SurveyPage.css";
 
-function SurveyCompletePage() {
+function RecommendationPage() {
   return (
     <div className="survey-page">
       <div className="survey-shell survey-complete">
-        <h1>설문이 완료되었어요!</h1>
-        <p>응답해주신 내용은 룸메이트 매칭에 활용돼요.</p>
+        <h1>추천 페이지</h1>
+        <p>설문 결과를 바탕으로 매칭 추천을 보여줍니다.</p>
         <div className="survey-complete-actions">
-          <Link to="/recommend" className="btn btn-primary">
-            추천 페이지 보기
-          </Link>
           <Link to="/mypage/activity" className="btn btn-outline">
-            내 활동에서 확인하기
+            내 활동으로 이동
           </Link>
           <Link to="/" className="btn btn-primary">
             홈으로
@@ -23,4 +20,4 @@ function SurveyCompletePage() {
   );
 }
 
-export default SurveyCompletePage;
+export default RecommendationPage;
