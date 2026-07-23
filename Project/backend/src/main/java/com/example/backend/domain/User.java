@@ -35,6 +35,9 @@ public class User {
     @Column(length = 20)
     private String phone;
 
+    @Column(name = "profile_image_url", length = 255)
+    private String profileImageUrl;
+
     @Column(name = "is_verified", nullable = false)
     private Boolean isVerified = false;
 
@@ -60,6 +63,10 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateProfileImage(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
     // 회원가입용 생성자
