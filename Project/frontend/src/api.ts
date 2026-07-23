@@ -75,3 +75,10 @@ export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
   });
   return response.data;
 };
+
+export const checkEmailAvailability = async (email: string): Promise<boolean> => {
+  const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-email`, {
+    params: { email },
+  });
+  return response.data.available;
+};
