@@ -242,8 +242,6 @@ function ProfilePage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
 
         <div className="profile-card-info">
           <div className="profile-card-info-row">
