@@ -66,11 +66,26 @@
   font-size: 13px;
   margin: 0;
 }
+.email-check-group {
+  display: flex;
+  gap: 8px;
+}
+
+.email-check-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.email-check-group .btn {
+  white-space: nowrap;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
 .signup-hint {
   font-size: 12px;
   font-weight: 400;
   color: #888;
-
 }
 
 .signup-hint-success {

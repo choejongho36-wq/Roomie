@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { signup , checkEmailAvailability, checkLoginIdAvailability } from "../api";
+import { signup, checkEmailAvailability, checkLoginIdAvailability } from "../api";
 import "./SignupPage.css";
 
 const currentYear = new Date().getFullYear();
@@ -50,9 +50,9 @@ function SignupPage() {
   const [email, setEmail] = useState("");
   const [emailCheckStatus, setEmailCheckStatus] = useState<CheckStatus>("idle");
   const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [phone, setPhone] = useState("");
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -127,6 +127,14 @@ function SignupPage() {
     e.preventDefault();
     setError("");
 
+    if (loginIdCheckStatus !== "available" || loginId !== checkedLoginId) {
+      setError("아이디 중복확인을 완료해주세요.");
+      return;
+    }
+    if (emailCheckStatus !== "available" || email !== checkedEmail) {
+      setError("이메일 중복확인을 완료해주세요.");
+      return;
+    }
     if (!PASSWORD_PATTERN.test(password)) {
       setError("비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다.");
       return;
@@ -139,13 +147,17 @@ function SignupPage() {
       setError("생년월일을 모두 선택해주세요.");
       return;
     }
+    if (!PHONE_PATTERN.test(phone)) {
+      setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
+      return;
+    }
 
     const paddedMonth = birthMonth.padStart(2, "0");
     const paddedDay = birthDay.padStart(2, "0");
     const birthDate = `${birthYear}-${paddedMonth}-${paddedDay}`;
 
     try {
-      await signup(email, password, nickname, gender, birthDate);
+      await signup(loginId, email, password, nickname, gender, birthDate, phone);
       setSuccess(true);
     } catch (err) {
       const message =
@@ -171,7 +183,7 @@ function SignupPage() {
   }
 
   return (
-     <div className="signup-page">
+    <div className="signup-page">
       <form className="signup-box" onSubmit={handleSubmit}>
         <h1>회원가입</h1>
         <label>
@@ -252,9 +264,10 @@ function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={8}
+            maxLength={24}
             required
           />
-           <div className="password-strength">
+          <div className="password-strength">
             <div className="password-strength-bar">
               {[0, 1, 2, 3].map((i) => (
                 <span
@@ -281,6 +294,7 @@ function SignupPage() {
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             minLength={8}
+            maxLength={24}
             required
           />
         </label>
@@ -328,7 +342,7 @@ function SignupPage() {
               value={birthMonth}
               onChange={(e) => {
                 setBirthMonth(e.target.value);
-                setBirthDay(""); // 월이 바뀌면 일 선택 초기화
+                setBirthDay("");
               }}
               required
             >

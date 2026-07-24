@@ -5,11 +5,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record UserResponse(
-        Long userId,
+        String loginId,
         String email,
         String nickname,
         String gender,
         LocalDate birthDate,
+        String phone,
         LocalDateTime createdAt,
         String profileImageUrl,
         List<String> tags,
