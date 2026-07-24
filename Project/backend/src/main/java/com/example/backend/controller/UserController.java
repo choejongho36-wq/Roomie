@@ -142,6 +142,7 @@ public class UserController {
                 ? List.of()
                 : Arrays.stream(user.getTags().split(",")).collect(Collectors.toList());
         return new UserResponse(
+                user.getUserId(),
                 user.getEmail(),
                 user.getNickname(),
                 user.getGender(),
