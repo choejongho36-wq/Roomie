@@ -172,15 +172,77 @@ function SignupPage() {
   }
 
   return (
-    <div className="signup-page">
+     <div className="signup-page">
       <form className="signup-box" onSubmit={handleSubmit}>
         <h1>회원가입</h1>
         <label>
+          아이디
+          <div className="email-check-group">
+            <input
+              type="text"
+              value={loginId}
+              onChange={(e) => handleLoginIdChange(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleCheckLoginId}
+              disabled={loginIdCheckStatus === "checking"}
+            >
+              {loginIdCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            </button>
+          </div>
+          {loginIdCheckStatus === "available" && loginId === checkedLoginId && (
+            <small className="signup-hint signup-hint-success">사용 가능한 아이디예요.</small>
+          )}
+          {loginIdCheckStatus === "taken" && (
+            <small className="signup-hint signup-hint-error">이미 사용 중인 아이디예요.</small>
+          )}
+          {loginIdCheckStatus === "error" && (
+            <small className="signup-hint signup-hint-error">
+              영문 소문자와 숫자로 4~20자로 입력해주세요.
+            </small>
+          )}
+        </label>
+        <label>
           이메일
+          <div className="email-check-group">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleCheckEmail}
+              disabled={emailCheckStatus === "checking"}
+            >
+              {emailCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            </button>
+          </div>
+          {emailCheckStatus === "available" && email === checkedEmail && (
+            <small className="signup-hint signup-hint-success">사용 가능한 이메일이에요.</small>
+          )}
+          {emailCheckStatus === "taken" && (
+            <small className="signup-hint signup-hint-error">이미 가입된 이메일이에요.</small>
+          )}
+          {emailCheckStatus === "error" && (
+            <small className="signup-hint signup-hint-error">
+              형식을 확인해주세요 (예: name@example.com)
+            </small>
+          )}
+        </label>
+        <label>
+          휴대폰 번호
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="숫자만 입력 (예: 01012345678)"
+            maxLength={11}
             required
           />
         </label>
@@ -191,28 +253,9 @@ function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={8}
-            maxLength={24}
             required
           />
-          <div className="password-strength">
-            <div className="password-strength-bar">
-              {[0, 1, 2, 3].map((i) => (
-                <span
-                  key={i}
-                  className="password-strength-segment"
-                  style={
-                    i < passwordStrength ? { backgroundColor: strengthMeta.color } : undefined
-                  }
-                />
-              ))}
-            </div>
-            {password && (
-              <small className="password-strength-label" style={{ color: strengthMeta.color }}>
-                {strengthMeta.label}
-              </small>
-            )}
-          </div>
-          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하</small>
+          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상</small>
         </label>
         <label>
           비밀번호 확인
@@ -221,7 +264,6 @@ function SignupPage() {
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             minLength={8}
-            maxLength={24}
             required
           />
         </label>
@@ -269,7 +311,7 @@ function SignupPage() {
               value={birthMonth}
               onChange={(e) => {
                 setBirthMonth(e.target.value);
-                setBirthDay("");
+                setBirthDay(""); // 월이 바뀌면 일 선택 초기화
               }}
               required
             >
