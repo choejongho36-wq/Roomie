@@ -24,18 +24,18 @@ public class JwtProvider {
         this.expirationMs = expirationMs;
     }
 
-    public String createToken(String loginId) {
+    public String createToken(String email) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
-                .subject(loginId)
+                .subject(email)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
                 .compact();
     }
 
-    public String getLoginId(String token) {
+    public String getEmail(String token) {
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

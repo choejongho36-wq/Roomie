@@ -12,7 +12,7 @@ interface LoginModalProps {
 function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
   const navigate = useNavigate();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [loginId, setLoginId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -24,7 +24,7 @@ function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
     e.preventDefault();
     setError("");
     try {
-      const token = await login(loginId, password);
+      const token = await login(email, password);
       onLoginSuccess(token);
     } catch (err) {
       const message =
@@ -50,10 +50,10 @@ function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
         </button>
         <h2>로그인</h2>
         <input
-          type="text"
-          placeholder="아이디"
-          value={loginId}
-          onChange={(e) => setLoginId(e.target.value)}
+          type="email"
+          placeholder="이메일"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input

@@ -10,32 +10,22 @@ export const getPosts = async (): Promise<Post[]> => {
   return response.data;
 };
 
-export const login = async (loginId: string, password: string): Promise<string> => {
+export const login = async (email: string, password: string): Promise<string> => {
   const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/login`, {
-    loginId,
+    email,
     password,
   });
   return response.data.token;
 };
 
 export const signup = async (
-  loginId: string,
   email: string,
   password: string,
   nickname: string,
   gender: string,
-  birthDate: string,
-  phone: string
+  birthDate: string
 ): Promise<void> => {
-  await axios.post(`${API_BASE_URL}/auth/signup`, {
-    loginId,
-    email,
-    password,
-    nickname,
-    gender,
-    birthDate,
-    phone,
-  });
+  await axios.post(`${API_BASE_URL}/auth/signup`, { email, password, nickname, gender, birthDate, });
 };
 
 export const getMyProfile = async (token: string): Promise<User> => {
@@ -93,18 +83,4 @@ export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
-};
-
-export const checkEmailAvailability = async (email: string): Promise<boolean> => {
-  const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-email`, {
-    params: { email },
-  });
-  return response.data.available;
-};
-
-export const checkLoginIdAvailability = async (loginId: string): Promise<boolean> => {
-  const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-login-id`, {
-    params: { loginId },
-  });
-  return response.data.available;
 };

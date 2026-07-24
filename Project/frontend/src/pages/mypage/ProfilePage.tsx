@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { updateTags, updateBio, getMySurveys, API_ORIGIN } from "../../api";
@@ -22,6 +22,10 @@ function getAge(birthDate: string) {
 
 function ProfilePage() {
   const { user, token, setUser } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
   const [editingTags, setEditingTags] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>([]);
@@ -40,6 +44,23 @@ function ProfilePage() {
   }, [token]);
 
   if (!user) return null;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !token) return;
+
+    setUploading(true);
+    setUploadError("");
+    try {
+      const updated = await uploadProfileImage(token, file);
+      setUser(updated);
+    } catch {
+      setUploadError("이미지 업로드에 실패했습니다.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const startEditTags = () => {
     setDraftTags(user.tags);
@@ -88,6 +109,20 @@ function ProfilePage() {
       setTagsError("태그 저장에 실패했습니다.");
     } finally {
       setTagsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!token) return;
+    setDeleting(true);
+    setUploadError("");
+    try {
+      const updated = await deleteProfileImage(token);
+      setUser(updated);
+    } catch {
+      setUploadError("이미지 삭제에 실패했습니다.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -159,54 +194,56 @@ function ProfilePage() {
           </div>
         )}
 
-        {!editingTags ? (
-          <div className="profile-tags profile-tags-centered">
-            {user.tags.map((tag) => (
-              <span key={tag} className="profile-tag">
-                {tag}
-              </span>
-            ))}
-            <button type="button" className="profile-tags-edit" onClick={startEditTags}>
-              태그 편집
-            </button>
-          </div>
-        ) : (
-          <div className="profile-tags-editor">
-            <div className="profile-tags profile-tags-centered">
-              {PROFILE_TAGS.map((tag) => (
-                <button
-                  type="button"
-                  key={tag}
-                  className={`profile-tag profile-tag-selectable${
-                    draftTags.includes(tag) ? " profile-tag-selected" : ""
-                  }`}
-                  onClick={() => toggleDraftTag(tag)}
-                >
-                  {tag}
+            {!editingTags ? (
+              <div className="profile-tags">
+                {user.tags.map((tag) => (
+                  <span key={tag} className="profile-tag">
+                    {tag}
+                  </span>
+                ))}
+                <button type="button" className="profile-tags-edit" onClick={startEditTags}>
+                  태그 편집
                 </button>
-              ))}
-            </div>
-            {tagsError && <p className="mypage-error">{tagsError}</p>}
-            <div className="profile-tags-actions">
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-change"
-                onClick={handleSaveTags}
-                disabled={tagsSaving}
-              >
-                {tagsSaving ? "저장 중..." : "저장"}
-              </button>
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-delete"
-                onClick={() => setEditingTags(false)}
-                disabled={tagsSaving}
-              >
-                취소
-              </button>
-            </div>
+              </div>
+            ) : (
+              <div className="profile-tags-editor">
+                <div className="profile-tags">
+                  {PROFILE_TAGS.map((tag) => (
+                    <button
+                      type="button"
+                      key={tag}
+                      className={`profile-tag profile-tag-selectable${
+                        draftTags.includes(tag) ? " profile-tag-selected" : ""
+                      }`}
+                      onClick={() => toggleDraftTag(tag)}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+                {tagsError && <p className="mypage-error">{tagsError}</p>}
+                <div className="profile-tags-actions">
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-change"
+                    onClick={handleSaveTags}
+                    disabled={tagsSaving}
+                  >
+                    {tagsSaving ? "저장 중..." : "저장"}
+                  </button>
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-delete"
+                    onClick={() => setEditingTags(false)}
+                    disabled={tagsSaving}
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div className="profile-card-info">
           <div className="profile-card-info-row">

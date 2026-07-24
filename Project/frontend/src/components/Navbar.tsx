@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API_ORIGIN } from "../api";
+import { API_ORIGIN, getMySurveys } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
 import logo from "../assets/Roomie_logo.png";
@@ -12,13 +12,23 @@ function Navbar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
 
-  const handleMatchClick = () => {
-    if (token) {
-      navigate("/survey");
+  const handleMatchClick = async () => {
+    if (!token) {
+      setRedirectAfterLogin(true);
+      setIsLoginOpen(true);
       return;
     }
-    setRedirectAfterLogin(true);
-    setIsLoginOpen(true);
+
+    try {
+      const surveys = await getMySurveys(token);
+      if (surveys.length > 0) {
+        navigate("/recommend");
+      } else {
+        navigate("/survey");
+      }
+    } catch {
+      navigate("/survey");
+    }
   };
 
   return (
@@ -30,8 +40,8 @@ function Navbar() {
         <button type="button" className="navbar-menu-link" onClick={handleMatchClick}>
           매칭
         </button>
-        <a href="#">모집</a>
-        <a href="#">고객센터</a>
+        <a href="#">모집글</a>
+        <a href="#">문의</a>
       </nav>
       <div className="navbar-auth">
         {token ? (
@@ -53,12 +63,21 @@ function Navbar() {
             setIsLoginOpen(false);
             setRedirectAfterLogin(false);
           }}
-          onLoginSuccess={(token) => {
+          onLoginSuccess={async (token) => {
             login(token);
             setIsLoginOpen(false);
             if (redirectAfterLogin) {
-              navigate("/survey");
               setRedirectAfterLogin(false);
+              try {
+                const surveys = await getMySurveys(token);
+                if (surveys.length > 0) {
+                  navigate("/recommend");
+                } else {
+                  navigate("/survey");
+                }
+              } catch {
+                navigate("/survey");
+              }
             }
           }}
         />
