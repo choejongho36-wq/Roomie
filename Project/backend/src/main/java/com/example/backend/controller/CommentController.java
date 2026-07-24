@@ -36,7 +36,7 @@ public class CommentController {
     }
 
     private User findUser(Authentication authentication) {
-        return userRepository.findByEmail(authentication.getName())
+        return userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 }

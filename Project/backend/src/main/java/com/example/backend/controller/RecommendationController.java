@@ -21,7 +21,7 @@ public class RecommendationController {
 
     @GetMapping
     public List<RecommendationResponse> getRecommendations(Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName())
+        User user = userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         return compatibilityService.recommendForUser(user.getUserId());
     }
