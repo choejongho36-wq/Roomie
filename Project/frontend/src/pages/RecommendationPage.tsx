@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API_ORIGIN, getMySurveySummary, getMySurveys, getRecommendations } from "../api";
+import {
+  API_ORIGIN,
+  getMySurveySummary,
+  getMySurveys,
+  getRecommendations,
+  getSurveyComparison,
+} from "../api";
 import { surveyQuestions } from "../data/SurveyQuestions";
-import type { RecommendationResult, SurveyResult } from "../types/survey";
+import type { RecommendationResult, SurveyComparisonResult, SurveyResult } from "../types/survey";
 import "./RecommendationPage.css";
 
 const RECOMMENDATION_CARD_LIMIT = 3;
@@ -56,6 +62,10 @@ function RecommendationPage() {
   const [surveys, setSurveys] = useState<SurveyResult[] | null>(null);
   const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
+  const [comparisonError, setComparisonError] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -64,6 +74,8 @@ function RecommendationPage() {
       setRecommendations(null);
       setSurveys(null);
       setSelectedUserId(null);
+      setComparison(null);
+      setIsComparisonOpen(false);
       return;
     }
 
@@ -114,6 +126,28 @@ function RecommendationPage() {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     setSelectedUserId(userId);
+  };
+
+  const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
+    event.stopPropagation();
+    if (!token) return;
+
+    setSelectedUserId(item.userId);
+    setIsComparisonOpen(true);
+    setComparison(null);
+    setComparisonError("");
+    setComparisonLoadingUserId(item.userId);
+
+    getSurveyComparison(token, item.userId)
+      .then(setComparison)
+      .catch(() => setComparisonError("설문 비교 데이터를 불러오지 못했습니다."))
+      .finally(() => setComparisonLoadingUserId(null));
+  };
+
+  const closeComparison = () => {
+    setIsComparisonOpen(false);
+    setComparisonError("");
+    setComparisonLoadingUserId(null);
   };
 
   return (
@@ -217,9 +251,13 @@ function RecommendationPage() {
 
                     <div className="profile-card-footer">
                       <strong>{item.compatibilityScore}%</strong>
-                      <span>
+                      <button
+                        type="button"
+                        className="profile-compare-button"
+                        onClick={(event) => openComparison(event, item)}
+                      >
                         호환성 점수 <span aria-hidden="true">&gt;</span>
-                      </span>
+                      </button>
                     </div>
                   </article>
                 );
@@ -238,6 +276,96 @@ function RecommendationPage() {
           </>
         )}
       </section>
+
+      {isComparisonOpen && (
+        <div className="comparison-modal-backdrop" onClick={closeComparison}>
+          <section
+            className="comparison-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="comparison-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="comparison-modal-header">
+              <div>
+                <p className="comparison-modal-eyebrow">설문 비교</p>
+                <h2 id="comparison-title">
+                  {comparison ? `${comparison.nickname}님과의 호환성` : "호환성 비교"}
+                </h2>
+              </div>
+              <button type="button" className="comparison-modal-close" onClick={closeComparison}>
+                닫기
+              </button>
+            </div>
+
+            {comparisonLoadingUserId !== null && (
+              <p className="comparison-modal-state">비교 데이터를 불러오는 중...</p>
+            )}
+
+            {comparisonError && <p className="comparison-modal-error">{comparisonError}</p>}
+
+            {comparison && (
+              <>
+                <div className="comparison-modal-score">
+                  <strong>{comparison.compatibilityScore}%</strong>
+                  <span>{comparison.nickname}님과 나의 설문 기반 호환성 점수</span>
+                </div>
+
+                <div className="comparison-highlight-grid">
+                  <div className="comparison-highlight-panel">
+                    <h3>잘 맞는 이유 TOP3</h3>
+                    <ul>
+                      {comparison.topReasons.map((item) => (
+                        <li key={`reason-${item.category}`}>
+                          <strong>{item.category}</strong>
+                          <span>{item.description}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="comparison-highlight-panel">
+                    <h3>다른점</h3>
+                    <ul>
+                      {comparison.differences.map((item) => (
+                        <li key={`difference-${item.category}`}>
+                          <strong>{item.category}</strong>
+                          <span>{item.description}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="comparison-table-wrap">
+                  <div className="comparison-table-header">
+                    <h3>설문 답변 비교</h3>
+                    <span>나와 {comparison.nickname}</span>
+                  </div>
+                  <div className="comparison-table">
+                    <div className="comparison-table-row comparison-table-head">
+                      <span>항목</span>
+                      <span>나</span>
+                      <span>{comparison.nickname}</span>
+                      <span>차이</span>
+                    </div>
+                    {comparison.items.map((item) => (
+                      <div key={item.questionId} className="comparison-table-row">
+                        <span className="comparison-category">{item.category}</span>
+                        <span>{item.myAnswer}</span>
+                        <span>{item.otherAnswer}</span>
+                        <span className={`comparison-level level-${item.difference}`}>
+                          {item.matchLevel}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

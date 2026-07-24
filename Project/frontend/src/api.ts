@@ -1,6 +1,11 @@
 import axios from "axios";
 import type { Comment, Page, Post, PostRequest, User } from "./types";
-import type { RecommendationResult, SurveyResult, SurveySummaryResult } from "./types/survey";
+import type {
+  RecommendationResult,
+  SurveyComparisonResult,
+  SurveyResult,
+  SurveySummaryResult,
+} from "./types/survey";
 
 
 const API_BASE_URL = "http://localhost:8080/api";
@@ -162,5 +167,16 @@ export const getRecommendations = async (token: string): Promise<RecommendationR
   const response = await axios.get<RecommendationResult[]>(`${API_BASE_URL}/recommendations`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  return response.data;
+};
+
+export const getSurveyComparison = async (
+  token: string,
+  userId: number
+): Promise<SurveyComparisonResult> => {
+  const response = await axios.get<SurveyComparisonResult>(
+    `${API_BASE_URL}/recommendations/${userId}/comparison`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return response.data;
 };
