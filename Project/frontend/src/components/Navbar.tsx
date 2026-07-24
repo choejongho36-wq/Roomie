@@ -41,9 +41,9 @@ function Navbar() {
           매칭
         </button>
         <Link to="/board" className="navbar-menu-link">
-          모집글
+          모집
         </Link>
-        <a href="#">문의</a>
+        <a href="#">고객센터</a>
       </nav>
       <div className="navbar-auth">
         {token ? (

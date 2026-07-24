@@ -22,15 +22,20 @@ public class AuthService {
     private final JwtProvider jwtProvider;
 
     public void signup(SignupRequest request) {
+        if (userRepository.existsByLoginId(request.loginId())) {
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
         User user = new User(
+                request.loginId(),
                 request.email(),
                 passwordEncoder.encode(request.password()),
                 request.nickname(),
                 request.gender(),
-                request.birthDate()
+                request.birthDate(),
+                request.phone()
 
         );
         userRepository.save(user);
@@ -53,11 +58,11 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다."));
+        User user = userRepository.findByLoginId(request.loginId())
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
-        return new LoginResponse(jwtProvider.createToken(user.getEmail()));
+        return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
     }
 }
