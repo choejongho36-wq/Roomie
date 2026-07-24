@@ -22,12 +22,11 @@ type PasswordStrength = 0 | 1 | 2 | 3 | 4;
 const getPasswordStrength = (pw: string): PasswordStrength => {
   if (!pw) return 0;
   let score = 0;
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
   const categoryCount = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((regex) =>
     regex.test(pw)
   ).length;
-  if (categoryCount >= 3) score++;
+  if (categoryCount >= 8) score++;
+  if (categoryCount >= 12) score++;
   if (categoryCount === 4 && pw.length >= 10) score++;
   return Math.min(score, 4) as PasswordStrength;
 };
@@ -212,7 +211,7 @@ function SignupPage() {
           )}
           {loginIdCheckStatus === "error" && (
             <small className="signup-hint signup-hint-error">
-             4~20자로 입력해주세요.
+             아이디는 4~20자로 입력해주세요.
             </small>
           )}
         </label>
