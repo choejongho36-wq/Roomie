@@ -2,6 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.domain.User;
 import com.example.backend.dto.BioRequest;
+import com.example.backend.dto.NicknameRequest;
+import com.example.backend.dto.PasswordChangeRequest;
 import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.repository.UserRepository;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,8 +42,12 @@ public class UserController {
     );
     private static final int MAX_TAGS = 5;
     private static final int MAX_BIO_LENGTH = 150;
+    private static final int MAX_NICKNAME_LENGTH = 30;
+    private static final java.util.regex.Pattern PASSWORD_PATTERN =
+            java.util.regex.Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,24}$");
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${file.upload-dir:uploads/profile}")
     private String uploadDir;
@@ -110,6 +117,42 @@ public class UserController {
 
         User user = findUser(authentication);
         user.updateBio(bio.isEmpty() ? null : bio);
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
+    @PutMapping("/me/nickname")
+    public UserResponse updateNickname(Authentication authentication, @RequestBody NicknameRequest request) {
+        String nickname = request.nickname() == null ? "" : request.nickname().trim();
+        if (nickname.isEmpty()) {
+            throw new IllegalArgumentException("닉네임을 입력해주세요.");
+        }
+        if (nickname.length() > MAX_NICKNAME_LENGTH) {
+            throw new IllegalArgumentException("닉네임은 " + MAX_NICKNAME_LENGTH + "자를 넘을 수 없습니다.");
+        }
+
+        User user = findUser(authentication);
+        if (user.getNicknameChangedAt() != null
+                && user.getNicknameChangedAt().isAfter(java.time.LocalDateTime.now().minusMonths(3))) {
+            java.time.LocalDate nextChangeDate = user.getNicknameChangedAt().plusMonths(3).toLocalDate();
+            throw new IllegalArgumentException("닉네임은 3개월에 한 번만 변경할 수 있어요. 다음 변경 가능일: " + nextChangeDate);
+        }
+        user.updateNickname(nickname);
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
+    @PutMapping("/me/password")
+    public UserResponse updatePassword(Authentication authentication, @RequestBody PasswordChangeRequest request) {
+        User user = findUser(authentication);
+        if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        if (request.newPassword() == null || !PASSWORD_PATTERN.matcher(request.newPassword()).matches()) {
+            throw new IllegalArgumentException("새 비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하여야 합니다.");
+        }
+
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         return toResponse(user);
     }
