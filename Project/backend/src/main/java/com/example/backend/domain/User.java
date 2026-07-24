@@ -17,6 +17,9 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "login_id", nullable = false, unique = true, length = 20)
+    private String loginId;
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
@@ -93,5 +96,13 @@ public class User {
         this.isVerified = false;
         this.emailVerified = false;
         this.status = "ACTIVE";
+    }
+
+    // 더미 데이터용 생성자 (loginId, phone 포함)
+    public User(String loginId, String email, String password, String nickname, String gender,
+            LocalDate birthDate, String phone) {
+        this(email, password, nickname, gender, birthDate);
+        this.loginId = loginId;
+        this.phone = phone;
     }
 }
