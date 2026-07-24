@@ -4,8 +4,10 @@ import com.example.backend.domain.SurveyResult;
 import com.example.backend.domain.User;
 import com.example.backend.dto.SurveyResultRequest;
 import com.example.backend.dto.SurveyResultResponse;
+import com.example.backend.dto.SurveySummaryResponse;
 import com.example.backend.repository.SurveyResultRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.service.SurveySummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,7 @@ public class SurveyController {
 
     private final SurveyResultRepository surveyResultRepository;
     private final UserRepository userRepository;
+    private final SurveySummaryService surveySummaryService;
 
     @PostMapping
     public SurveyResultResponse submit(Authentication authentication, @RequestBody SurveyResultRequest request) {
@@ -45,6 +48,16 @@ public class SurveyController {
         User user = findUser(authentication);
         return surveyResultRepository.findByUserIdOrderByCompletedAtDesc(user.getUserId())
                 .stream().map(this::toResponse).toList();
+    }
+
+    @GetMapping("/me/summary")
+    public SurveySummaryResponse mySurveySummary(Authentication authentication) {
+        User user = findUser(authentication);
+        List<SurveyResult> surveys = surveyResultRepository.findByUserIdOrderByCompletedAtDesc(user.getUserId());
+        if (surveys.isEmpty()) {
+            return new SurveySummaryResponse("설문을 완료하면 AI가 생활 성향을 한 줄로 요약해드려요.");
+        }
+        return new SurveySummaryResponse(surveySummaryService.summarize(surveys.get(0)));
     }
 
     private User findUser(Authentication authentication) {

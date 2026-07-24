@@ -14,3 +14,6 @@ server.port=8080
 
 jwt.secret=본인만의_32바이트_이상_랜덤_문자열로_교체
 jwt.expiration-ms=86400000
+
+groq.api-key=${GROQ_API_KEY:}
+groq.model=${GROQ_MODEL:openai/gpt-oss-20b}
