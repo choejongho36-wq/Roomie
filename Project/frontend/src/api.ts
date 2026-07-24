@@ -1,6 +1,11 @@
 import axios from "axios";
+<<<<<<< HEAD
 import type { Comment, Page, Post, PostRequest, User } from "./types";
 import type { SurveyResult } from "./types/survey";
+=======
+import type { Post, User } from "./types";
+import type { RecommendationResult, SurveyResult } from "./types/survey";
+>>>>>>> a5700f1809aa132b0b0a2fe8e76d6d451c8d1aa0
 
 const API_BASE_URL = "http://localhost:8080/api";
 export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
@@ -134,6 +139,7 @@ export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
   });
   return response.data;
 };
+<<<<<<< HEAD
 export const checkEmailAvailability = async (email: string): Promise<boolean> => {
   const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-email`, {
     params: { email },
@@ -146,4 +152,12 @@ export const checkLoginIdAvailability = async (loginId: string): Promise<boolean
     params: { loginId },
   });
   return response.data.available;
+=======
+
+export const getRecommendations = async (token: string): Promise<RecommendationResult[]> => {
+  const response = await axios.get<RecommendationResult[]>(`${API_BASE_URL}/recommendations`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+>>>>>>> a5700f1809aa132b0b0a2fe8e76d6d451c8d1aa0
 };

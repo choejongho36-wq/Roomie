@@ -6,6 +6,5 @@ import java.util.List;
 public record SurveyResultResponse(
         Long id,
         List<Integer> answers,
-        Integer totalScore,
         LocalDateTime completedAt
 ) {}

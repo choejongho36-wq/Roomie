@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { updateTags, updateBio, getMySurveys, API_ORIGIN } from "../../api";
@@ -22,10 +22,6 @@ function getAge(birthDate: string) {
 
 function ProfilePage() {
   const { user, token, setUser } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
   const [editingTags, setEditingTags] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>([]);
@@ -45,22 +41,6 @@ function ProfilePage() {
 
   if (!user) return null;
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file || !token) return;
-
-    setUploading(true);
-    setUploadError("");
-    try {
-      const updated = await uploadProfileImage(token, file);
-      setUser(updated);
-    } catch {
-      setUploadError("이미지 업로드에 실패했습니다.");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const startEditTags = () => {
     setDraftTags(user.tags);
@@ -112,19 +92,6 @@ function ProfilePage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!token) return;
-    setDeleting(true);
-    setUploadError("");
-    try {
-      const updated = await deleteProfileImage(token);
-      setUser(updated);
-    } catch {
-      setUploadError("이미지 삭제에 실패했습니다.");
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   return (
     <div className="mypage-panel">
@@ -243,7 +210,7 @@ function ProfilePage() {
               </div>
             )}
 
-        <div className="profile-card-info">
+          <div className="profile-card-info">
           <div className="profile-card-info-row">
             <span>가입일</span>
             <span>{new Date(user.createdAt).toLocaleDateString("ko-KR")}</span>

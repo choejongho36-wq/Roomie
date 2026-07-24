@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface SurveyResultRepository extends JpaRepository<SurveyResult, Long> {
     List<SurveyResult> findByUserIdOrderByCompletedAtDesc(Long userId);
+    List<SurveyResult> findByUserIdNot(Long userId);
 }

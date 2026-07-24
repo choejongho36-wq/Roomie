@@ -38,9 +38,13 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
+<<<<<<< HEAD
                         .requestMatchers("/api/users/**", "/api/surveys/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers("/api/posts/**", "/api/comments/**").authenticated()
+=======
+                        .requestMatchers("/api/users/**", "/api/surveys/**", "/api/recommendations").authenticated()
+>>>>>>> a5700f1809aa132b0b0a2fe8e76d6d451c8d1aa0
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
