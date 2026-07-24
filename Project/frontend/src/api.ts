@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { Comment, Page, Post, PostRequest, User } from "./types";
-import type { RecommendationResult, SurveyResult } from "./types/survey";
+import type { RecommendationResult, SurveyResult, SurveySummaryResult } from "./types/survey";
 
 
 const API_BASE_URL = "http://localhost:8080/api";
@@ -133,6 +133,13 @@ export const submitSurvey = async (token: string, answers: number[]): Promise<Su
 
 export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
   const response = await axios.get<SurveyResult[]>(`${API_BASE_URL}/surveys/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getMySurveySummary = async (token: string): Promise<SurveySummaryResult> => {
+  const response = await axios.get<SurveySummaryResult>(`${API_BASE_URL}/surveys/me/summary`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;

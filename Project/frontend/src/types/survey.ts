@@ -16,6 +16,10 @@ export interface SurveyResult {
   completedAt: string;
 }
 
+export interface SurveySummaryResult {
+  summary: string;
+}
+
 export interface RecommendationResult {
   userId: number;
   nickname: string;
@@ -24,4 +28,6 @@ export interface RecommendationResult {
   tags: string[];
   compatibilityScore: number;
   age: number;
+  job?: string | null;
+  region?: string | null;
 }
