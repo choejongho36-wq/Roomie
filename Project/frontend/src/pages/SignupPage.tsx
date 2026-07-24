@@ -13,7 +13,6 @@ const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
 };
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
-
 const LOGIN_ID_PATTERN = /^[a-z0-9]{4,20}$/;
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
 
@@ -255,7 +254,25 @@ function SignupPage() {
             minLength={8}
             required
           />
-          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상</small>
+           <div className="password-strength">
+            <div className="password-strength-bar">
+              {[0, 1, 2, 3].map((i) => (
+                <span
+                  key={i}
+                  className="password-strength-segment"
+                  style={
+                    i < passwordStrength ? { backgroundColor: strengthMeta.color } : undefined
+                  }
+                />
+              ))}
+            </div>
+            {password && (
+              <small className="password-strength-label" style={{ color: strengthMeta.color }}>
+                {strengthMeta.label}
+              </small>
+            )}
+          </div>
+          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하</small>
         </label>
         <label>
           비밀번호 확인
