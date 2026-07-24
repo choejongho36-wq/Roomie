@@ -122,6 +122,28 @@ export const updateBio = async (token: string, bio: string): Promise<User> => {
   return response.data;
 };
 
+export const updateNickname = async (token: string, nickname: string): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/nickname`,
+    { nickname },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const changePassword = async (
+  token: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/password`,
+    { currentPassword, newPassword },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const submitSurvey = async (token: string, answers: number[]): Promise<SurveyResult> => {
   const response = await axios.post<SurveyResult>(
     `${API_BASE_URL}/surveys`,

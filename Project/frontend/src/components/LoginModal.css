@@ -18,9 +18,25 @@
   position: relative;
 }
 
-.login-modal-form h2 {
+.login-modal-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   margin: 0 0 8px;
-  font-size: 18px;
+}
+
+.login-modal-logo {
+  height: 60px;
+  margin: -15px;
+}
+
+.login-modal-brand-text {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: #f16526;
 }
 
 .login-modal-form input {
@@ -70,7 +86,7 @@
   right: 16px;
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 32px;
   cursor: pointer;
   color: #999;
 }
