@@ -55,10 +55,10 @@ function Icon({ name }: { name: string }) {
 
 const NAV_ITEMS = [
   { to: "/mypage", label: "내 프로필", icon: "person", end: true },
-  { to: "/survey", label: "매칭 설정", icon: "sliders" },
+  { to: "/mypage/my-activity", label: "내 활동", icon: "sliders" },
   { to: "/mypage/interests", label: "관심 목록", icon: "heart" },
   { to: "/mypage/chat", label: "채팅", icon: "chat" },
-  { to: "/mypage/activity", label: "내 활동", icon: "clock" },
+  { to: "/mypage/activity", label: "설문 기록", icon: "clock" },
   { to: "/mypage/notifications", label: "알림", icon: "bell" },
   { to: "/mypage/settings", label: "계정 설정", icon: "gear" },
 ];
