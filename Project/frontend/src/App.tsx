@@ -13,6 +13,9 @@ import ActivityPage from "./pages/mypage/ActivityPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import BoardListPage from "./pages/board/BoardListPage";
+import BoardDetailPage from "./pages/board/BoardDetailPage";
+import BoardWritePage from "./pages/board/BoardWritePage";
 
 function App() {
   return (
@@ -27,6 +30,10 @@ function App() {
           <Route path="/recommend" element={<RecommendationPage />} />
            <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/board" element={<BoardListPage />} />
+          <Route path="/board/write" element={<BoardWritePage />} />
+          <Route path="/board/edit/:postId" element={<BoardWritePage />} />
+          <Route path="/board/:postId" element={<BoardDetailPage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
             <Route path="activity" element={<ActivityPage />} />
