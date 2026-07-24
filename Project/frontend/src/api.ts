@@ -1,13 +1,63 @@
 import axios from "axios";
-import type { Post, User } from "./types";
+import type { Comment, Page, Post, PostRequest, User } from "./types";
 import type { SurveyResult } from "./types/survey";
 
 const API_BASE_URL = "http://localhost:8080/api";
 export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
 
-export const getPosts = async (): Promise<Post[]> => {
-  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts`);
+export const getPosts = async (page: number): Promise<Page<Post>> => {
+  const response = await axios.get<Page<Post>>(`${API_BASE_URL}/posts`, { params: { page } });
   return response.data;
+};
+
+export const getPost = async (postId: number): Promise<Post> => {
+  const response = await axios.get<Post>(`${API_BASE_URL}/posts/${postId}`);
+  return response.data;
+};
+
+export const createPost = async (token: string, request: PostRequest): Promise<Post> => {
+  const response = await axios.post<Post>(`${API_BASE_URL}/posts`, request, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updatePost = async (token: string, postId: number, request: PostRequest): Promise<Post> => {
+  const response = await axios.put<Post>(`${API_BASE_URL}/posts/${postId}`, request, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const deletePost = async (token: string, postId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/posts/${postId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const getComments = async (postId: number): Promise<Comment[]> => {
+  const response = await axios.get<Comment[]>(`${API_BASE_URL}/posts/${postId}/comments`);
+  return response.data;
+};
+
+export const createComment = async (
+  token: string,
+  postId: number,
+  content: string,
+  parentCommentId: number | null
+): Promise<Comment> => {
+  const response = await axios.post<Comment>(
+    `${API_BASE_URL}/posts/${postId}/comments`,
+    { content, parentCommentId },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const deleteComment = async (token: string, commentId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/comments/${commentId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
 export const login = async (email: string, password: string): Promise<string> => {
