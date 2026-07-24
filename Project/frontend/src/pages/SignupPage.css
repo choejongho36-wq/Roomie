@@ -95,3 +95,29 @@
 .signup-hint-error {
   color: #e03131;
 }
+
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.password-strength-bar {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.password-strength-segment {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background-color: #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+.password-strength-label {
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
