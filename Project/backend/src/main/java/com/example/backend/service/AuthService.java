@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.domain.User;
 import com.example.backend.dto.EmailCheckResponse;
+import com.example.backend.dto.LoginIdCheckResponse;
 import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.LoginResponse;
 import com.example.backend.dto.SignupRequest;
@@ -41,6 +42,14 @@ public class AuthService {
         }
         boolean available = !userRepository.existsByEmail(email);
         return new EmailCheckResponse(available);
+    }
+
+    public LoginIdCheckResponse checkLoginId(String loginId) {
+        if (loginId == null || !loginId.matches("^[a-z0-9]{4,20}$")) {
+            throw new IllegalArgumentException("아이디는 영문 소문자와 숫자로 4자 이상 20자 이하여야 합니다.");
+        }
+        boolean available = !userRepository.existsByLoginId(loginId);
+        return new LoginIdCheckResponse(available);
     }
 
     public LoginResponse login(LoginRequest request) {
