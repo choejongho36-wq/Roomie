@@ -9,16 +9,18 @@ import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/surveys")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5174")
 public class SurveyController {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final SurveyResultRepository surveyResultRepository;
     private final UserRepository userRepository;
@@ -29,9 +31,12 @@ public class SurveyController {
             throw new IllegalArgumentException("설문 응답이 비어있습니다.");
         }
         User user = findUser(authentication);
-        String answersCsv = request.answers().stream().map(String::valueOf).collect(Collectors.joining(","));
-        int total = request.answers().stream().mapToInt(Integer::intValue).sum();
-        SurveyResult saved = surveyResultRepository.save(new SurveyResult(user.getUserId(), answersCsv, total));
+        String answersJson = toJson(request.answers());
+        List<Double> vector = request.answers().stream()
+                .map(answer -> (answer - 1) / 4.0)
+                .toList();
+        String vectorJson = toJson(vector);
+        SurveyResult saved = surveyResultRepository.save(new SurveyResult(user.getUserId(), answersJson, vectorJson));
         return toResponse(saved);
     }
 
@@ -48,9 +53,24 @@ public class SurveyController {
     }
 
     private SurveyResultResponse toResponse(SurveyResult r) {
-        List<Integer> answers = Arrays.stream(r.getAnswers().split(","))
+        String answersJson = r.getAnswers();
+        String trimmed = answersJson.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            trimmed = trimmed.substring(1, trimmed.length() - 1);
+        }
+        List<Integer> answers = trimmed.isBlank() ? List.of() : Arrays.stream(trimmed.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
                 .map(Integer::parseInt)
                 .toList();
-        return new SurveyResultResponse(r.getSurveyResultId(), answers, r.getTotalScore(), r.getCompletedAt());
+        return new SurveyResultResponse(r.getSurveyResultId(), answers, r.getCompletedAt());
+    }
+
+    private static String toJson(Object value) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(value);
+        } catch (Exception e) {
+            throw new IllegalStateException("JSON 변환에 실패했습니다.", e);
+        }
     }
 }
