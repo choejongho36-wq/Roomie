@@ -201,7 +201,7 @@ function SignupPage() {
           )}
           {loginIdCheckStatus === "error" && (
             <small className="signup-hint signup-hint-error">
-              영문 소문자와 숫자로 4~20자로 입력해주세요.
+             4~20자로 입력해주세요.
             </small>
           )}
         </label>
