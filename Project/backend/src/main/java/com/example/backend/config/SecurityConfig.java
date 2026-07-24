@@ -4,6 +4,7 @@ import com.example.backend.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,7 +38,11 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers("/api/users/**", "/api/surveys/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers("/api/posts/**", "/api/comments/**").authenticated()
+                        .requestMatchers("/api/users/**", "/api/surveys/**", "/api/recommendations").authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

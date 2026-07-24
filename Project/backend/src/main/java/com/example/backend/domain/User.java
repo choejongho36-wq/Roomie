@@ -35,7 +35,7 @@ public class User {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phone;
 
     @Column(name = "profile_image_url", length = 255)
@@ -87,17 +87,22 @@ public class User {
     }
 
     // 회원가입용 생성자
-    public User(String loginId, String email, String password, String nickname, String gender,
-                LocalDate birthDate, String phone) {
-        this.loginId = loginId;
+    public User(String email, String password, String nickname, String gender, LocalDate birthDate) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.gender = gender;
         this.birthDate = birthDate;
-        this.phone = phone;
         this.isVerified = false;
         this.emailVerified = false;
         this.status = "ACTIVE";
+    }
+
+    // 더미 데이터용 생성자 (loginId, phone 포함)
+    public User(String loginId, String email, String password, String nickname, String gender,
+            LocalDate birthDate, String phone) {
+        this(email, password, nickname, gender, birthDate);
+        this.loginId = loginId;
+        this.phone = phone;
     }
 }

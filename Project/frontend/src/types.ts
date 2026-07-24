@@ -1,18 +1,51 @@
 export interface Post {
-  id: number;
-  title: string;
+  postId: number;
+  userId: number;
+  nickname: string;
+  region: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  moveInDate: string | null;
+  roomType: string | null;
+  recruitCount: number;
+  description: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface PostRequest {
+  region: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  moveInDate: string | null;
+  roomType: string | null;
+  recruitCount: number;
+  description: string;
+}
+
+export interface Comment {
+  commentId: number;
+  userId: number;
+  nickname: string;
+  parentCommentId: number | null;
   content: string;
-  viewCount: number;
   createdAt: string;
 }
 
+export interface Page<T> {
+  content: T[];
+  number: number;
+  totalPages: number;
+  totalElements: number;
+}
+
 export interface User {
-  loginId: string;
+  userId: number;
   email: string;
   nickname: string;
   gender: string;
   birthDate: string;
-  phone: string;
   createdAt: string;
   profileImageUrl: string | null;
   tags: string[];

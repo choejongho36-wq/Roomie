@@ -1,0 +1,152 @@
+.board-detail-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.board-detail-header h1 {
+  margin: 8px 0;
+}
+
+.board-detail-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  color: #999;
+  margin-bottom: 24px;
+}
+
+.board-detail-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 0 0 24px;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-radius: 12px;
+}
+
+.board-detail-info dt {
+  font-size: 12px;
+  color: #999;
+}
+
+.board-detail-info dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.board-detail-description {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.board-detail-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+
+.board-comments h2 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.comment-write {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.comment-write input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.board-comment-login {
+  color: #999;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.comment-list,
+.comment-replies {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.comment-replies {
+  margin-top: 12px;
+  margin-left: 24px;
+  border-left: 2px solid #f1f1f1;
+  padding-left: 16px;
+}
+
+.comment-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.comment-header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.comment-nickname {
+  font-weight: 600;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.comment-content {
+  margin: 0 0 6px;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.comment-actions button {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.comment-actions button:hover {
+  color: #f16526;
+}
+
+.comment-reply-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comment-reply-form input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.comment-reply-form button {
+  border: 1px solid #f16526;
+  background: #fff;
+  color: #f16526;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}

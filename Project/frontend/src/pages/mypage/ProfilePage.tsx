@@ -41,6 +41,7 @@ function ProfilePage() {
 
   if (!user) return null;
 
+
   const startEditTags = () => {
     setDraftTags(user.tags);
     setTagsError("");
@@ -90,6 +91,7 @@ function ProfilePage() {
       setTagsSaving(false);
     }
   };
+
 
   return (
     <div className="mypage-panel">
@@ -159,56 +161,56 @@ function ProfilePage() {
           </div>
         )}
 
-        {!editingTags ? (
-          <div className="profile-tags profile-tags-centered">
-            {user.tags.map((tag) => (
-              <span key={tag} className="profile-tag">
-                {tag}
-              </span>
-            ))}
-            <button type="button" className="profile-tags-edit" onClick={startEditTags}>
-              태그 편집
-            </button>
-          </div>
-        ) : (
-          <div className="profile-tags-editor">
-            <div className="profile-tags profile-tags-centered">
-              {PROFILE_TAGS.map((tag) => (
-                <button
-                  type="button"
-                  key={tag}
-                  className={`profile-tag profile-tag-selectable${
-                    draftTags.includes(tag) ? " profile-tag-selected" : ""
-                  }`}
-                  onClick={() => toggleDraftTag(tag)}
-                >
-                  {tag}
+            {!editingTags ? (
+              <div className="profile-tags">
+                {user.tags.map((tag) => (
+                  <span key={tag} className="profile-tag">
+                    {tag}
+                  </span>
+                ))}
+                <button type="button" className="profile-tags-edit" onClick={startEditTags}>
+                  태그 편집
                 </button>
-              ))}
-            </div>
-            {tagsError && <p className="mypage-error">{tagsError}</p>}
-            <div className="profile-tags-actions">
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-change"
-                onClick={handleSaveTags}
-                disabled={tagsSaving}
-              >
-                {tagsSaving ? "저장 중..." : "저장"}
-              </button>
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-delete"
-                onClick={() => setEditingTags(false)}
-                disabled={tagsSaving}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        )}
+              </div>
+            ) : (
+              <div className="profile-tags-editor">
+                <div className="profile-tags">
+                  {PROFILE_TAGS.map((tag) => (
+                    <button
+                      type="button"
+                      key={tag}
+                      className={`profile-tag profile-tag-selectable${
+                        draftTags.includes(tag) ? " profile-tag-selected" : ""
+                      }`}
+                      onClick={() => toggleDraftTag(tag)}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+                {tagsError && <p className="mypage-error">{tagsError}</p>}
+                <div className="profile-tags-actions">
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-change"
+                    onClick={handleSaveTags}
+                    disabled={tagsSaving}
+                  >
+                    {tagsSaving ? "저장 중..." : "저장"}
+                  </button>
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-delete"
+                    onClick={() => setEditingTags(false)}
+                    disabled={tagsSaving}
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            )}
 
-        <div className="profile-card-info">
+          <div className="profile-card-info">
           <div className="profile-card-info-row">
             <span>가입일</span>
             <span>{new Date(user.createdAt).toLocaleDateString("ko-KR")}</span>

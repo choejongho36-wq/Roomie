@@ -13,15 +13,15 @@ class JwtProviderTest {
 
     @Test
     void createsAndParsesValidToken() {
-        String token = jwtProvider.createToken("testuser1");
+        String token = jwtProvider.createToken("user@example.com");
 
         assertTrue(jwtProvider.isValid(token));
-        assertEquals("testuser1", jwtProvider.getLoginId(token));
+        assertEquals("user@example.com", jwtProvider.getEmail(token));
     }
 
     @Test
     void rejectsTamperedToken() {
-        String token = jwtProvider.createToken("testuser1");
+        String token = jwtProvider.createToken("user@example.com");
 
         assertFalse(jwtProvider.isValid(token + "tampered"));
     }

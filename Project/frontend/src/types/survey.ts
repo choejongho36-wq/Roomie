@@ -13,6 +13,15 @@ export interface SurveyOption {
 export interface SurveyResult {
   id: number;
   answers: number[];
-  totalScore: number;
   completedAt: string;
+}
+
+export interface RecommendationResult {
+  userId: number;
+  nickname: string;
+  profileImageUrl: string | null;
+  bio: string | null;
+  tags: string[];
+  compatibilityScore: number;
+  age: number;
 }

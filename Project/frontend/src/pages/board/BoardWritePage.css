@@ -1,0 +1,39 @@
+.board-write-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.board-write-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.board-write-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #444;
+  flex: 1;
+}
+
+.board-write-form input,
+.board-write-form textarea {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.board-write-row {
+  display: flex;
+  gap: 16px;
+}
+
+.board-write-form button {
+  align-self: flex-start;
+  border: none;
+}
