@@ -1,24 +1,59 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { signup } from "../api";
+import { signup , checkEmailAvailability, checkLoginIdAvailability } from "../api";
 import "./SignupPage.css";
 
 const currentYear = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i); // 올해 ~ 100년 전
+const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i); 
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-// 선택된 연/월 기준으로 그 달의 실제 일수를 계산 (2월 30일 같은 값 방지)
+
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
 };
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 
+const LOGIN_ID_PATTERN = /^[a-z0-9]{4,20}$/;
+const PHONE_PATTERN = /^[0-9]{10,11}$/;
+
+type PasswordStrength = 0 | 1 | 2 | 3 | 4;
+
+
+const getPasswordStrength = (pw: string): PasswordStrength => {
+  if (!pw) return 0;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  const categoryCount = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((regex) =>
+    regex.test(pw)
+  ).length;
+  if (categoryCount >= 3) score++;
+  if (categoryCount === 4 && pw.length >= 10) score++;
+  return Math.min(score, 4) as PasswordStrength;
+};
+
+const STRENGTH_META: Record<PasswordStrength, { label: string; color: string }> = {
+  0: { label: "매우 약함", color: "#e03131" },
+  1: { label: "약함", color: "#f08c00" },
+  2: { label: "보통", color: "#f2b705" },
+  3: { label: "강함", color: "#2f9e44" },
+  4: { label: "매우 강함", color: "#1971c2" },
+};
+
+type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
+
 function SignupPage() {
   const navigate = useNavigate();
+  const [loginId, setLoginId] = useState("");
+  const [loginIdCheckStatus, setLoginIdCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedLoginId, setCheckedLoginId] = useState(""); // 마지막으로 중복확인에 통과한 아이디 값
   const [email, setEmail] = useState("");
+  const [emailCheckStatus, setEmailCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [phone, setPhone] = useState("");
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -27,13 +62,68 @@ function SignupPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+
+  const passwordStrength = getPasswordStrength(password);
+  const strengthMeta = STRENGTH_META[passwordStrength];
+
   const dayOptions = (() => {
     if (!birthYear || !birthMonth) return Array.from({ length: 31 }, (_, i) => i + 1);
     const count = getDaysInMonth(Number(birthYear), Number(birthMonth));
     return Array.from({ length: count }, (_, i) => i + 1);
   })();
 
-  
+  const handleLoginIdChange = (value: string) => {
+    setLoginId(value);
+
+    if (value !== checkedLoginId) {
+      setLoginIdCheckStatus("idle");
+    }
+  };
+
+  const handleCheckLoginId = async () => {
+    setError("");
+    if (!loginId) {
+      setError("아이디를 먼저 입력해주세요.");
+      return;
+    }
+    if (!LOGIN_ID_PATTERN.test(loginId)) {
+      setLoginIdCheckStatus("error");
+      return;
+    }
+    setLoginIdCheckStatus("checking");
+    try {
+      const available = await checkLoginIdAvailability(loginId);
+      setCheckedLoginId(loginId);
+      setLoginIdCheckStatus(available ? "available" : "taken");
+    } catch {
+      setLoginIdCheckStatus("error");
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+
+    if (value !== checkedEmail) {
+      setEmailCheckStatus("idle");
+    }
+  };
+
+  const handleCheckEmail = async () => {
+    setError("");
+    if (!email) {
+      setError("이메일을 먼저 입력해주세요.");
+      return;
+    }
+    setEmailCheckStatus("checking");
+    try {
+      const available = await checkEmailAvailability(email);
+      setCheckedEmail(email);
+      setEmailCheckStatus(available ? "available" : "taken");
+    } catch {
+      setEmailCheckStatus("error");
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
@@ -101,9 +191,28 @@ function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             minLength={8}
+            maxLength={24}
             required
           />
-          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상</small>
+          <div className="password-strength">
+            <div className="password-strength-bar">
+              {[0, 1, 2, 3].map((i) => (
+                <span
+                  key={i}
+                  className="password-strength-segment"
+                  style={
+                    i < passwordStrength ? { backgroundColor: strengthMeta.color } : undefined
+                  }
+                />
+              ))}
+            </div>
+            {password && (
+              <small className="password-strength-label" style={{ color: strengthMeta.color }}>
+                {strengthMeta.label}
+              </small>
+            )}
+          </div>
+          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하</small>
         </label>
         <label>
           비밀번호 확인
@@ -112,6 +221,7 @@ function SignupPage() {
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
             minLength={8}
+            maxLength={24}
             required
           />
         </label>
@@ -159,7 +269,7 @@ function SignupPage() {
               value={birthMonth}
               onChange={(e) => {
                 setBirthMonth(e.target.value);
-                setBirthDay(""); // 월이 바뀌면 일 선택 초기화
+                setBirthDay("");
               }}
               required
             >
