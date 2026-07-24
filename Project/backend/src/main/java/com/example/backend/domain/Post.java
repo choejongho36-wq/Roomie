@@ -75,4 +75,15 @@ public class Post {
         this.description = description;
         this.status = "RECRUITING";
     }
+
+    public void update(String region, Integer budgetMin, Integer budgetMax,
+            LocalDate moveInDate, String roomType, Integer recruitCount, String description) {
+        this.region = region;
+        this.budgetMin = budgetMin;
+        this.budgetMax = budgetMax;
+        this.moveInDate = moveInDate;
+        this.roomType = roomType;
+        this.recruitCount = recruitCount;
+        this.description = description;
+    }
 }
