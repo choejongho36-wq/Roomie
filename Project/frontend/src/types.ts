@@ -24,6 +24,23 @@ export interface PostRequest {
   description: string;
 }
 
+export interface Inquiry {
+  inquiryId: number;
+  userId: number;
+  nickname: string;
+  title: string;
+  content: string;
+  status: string;
+  answer: string | null;
+  createdAt: string;
+  answeredAt: string | null;
+}
+
+export interface InquiryRequest {
+  title: string;
+  content: string;
+}
+
 export interface Comment {
   commentId: number;
   userId: number;

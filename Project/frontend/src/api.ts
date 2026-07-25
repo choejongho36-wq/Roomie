@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Comment, Page, Post, PostRequest, User } from "./types";
+import type { Comment, Inquiry, InquiryRequest, Page, Post, PostRequest, User } from "./types";
 import type {
   RecommendationResult,
   SurveyComparisonResult,
@@ -62,6 +62,40 @@ export const createComment = async (
 
 export const deleteComment = async (token: string, commentId: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/comments/${commentId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const getInquiries = async (): Promise<Inquiry[]> => {
+  const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/inquiries`);
+  return response.data;
+};
+
+export const getInquiry = async (inquiryId: number): Promise<Inquiry> => {
+  const response = await axios.get<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`);
+  return response.data;
+};
+
+export const createInquiry = async (token: string, request: InquiryRequest): Promise<Inquiry> => {
+  const response = await axios.post<Inquiry>(`${API_BASE_URL}/inquiries`, request, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updateInquiry = async (
+  token: string,
+  inquiryId: number,
+  request: InquiryRequest
+): Promise<Inquiry> => {
+  const response = await axios.put<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, request, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const deleteInquiry = async (token: string, inquiryId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/inquiries/${inquiryId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
