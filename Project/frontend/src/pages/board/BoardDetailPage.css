@@ -1,11 +1,78 @@
 .board-detail-page {
-  max-width: 700px;
+  width: 800px;
+  min-width: 0;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 40px 24px 80px;
+  text-align: left;
+}
+
+.info-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.info-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 20px;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.info-modal p {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.info-modal .btn {
+  width: 100%;
+}
+
+.info-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.info-modal-actions .btn {
+  width: auto;
+  flex: 1;
+}
+
+.board-detail-header {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .board-detail-header h1 {
-  margin: 8px 0;
+  margin: 8px 0 16px;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.board-status {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: #666;
+}
+
+.board-status-recruiting {
+  background: #fff1e8;
+  color: #f16526;
 }
 
 .board-detail-board-type {
@@ -22,7 +89,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: -12px 0 20px;
+  margin-top: 16px;
 }
 
 .board-detail-tag {
@@ -34,12 +101,81 @@
   font-weight: 600;
 }
 
-.board-detail-meta {
+.board-detail-profile-row {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-detail-bookmark-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #eee;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+}
+
+.board-detail-bookmark-button:hover {
+  border-color: #ddd;
+  background: #fafafa;
+}
+
+.board-detail-bookmark-button.is-active {
+  border-color: #ffcda6;
+  background: #fff1e8;
+  color: #f16526;
+}
+
+.board-detail-bookmark-button.is-own-post {
+  opacity: 0.5;
+}
+
+.board-detail-bookmark-button.is-own-post:hover {
+  border-color: #eee;
+  background: #fff;
+}
+
+.board-detail-avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.board-detail-avatar-fallback {
+  background: #4e41db;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
+  font-weight: 700;
+}
+
+.board-detail-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-right: auto;
+}
+
+.board-detail-nickname {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.board-detail-date {
+  font-size: 12px;
   color: #999;
-  margin-bottom: 24px;
 }
 
 .board-detail-info {
@@ -63,15 +199,103 @@
 }
 
 .board-detail-description {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   white-space: pre-wrap;
-  line-height: 1.6;
-  margin-bottom: 24px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow-x: hidden;
+  line-height: 1.75;
+  font-size: 15px;
+  color: #333;
+  padding: 20px 4px;
+  margin-bottom: 8px;
+  font-synthesis: weight style;
+}
+
+.board-detail-description b,
+.board-detail-description strong {
+  font-weight: 900;
+}
+
+.board-detail-description i,
+.board-detail-description em {
+  font-style: italic;
+  font-synthesis: none;
+  display: inline-block;
+  transform: skewX(-20deg);
+}
+
+.board-detail-description img {
+  max-width: 100%;
+  height: auto;
 }
 
 .board-detail-actions {
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 6px;
   margin-bottom: 40px;
+}
+
+.board-detail-actions .btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-width: 1px;
+}
+
+.board-detail-author-posts {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.board-detail-author-posts h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #555;
+  margin: 0 0 10px;
+}
+
+.board-detail-author-posts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.board-detail-author-posts-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-decoration: none;
+  padding: 6px 0;
+}
+
+.board-detail-author-posts-title {
+  color: #333;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-detail-author-posts-date {
+  flex-shrink: 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.board-detail-author-posts-empty {
+  margin: 0;
+  color: #999;
+  font-size: 13px;
 }
 
 .board-comments h2 {
@@ -81,7 +305,8 @@
 
 .comment-write {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
@@ -90,6 +315,24 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 10px 12px;
+}
+
+.comment-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-avatar-fallback {
+  background: #4e41db;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .board-comment-login {
@@ -113,8 +356,15 @@
 }
 
 .comment-item {
+  display: flex;
+  gap: 10px;
   padding: 12px 0;
   border-bottom: 1px solid #f1f1f1;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .comment-header {
@@ -125,7 +375,9 @@
 }
 
 .comment-nickname {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 15px;
+  color: #222;
 }
 
 .comment-date {
@@ -135,6 +387,11 @@
 
 .comment-content {
   margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #333;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .comment-actions {

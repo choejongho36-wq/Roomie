@@ -1,0 +1,228 @@
+.region-picker {
+  position: relative;
+}
+
+.region-picker-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e5ded8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #444;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.region-picker-toggle span {
+  font-size: 10px;
+  color: #aaa;
+}
+
+.region-picker-toggle.is-active {
+  color: #ff6600;
+  border-color: #ff6600;
+  background: #fff1e8;
+}
+
+.region-picker-toggle.is-active span {
+  color: #ff6600;
+}
+
+.region-picker-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ff6600;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.region-picker-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: min(680px, 90vw);
+  background: #ffffff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.region-picker-inline {
+  width: 100%;
+  min-width: 0;
+}
+
+.region-picker-search input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 12px;
+}
+
+.region-picker-search input:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 1px;
+}
+
+.region-picker-columns {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 84px 110px minmax(0, 1fr);
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.region-picker-col {
+  border-right: 1px solid #eee;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.region-picker-col:last-child {
+  border-right: none;
+}
+
+.region-picker-col-header {
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.region-picker-col-body {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px;
+}
+
+.region-picker-row {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: left;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.region-picker-row:hover {
+  background: #fff4e6;
+}
+
+.region-picker-row.is-active {
+  background: #fff1e8;
+  color: #ff6600;
+  font-weight: 800;
+}
+
+.region-picker-row.is-selected {
+  color: #ff6600;
+  font-weight: 800;
+}
+
+.region-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.region-picker-selected-chips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.region-picker-footer-hint {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.region-picker-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff1e8;
+  color: #ff6600;
+  border-radius: 999px;
+  padding: 6px 8px 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.region-picker-selected-chip button {
+  border: none;
+  background: none;
+  color: #ff6600;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.region-picker-reset {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #e5ded8;
+  border-radius: 8px;
+  background: #fff;
+  color: #666;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.region-picker-reset:hover {
+  border-color: #ff6600;
+  color: #ff6600;
+}
+
+@media (max-width: 720px) {
+  .region-picker-panel {
+    width: 92vw;
+  }
+
+  .region-picker-columns {
+    grid-template-columns: 64px 90px 1fr;
+  }
+}

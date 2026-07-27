@@ -7,7 +7,7 @@
   position: relative;
   overflow: hidden;
   margin-top: -110px;
-  min-height: 100vh;
+  min-height: 110vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,6 +17,86 @@
   background: linear-gradient(135deg, #f16526 0%, #f4834f 45%, #ffc79b 100%);
   background-size: 200% 200%;
   animation: hero-gradient-shift 16s ease infinite;
+}
+
+.hero-center-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 900px;
+  height: 700px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 65%);
+  pointer-events: none;
+}
+
+.hero-tagline {
+  position: relative;
+  z-index: 1;
+  font-family: "Gowun Dodum", sans-serif;
+  font-weight: 700;
+  font-size: 33px;
+  color: #fff;
+  margin: 16px 0 0;
+}
+
+.hero-tagline-highlight {
+  color: #f16526;
+}
+
+.hero-cta {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  color: #f16526;
+  border-color: #fff;
+}
+
+@keyframes hero-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mainpage-logo,
+.hero .logo,
+.hero-tagline,
+.hero-cta {
+  animation: hero-fade-in-up 0.6s ease-out backwards;
+}
+
+.mainpage-logo {
+  animation-delay: 0s;
+}
+
+.hero .logo {
+  animation-delay: 0.15s;
+}
+
+.hero-tagline {
+  animation-delay: 0.3s;
+}
+
+.hero-cta {
+  animation-delay: 0.45s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mainpage-logo,
+  .hero .logo,
+  .hero-tagline,
+  .hero-cta {
+    animation: none;
+  }
+}
+
+.hero-cta:hover {
+  opacity: 0.9;
 }
 
 @keyframes hero-gradient-shift {
@@ -32,8 +112,8 @@
 .hero-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.45;
+  filter: blur(45px);
+  opacity: 0.4;
   pointer-events: none;
 }
 
@@ -60,7 +140,8 @@
   height: 260px;
   top: 45%;
   right: 12%;
-  background: #fff3e0;
+  background: #ffd28a;
+  opacity: 0.3;
   animation: hero-blob-float-3 14s ease-in-out infinite;
 }
 
@@ -453,6 +534,35 @@
   .logo {
     font-size: 56px;
   }
+}
+
+.scroll-top-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f16526, #ff9d5c);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(241, 101, 38, 0.35);
+  z-index: 40;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scroll-top-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(241, 101, 38, 0.45);
+}
+
+.scroll-top-btn svg {
+  width: 22px;
+  height: 22px;
 }
 
 .auth-box {

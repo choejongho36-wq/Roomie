@@ -8,6 +8,8 @@ public record PostRequest(
         Integer budgetMin,
         Integer budgetMax,
         LocalDate moveInDate,
+        Integer moveInMonthMin,
+        Integer moveInMonthMax,
         String roomType,
         Integer recruitCount,
         String description,

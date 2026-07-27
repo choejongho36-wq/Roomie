@@ -43,6 +43,7 @@ public class SurveyComparisonService {
 
     private final SurveyResultRepository surveyResultRepository;
     private final UserRepository userRepository;
+    private final CompatibilityCalculator compatibilityCalculator;
 
     public SurveyComparisonResponse compare(Long myUserId, Long otherUserId) {
         if (myUserId.equals(otherUserId)) {
@@ -63,14 +64,12 @@ public class SurveyComparisonService {
                 .map(question -> toItem(question, myAnswers.get(question.id() - 1), otherAnswers.get(question.id() - 1)))
                 .toList();
 
-        String otherNickname = otherUser.getNickname();
-
         List<SurveyComparisonHighlightResponse> topReasons = items.stream()
                 .sorted(Comparator
                         .comparing(SurveyComparisonItemResponse::difference)
                         .thenComparing(SurveyComparisonItemResponse::questionId))
                 .limit(3)
-                .map(item -> toHighlight(item, buildMatchDescription(item, otherNickname)))
+                .map(this::toHighlight)
                 .toList();
 
         List<SurveyComparisonHighlightResponse> differences = items.stream()
@@ -78,7 +77,7 @@ public class SurveyComparisonService {
                         .comparing(SurveyComparisonItemResponse::difference).reversed()
                         .thenComparing(SurveyComparisonItemResponse::questionId))
                 .limit(3)
-                .map(item -> toHighlight(item, buildDifferenceDescription(item, otherNickname)))
+                .map(this::toHighlight)
                 .toList();
 
         return new SurveyComparisonResponse(
@@ -111,30 +110,13 @@ public class SurveyComparisonService {
         );
     }
 
-    private SurveyComparisonHighlightResponse toHighlight(SurveyComparisonItemResponse item, String description) {
+    private SurveyComparisonHighlightResponse toHighlight(SurveyComparisonItemResponse item) {
         return new SurveyComparisonHighlightResponse(
                 item.category(),
                 item.myAnswer(),
                 item.otherAnswer(),
-                item.difference(),
-                description
+                item.difference()
         );
-    }
-
-    private String buildMatchDescription(SurveyComparisonItemResponse item, String otherNickname) {
-        if (item.difference() == 0) {
-            return String.format("둘 다 '%s'라고 답해서 잘 맞아요.", item.myAnswer());
-        }
-        return String.format("나는 '%s', %s님은 '%s' — 답변이 비슷해서 맞추기 좋아요.",
-                item.myAnswer(), otherNickname, item.otherAnswer());
-    }
-
-    private String buildDifferenceDescription(SurveyComparisonItemResponse item, String otherNickname) {
-        if (item.difference() == 0) {
-            return String.format("둘 다 '%s'라고 답해서 큰 차이가 없어요.", item.myAnswer());
-        }
-        return String.format("나는 '%s', %s님은 '%s' — 차이가 있어 입주 전 조율하면 좋아요.",
-                item.myAnswer(), otherNickname, item.otherAnswer());
     }
 
     private String answerText(SurveyQuestionPrompt question, int score) {
@@ -152,26 +134,7 @@ public class SurveyComparisonService {
     }
 
     private int calculateCompatibilityScore(List<Integer> myAnswers, List<Integer> otherAnswers) {
-        int count = Math.min(myAnswers.size(), otherAnswers.size());
-        if (count == 0) {
-            return 0;
-        }
-
-        double dot = 0.0;
-        double myNorm = 0.0;
-        double otherNorm = 0.0;
-        for (int i = 0; i < count; i++) {
-            double myValue = (myAnswers.get(i) - 1) / 4.0;
-            double otherValue = (otherAnswers.get(i) - 1) / 4.0;
-            dot += myValue * otherValue;
-            myNorm += Math.pow(myValue, 2);
-            otherNorm += Math.pow(otherValue, 2);
-        }
-        if (myNorm == 0 || otherNorm == 0) {
-            return 0;
-        }
-        double similarity = dot / (Math.sqrt(myNorm) * Math.sqrt(otherNorm));
-        return (int) Math.round(similarity * 100);
+        return compatibilityCalculator.score(myAnswers, otherAnswers);
     }
 
     private List<Integer> parseAnswers(String answersJson) {

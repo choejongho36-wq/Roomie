@@ -120,8 +120,15 @@ function MainPage() {
         <div className="hero-blob hero-blob-1" aria-hidden="true" />
         <div className="hero-blob hero-blob-2" aria-hidden="true" />
         <div className="hero-blob hero-blob-3" aria-hidden="true" />
+        <div className="hero-center-glow" aria-hidden="true" />
         <img className="mainpage-logo" src={logo} alt="Roomie" />
         <h1 className="logo">Roomie</h1>
+        <h1 className="hero-tagline">
+          지금 당장 나와 어울리는 <span className="hero-tagline-highlight">룸메이트</span>를 찾아보세요
+        </h1>
+        <button type="button" className="btn btn-primary hero-cta" onClick={handleMatchClick}>
+          무료로 시작하기
+        </button>
       </section>
 
       <section className="why-section">
@@ -159,9 +166,6 @@ function MainPage() {
               Roomie의 AI는 생활습관, 성격, 가치관, 선호도를 종합 분석하여
               당신과 가장 잘 맞는 룸메이트를 추천합니다.
             </p>
-            <button type="button" className="btn btn-primary" onClick={handleMatchClick}>
-              AI 매칭 시작
-            </button>
           </div>
 
           <div className="ai-match-card">
@@ -247,6 +251,17 @@ function MainPage() {
           }}
         />
       )}
+
+      <button
+        type="button"
+        className="scroll-top-btn"
+        aria-label="맨 위로"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 19V5M5 12l7-7 7 7" />
+        </svg>
+      </button>
     </div>
   );
 }

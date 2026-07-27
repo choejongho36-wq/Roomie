@@ -3,23 +3,92 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
+import RegionPicker, { type RegionToken, parseRegionToken } from "../../components/RegionPicker";
 import "./BoardWritePage.css";
 
 const BOARD_OPTIONS = ["모집게시판", "고민게시판"];
 
-const FONT_SIZE_OPTIONS = [
-  { value: "2", label: "작게" },
-  { value: "3", label: "보통" },
-  { value: "5", label: "크게" },
-  { value: "7", label: "아주 크게" },
-];
-
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
+
+const BUDGET_MIN = 0;
+const BUDGET_MAX = 200;
+const BUDGET_STEP = 10;
+
+const MOVE_IN_MIN = 0;
+const MOVE_IN_MAX = 3;
+const MOVE_IN_STEP = 1;
+
+const formatBudgetLabel = (value: number) => (value >= BUDGET_MAX ? "200만원 이상" : `${value}만원`);
+
+const formatMoveInLabel = (value: number) => {
+  if (value <= 0) return "즉시입주";
+  if (value >= MOVE_IN_MAX) return "3개월 이후";
+  return `${value}개월`;
+};
 
 interface ImageItem {
   id: string;
   file: File;
   previewUrl: string;
+}
+
+function DualRangeSlider({
+  min,
+  max,
+  step,
+  valueMin,
+  valueMax,
+  onChange,
+  formatLabel,
+}: {
+  min: number;
+  max: number;
+  step: number;
+  valueMin: number;
+  valueMax: number;
+  onChange: (min: number, max: number) => void;
+  formatLabel: (value: number) => string;
+}) {
+  const range = max - min;
+  const minPct = range === 0 ? 0 : ((valueMin - min) / range) * 100;
+  const maxPct = range === 0 ? 100 : ((valueMax - min) / range) * 100;
+
+  return (
+    <div className="range-slider">
+      <div className="range-slider-labels">
+        <span>{formatLabel(valueMin)}</span>
+        <span>{formatLabel(valueMax)}</span>
+      </div>
+      <div className="range-slider-track-wrap">
+        <div className="range-slider-track" />
+        <div className="range-slider-range" style={{ left: `${minPct}%`, width: `${maxPct - minPct}%` }} />
+        <input
+          type="range"
+          className="range-slider-input"
+          min={min}
+          max={max}
+          step={step}
+          value={valueMin}
+          onChange={(event) => {
+            const next = Math.min(Number(event.target.value), valueMax - step);
+            onChange(Math.max(min, next), valueMax);
+          }}
+        />
+        <input
+          type="range"
+          className="range-slider-input"
+          min={min}
+          max={max}
+          step={step}
+          value={valueMax}
+          onChange={(event) => {
+            const next = Math.max(Number(event.target.value), valueMin + step);
+            onChange(valueMin, Math.min(max, next));
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 function BoardWritePage() {
@@ -37,6 +106,19 @@ function BoardWritePage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
+  const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
+  const region = regionTokens[0]
+    ? regionTokens[0].dong
+      ? `${regionTokens[0].district} ${regionTokens[0].dong}`
+      : regionTokens[0].district
+    : null;
+  const [budgetMin, setBudgetMin] = useState(BUDGET_MIN);
+  const [budgetMax, setBudgetMax] = useState(BUDGET_MAX);
+  const [moveInMonthMin, setMoveInMonthMin] = useState(MOVE_IN_MIN);
+  const [moveInMonthMax, setMoveInMonthMax] = useState(MOVE_IN_MAX);
+
+  const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
+
   const contentRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const boardMenuRef = useRef<HTMLDivElement | null>(null);
@@ -50,6 +132,14 @@ function BoardWritePage() {
       if (contentRef.current) {
         contentRef.current.innerHTML = post.description ?? "";
       }
+      if (post.region) {
+        const parsed = parseRegionToken(post.region);
+        if (parsed) setRegionTokens([parsed]);
+      }
+      if (post.budgetMin !== null) setBudgetMin(post.budgetMin);
+      if (post.budgetMax !== null) setBudgetMax(post.budgetMax);
+      if (post.moveInMonthMin !== null) setMoveInMonthMin(post.moveInMonthMin);
+      if (post.moveInMonthMax !== null) setMoveInMonthMax(post.moveInMonthMax);
     });
   }, [isEdit, postId]);
 
@@ -70,6 +160,27 @@ function BoardWritePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    // 브라우저에 따라 execCommand의 볼드/이탤릭/밑줄 토글이 인라인 span과 <b>/<i>/<u> 태그를
+    // 섞어 쓰면서 꼬이는 경우가 있어, 항상 시맨틱 태그만 쓰도록 강제한다.
+    document.execCommand("styleWithCSS", false, false as unknown as string);
+
+    const syncActiveFormats = () => {
+      if (!contentRef.current) return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      if (!contentRef.current.contains(selection.anchorNode)) return;
+      setActiveFormats({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    };
+
+    document.addEventListener("selectionchange", syncActiveFormats);
+    return () => document.removeEventListener("selectionchange", syncActiveFormats);
+  }, []);
+
   if (!token) {
     return (
       <div className="page board-write-page">
@@ -81,6 +192,11 @@ function BoardWritePage() {
   const applyStyle = (command: string, value?: string) => {
     contentRef.current?.focus();
     document.execCommand(command, false, value);
+    setActiveFormats({
+      bold: document.queryCommandState("bold"),
+      italic: document.queryCommandState("italic"),
+      underline: document.queryCommandState("underline"),
+    });
   };
 
   const handleAddTag = () => {
@@ -95,6 +211,10 @@ function BoardWritePage() {
   };
 
   const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    // 한글 등 IME 조합 중에 발생하는 키다운은 무시 (조합 완료용 Enter와 실제 Enter가
+    // 중복으로 잡혀 마지막 글자가 별도 태그로 추가되는 문제 방지)
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+
     if (event.key === "Enter" || event.key === ",") {
       event.preventDefault();
       handleAddTag();
@@ -152,6 +272,11 @@ function BoardWritePage() {
       setError("제목을 입력해주세요.");
       return;
     }
+    const isRecruitBoard = selectedBoard === "모집게시판";
+    if (isRecruitBoard && !region) {
+      setError("지역을 선택해주세요.");
+      return;
+    }
     const contentText = contentRef.current?.textContent?.trim() ?? "";
     if (!contentText) {
       setError("내용을 입력해주세요.");
@@ -166,10 +291,12 @@ function BoardWritePage() {
 
     const request = {
       title,
-      region: null,
-      budgetMin: null,
-      budgetMax: null,
+      region: isRecruitBoard ? region : null,
+      budgetMin: isRecruitBoard ? budgetMin : null,
+      budgetMax: isRecruitBoard ? budgetMax : null,
       moveInDate: null,
+      moveInMonthMin: isRecruitBoard ? moveInMonthMin : null,
+      moveInMonthMax: isRecruitBoard ? moveInMonthMax : null,
       roomType: null,
       recruitCount: null,
       description: contentRef.current?.innerHTML ?? "",
@@ -243,10 +370,56 @@ function BoardWritePage() {
           placeholder="제목을 입력해주세요."
         />
 
+        {selectedBoard === "모집게시판" && (
+          <div className="board-write-recruit-fields">
+            <div className="board-write-field-row">
+              <div className="board-write-field-label">지역</div>
+              <RegionPicker
+                selected={regionTokens}
+                onChange={setRegionTokens}
+                multiple={false}
+                variant="inline"
+              />
+            </div>
+
+            <div className="board-write-field-row">
+              <div className="board-write-field-label">예산</div>
+              <DualRangeSlider
+                min={BUDGET_MIN}
+                max={BUDGET_MAX}
+                step={BUDGET_STEP}
+                valueMin={budgetMin}
+                valueMax={budgetMax}
+                onChange={(next, nextMax) => {
+                  setBudgetMin(next);
+                  setBudgetMax(nextMax);
+                }}
+                formatLabel={formatBudgetLabel}
+              />
+            </div>
+
+            <div className="board-write-field-row">
+              <div className="board-write-field-label">입주 시기</div>
+              <DualRangeSlider
+                min={MOVE_IN_MIN}
+                max={MOVE_IN_MAX}
+                step={MOVE_IN_STEP}
+                valueMin={moveInMonthMin}
+                valueMax={moveInMonthMax}
+                onChange={(next, nextMax) => {
+                  setMoveInMonthMin(next);
+                  setMoveInMonthMax(nextMax);
+                }}
+                formatLabel={formatMoveInLabel}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="board-write-toolbar">
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.bold ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("bold")}
           >
@@ -254,7 +427,7 @@ function BoardWritePage() {
           </button>
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.italic ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("italic")}
           >
@@ -262,24 +435,12 @@ function BoardWritePage() {
           </button>
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.underline ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("underline")}
           >
             <span style={{ textDecoration: "underline" }}>U</span>
           </button>
-          <select
-            className="board-write-toolbar-select"
-            defaultValue="3"
-            onMouseDown={(event) => event.preventDefault()}
-            onChange={(event) => applyStyle("fontSize", event.target.value)}
-          >
-            {FONT_SIZE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div
