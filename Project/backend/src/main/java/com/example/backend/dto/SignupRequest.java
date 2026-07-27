@@ -23,7 +23,12 @@ public record SignupRequest(
                     message = "비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다."
                 )
                 String password,
-                @NotBlank String nickname,
+                @NotBlank
+                @Pattern(
+                    regexp = "^[a-zA-Z0-9가-힣]{2,10}$",
+                    message = "닉네임은 한글, 영문, 숫자로 2자 이상 10자 이하여야 합니다."
+                )
+                String nickname,
                 @NotBlank String gender,
                 @NotNull LocalDate birthDate,
                 @NotBlank

@@ -3,6 +3,7 @@ package com.example.backend.service;
 import com.example.backend.domain.User;
 import com.example.backend.dto.EmailCheckResponse;
 import com.example.backend.dto.LoginIdCheckResponse;
+import com.example.backend.dto.NicknameCheckResponse;
 import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.LoginResponse;
 import com.example.backend.dto.SignupRequest;
@@ -27,6 +28,9 @@ public class AuthService {
         }
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        }
+        if (userRepository.existsByNickname(request.nickname())) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
         }
         User user = new User(
                 request.loginId(),
@@ -55,6 +59,14 @@ public class AuthService {
         }
         boolean available = !userRepository.existsByLoginId(loginId);
         return new LoginIdCheckResponse(available);
+    }
+
+    public NicknameCheckResponse checkNickname(String nickname) {
+        if (nickname == null || !nickname.matches("^[a-zA-Z0-9가-힣]{2,10}$")) {
+            throw new IllegalArgumentException("닉네임은 한글, 영문, 숫자로 2자 이상 10자 이하여야 합니다.");
+        }
+        boolean available = !userRepository.existsByNickname(nickname);
+        return new NicknameCheckResponse(available);
     }
 
     public LoginResponse login(LoginRequest request) {

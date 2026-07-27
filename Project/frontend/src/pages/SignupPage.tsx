@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { signup, checkEmailAvailability, checkLoginIdAvailability } from "../api";
+import { signup, checkEmailAvailability, checkLoginIdAvailability, checkNicknameAvailability } from "../api";
 import "./SignupPage.css";
 
-// 라이브러리 설치 없이 쓰는 눈/눈-슬래시 아이콘 (비밀번호 보기/숨기기 토글용)
 function EyeIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,6 +34,7 @@ const getDaysInMonth = (year: number, month: number): number => {
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 const LOGIN_ID_PATTERN = /^[a-z0-9]{4,20}$/;
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
+const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,10}$/;
 
 type PasswordStrength = 0 | 1 | 2 | 3 | 4;
 
@@ -90,6 +90,8 @@ function SignupPage() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [nicknameCheckStatus, setNicknameCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedNickname, setCheckedNickname] = useState(""); // 마지막으로 중복확인에 통과한 닉네임 값
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
@@ -163,6 +165,33 @@ function SignupPage() {
     }
   };
 
+  const handleNicknameChange = (value: string) => {
+    setNickname(value);
+    if (value !== checkedNickname) {
+      setNicknameCheckStatus("idle");
+    }
+  };
+
+  const handleCheckNickname = async () => {
+    setError("");
+    if (!nickname) {
+      setError("닉네임을 먼저 입력해주세요.");
+      return;
+    }
+    if (!NICKNAME_PATTERN.test(nickname)) {
+      setNicknameCheckStatus("error");
+      return;
+    }
+    setNicknameCheckStatus("checking");
+    try {
+      const available = await checkNicknameAvailability(nickname);
+      setCheckedNickname(nickname);
+      setNicknameCheckStatus(available ? "available" : "taken");
+    } catch {
+      setNicknameCheckStatus("error");
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
@@ -173,6 +202,10 @@ function SignupPage() {
     }
     if (emailCheckStatus !== "available" || email !== checkedEmail) {
       setError("이메일 중복확인을 완료해주세요.");
+      return;
+    }
+    if (nicknameCheckStatus !== "available" || nickname !== checkedNickname) {
+      setError("닉네임 중복확인을 완료해주세요.");
       return;
     }
     if (!PASSWORD_PATTERN.test(password)) {
@@ -291,6 +324,36 @@ function SignupPage() {
           )}
         </label>
         <label>
+          닉네임
+          <div className="email-check-group">
+            <input
+              type="text"
+              value={nickname}
+              onChange={(e) => handleNicknameChange(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleCheckNickname}
+              disabled={nicknameCheckStatus === "checking"}
+            >
+              {nicknameCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            </button>
+          </div>
+          {nicknameCheckStatus === "available" && nickname === checkedNickname && (
+            <small className="signup-hint signup-hint-success">사용 가능한 닉네임이에요.</small>
+          )}
+          {nicknameCheckStatus === "taken" && (
+            <small className="signup-hint signup-hint-error">이미 사용 중인 닉네임이에요.</small>
+          )}
+          {nicknameCheckStatus === "error" && (
+            <small className="signup-hint signup-hint-error">
+              닉네임은 한글/영문/숫자 2~10자로 입력해주세요.
+            </small>
+          )}
+        </label>
+        <label>
           휴대폰 번호
           <input
             type="tel"
@@ -393,15 +456,7 @@ function SignupPage() {
             )}
           </div>
         </label>
-        <label>
-          닉네임
-          <input
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            required
-          />
-        </label>
+        
         <label>
           성별
           <select

@@ -219,6 +219,14 @@ export const checkLoginIdAvailability = async (loginId: string): Promise<boolean
   });
   return response.data.available;
 };
+
+export const checkNicknameAvailability = async (nickname: string): Promise<boolean> => {
+  const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-nickname`, {
+    params: { nickname },
+  });
+  return response.data.available;
+};
+
 export const getRecommendations = async (token: string): Promise<RecommendationResult[]> => {
   const response = await axios.get<RecommendationResult[]>(`${API_BASE_URL}/recommendations`, {
     headers: { Authorization: `Bearer ${token}` },

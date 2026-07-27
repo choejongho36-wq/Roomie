@@ -1,4 +1,5 @@
 import "./TermsPage.css";
+import { useEffect } from "react";
 
 // 개인정보처리방침 (개인정보보호법 제30조 + 위치정보법 반영)
 const SECTIONS = [
@@ -53,6 +54,11 @@ const SECTIONS = [
 ];
 
 function PrivacyPage() {
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="terms-page">
       <div className="terms-inner">
