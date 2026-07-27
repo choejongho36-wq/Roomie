@@ -1,0 +1,15 @@
+package com.example.backend.dto;
+
+import java.time.LocalDateTime;
+
+public record InquiryResponse(
+        Long inquiryId,
+        Long userId,
+        String nickname,
+        String title,
+        String content,
+        String status,
+        String answer,
+        LocalDateTime createdAt,
+        LocalDateTime answeredAt
+) {}

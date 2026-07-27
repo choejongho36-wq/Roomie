@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { login } from "../api";
+import logo from "../assets/Roomie_logo.png";
 import "./LoginModal.css";
 
 interface LoginModalProps {
@@ -40,15 +41,15 @@ function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
       ref={dialogRef}
       className="login-modal"
       onClose={onClose}
-      onClick={(e) => {
-        if (e.target === dialogRef.current) onClose();
-      }}
     >
       <form onSubmit={handleSubmit} className="login-modal-form">
         <button type="button" className="login-modal-close" onClick={onClose} aria-label="닫기">
           ×
         </button>
-        <h2>로그인</h2>
+        <div className="login-modal-brand">
+          <img src={logo} alt="Roomie" className="login-modal-logo" />
+          <span className="login-modal-brand-text">Roomie</span>
+        </div>
         <input
           type="text"
           placeholder="아이디"

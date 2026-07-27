@@ -1,9 +1,14 @@
 import axios from "axios";
-import type { Comment, Page, Post, PostRequest, User } from "./types";
-import type { RecommendationResult, SurveyResult } from "./types/survey";
+import type { Comment, Inquiry, InquiryRequest, Page, Post, PostRequest, User } from "./types";
+import type {
+  RecommendationResult,
+  SurveyComparisonResult,
+  SurveyResult,
+  SurveySummaryResult,
+} from "./types/survey";
 
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
 export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
 
 export const getPosts = async (page: number): Promise<Page<Post>> => {
@@ -57,6 +62,40 @@ export const createComment = async (
 
 export const deleteComment = async (token: string, commentId: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/comments/${commentId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const getInquiries = async (): Promise<Inquiry[]> => {
+  const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/inquiries`);
+  return response.data;
+};
+
+export const getInquiry = async (inquiryId: number): Promise<Inquiry> => {
+  const response = await axios.get<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`);
+  return response.data;
+};
+
+export const createInquiry = async (token: string, request: InquiryRequest): Promise<Inquiry> => {
+  const response = await axios.post<Inquiry>(`${API_BASE_URL}/inquiries`, request, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updateInquiry = async (
+  token: string,
+  inquiryId: number,
+  request: InquiryRequest
+): Promise<Inquiry> => {
+  const response = await axios.put<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, request, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const deleteInquiry = async (token: string, inquiryId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/inquiries/${inquiryId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
@@ -122,6 +161,28 @@ export const updateBio = async (token: string, bio: string): Promise<User> => {
   return response.data;
 };
 
+export const updateNickname = async (token: string, nickname: string): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/nickname`,
+    { nickname },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const changePassword = async (
+  token: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/password`,
+    { currentPassword, newPassword },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const submitSurvey = async (token: string, answers: number[]): Promise<SurveyResult> => {
   const response = await axios.post<SurveyResult>(
     `${API_BASE_URL}/surveys`,
@@ -133,6 +194,13 @@ export const submitSurvey = async (token: string, answers: number[]): Promise<Su
 
 export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
   const response = await axios.get<SurveyResult[]>(`${API_BASE_URL}/surveys/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getMySurveySummary = async (token: string): Promise<SurveySummaryResult> => {
+  const response = await axios.get<SurveySummaryResult>(`${API_BASE_URL}/surveys/me/summary`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -155,5 +223,16 @@ export const getRecommendations = async (token: string): Promise<RecommendationR
   const response = await axios.get<RecommendationResult[]>(`${API_BASE_URL}/recommendations`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  return response.data;
+};
+
+export const getSurveyComparison = async (
+  token: string,
+  userId: number
+): Promise<SurveyComparisonResult> => {
+  const response = await axios.get<SurveyComparisonResult>(
+    `${API_BASE_URL}/recommendations/${userId}/comparison`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return response.data;
 };

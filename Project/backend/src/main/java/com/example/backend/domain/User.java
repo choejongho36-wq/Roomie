@@ -62,6 +62,9 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "nickname_changed_at")
+    private LocalDateTime nicknameChangedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -84,6 +87,15 @@ public class User {
 
     public void updateBio(String bio) {
         this.bio = bio;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+        this.nicknameChangedAt = LocalDateTime.now();
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
     }
 
     // 회원가입용 생성자

@@ -60,7 +60,6 @@ const NAV_ITEMS = [
   { to: "/mypage/chat", label: "채팅", icon: "chat" },
   { to: "/mypage/activity", label: "설문 기록", icon: "clock" },
   { to: "/mypage/notifications", label: "알림", icon: "bell" },
-  { to: "/mypage/settings", label: "계정 설정", icon: "gear" },
 ];
 
 function MyPageSidebar() {
