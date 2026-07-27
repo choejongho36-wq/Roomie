@@ -67,17 +67,17 @@ function InquiryListPage() {
                   {isAnswered ? "답변완료" : "답변대기"}
                 </span>
                 <span className="inquiry-item-title">{inquiry.title}</span>
+                <span className="inquiry-item-meta">
+                  <span>{inquiry.nickname}</span>
+                  <span>{new Date(inquiry.createdAt).toLocaleDateString("ko-KR")}</span>
+                </span>
                 <span className={`inquiry-arrow ${isOpen ? "inquiry-arrow-open" : ""}`}>⌄</span>
               </button>
 
               {isOpen && (
                 <div className="inquiry-item-body">
-                  <div className="inquiry-item-meta">
-                    <span>{inquiry.nickname}</span>
-                    <span>{new Date(inquiry.createdAt).toLocaleDateString("ko-KR")}</span>
-                  </div>
-                  <p
-                    className="inquiry-content"
+                  <div
+                    className="inquiry-content-box"
                     dangerouslySetInnerHTML={{ __html: renderRichText(inquiry.content) }}
                   />
                   {isAnswered ? (

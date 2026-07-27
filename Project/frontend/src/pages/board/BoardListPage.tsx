@@ -97,6 +97,9 @@ const formatShortDate = (dateString: string) => {
 };
 
 function BoardListPage() {
+
+  const [searchParams] = useSearchParams();
+  const boardType = searchParams.get("type");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const boardType = searchParams.get("type");
@@ -136,6 +139,8 @@ function BoardListPage() {
     if (!posts) return [];
     return posts.filter((post) => {
       if (boardType && post.boardType !== boardType) return false;
+      if (selectedDistricts.length > 0) {
+        const matches = selectedDistricts.some((district) => regionMatchesDistrict(post.region, district));
 
       if (selectedRegions.length > 0) {
         const matches = selectedRegions.some((regionToken) =>
@@ -143,6 +148,7 @@ function BoardListPage() {
             ? regionMatchesDong(post.region, regionToken.dong)
             : regionMatchesDistrict(post.region, regionToken.district)
         );
+
         if (!matches) return false;
       }
 
@@ -161,7 +167,8 @@ function BoardListPage() {
 
       return true;
     });
-  }, [posts, boardType, selectedRegions, selectedBudgets, selectedMoveIns]);
+
+  }, [posts, boardType,selectedRegions, selectedDistricts, selectedBudgets, selectedMoveIns]);
 
   const hasActiveFilters =
     selectedRegions.length > 0 || selectedBudgets.length > 0 || selectedMoveIns.length > 0;
