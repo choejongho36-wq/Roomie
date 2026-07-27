@@ -128,44 +128,62 @@ function BoardDetailPage() {
   return (
     <div className="page board-detail-page">
       <div className="board-detail-header">
-        <span className={`board-status board-status-${post.status.toLowerCase()}`}>
-          {post.status === "RECRUITING" ? "모집중" : "모집완료"}
-        </span>
-        <h1>{post.region}</h1>
+        {post.boardType && <span className="board-detail-board-type">{post.boardType}</span>}
+        {!post.boardType && (
+          <span className={`board-status board-status-${post.status.toLowerCase()}`}>
+            {post.status === "RECRUITING" ? "모집중" : "모집완료"}
+          </span>
+        )}
+        <h1>{post.title || post.region || "제목 없음"}</h1>
         <div className="board-detail-meta">
           <span>{post.nickname}</span>
           <span>{new Date(post.createdAt).toLocaleString("ko-KR")}</span>
         </div>
+        {post.tags && (
+          <div className="board-detail-tags">
+            {post.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+              .map((tag) => (
+                <span key={tag} className="board-detail-tag">
+                  #{tag}
+                </span>
+              ))}
+          </div>
+        )}
       </div>
 
-      <dl className="board-detail-info">
-        {(post.budgetMin || post.budgetMax) && (
+      {!post.boardType && (
+        <dl className="board-detail-info">
+          {(post.budgetMin || post.budgetMax) && (
+            <div>
+              <dt>예산</dt>
+              <dd>
+                {post.budgetMin ?? "-"} ~ {post.budgetMax ?? "-"}만원
+              </dd>
+            </div>
+          )}
+          {post.moveInDate && (
+            <div>
+              <dt>입주 예정일</dt>
+              <dd>{post.moveInDate}</dd>
+            </div>
+          )}
+          {post.roomType && (
+            <div>
+              <dt>방 종류</dt>
+              <dd>{post.roomType}</dd>
+            </div>
+          )}
           <div>
-            <dt>예산</dt>
-            <dd>
-              {post.budgetMin ?? "-"} ~ {post.budgetMax ?? "-"}만원
-            </dd>
+            <dt>모집 인원</dt>
+            <dd>{post.recruitCount}명</dd>
           </div>
-        )}
-        {post.moveInDate && (
-          <div>
-            <dt>입주 예정일</dt>
-            <dd>{post.moveInDate}</dd>
-          </div>
-        )}
-        {post.roomType && (
-          <div>
-            <dt>방 종류</dt>
-            <dd>{post.roomType}</dd>
-          </div>
-        )}
-        <div>
-          <dt>모집 인원</dt>
-          <dd>{post.recruitCount}명</dd>
-        </div>
-      </dl>
+        </dl>
+      )}
 
-      <p className="board-detail-description">{post.description}</p>
+      <div className="board-detail-description" dangerouslySetInnerHTML={{ __html: post.description }} />
 
       {isAuthor && (
         <div className="board-detail-actions">

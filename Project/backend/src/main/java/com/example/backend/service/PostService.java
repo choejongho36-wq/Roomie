@@ -36,8 +36,9 @@ public class PostService {
     public PostResponse create(Long userId, PostRequest request) {
         validate(request);
         Post post = postRepository.save(new Post(
-                userId, request.region(), request.budgetMin(), request.budgetMax(),
-                request.moveInDate(), request.roomType(), request.recruitCount(), request.description()
+                userId, request.title(), regionOrDefault(request), request.budgetMin(), request.budgetMax(),
+                request.moveInDate(), request.roomType(), recruitCountOrDefault(request), request.description(),
+                request.tags(), request.boardType()
         ));
         return toResponse(post, nicknameOf(userId));
     }
@@ -48,8 +49,9 @@ public class PostService {
         if (!post.getUserId().equals(userId)) {
             throw new IllegalArgumentException("본인이 작성한 글만 수정할 수 있습니다.");
         }
-        post.update(request.region(), request.budgetMin(), request.budgetMax(),
-                request.moveInDate(), request.roomType(), request.recruitCount(), request.description());
+        post.update(request.title(), regionOrDefault(request), request.budgetMin(), request.budgetMax(),
+                request.moveInDate(), request.roomType(), recruitCountOrDefault(request), request.description(),
+                request.tags(), request.boardType());
         return toResponse(post, nicknameOf(userId));
     }
 
@@ -62,12 +64,22 @@ public class PostService {
     }
 
     private void validate(PostRequest request) {
-        if (request.region() == null || request.region().isBlank()) {
-            throw new IllegalArgumentException("지역을 입력해주세요.");
+        if (request.title() == null || request.title().isBlank()) {
+            throw new IllegalArgumentException("제목을 입력해주세요.");
         }
         if (request.description() == null || request.description().isBlank()) {
             throw new IllegalArgumentException("게시글 내용을 입력해주세요.");
         }
+    }
+
+    // region 컬럼이 DB에서 NOT NULL이라, 새 글쓰기 폼에서 지역을 안 받는 경우 빈 문자열로 채워줍니다.
+    private String regionOrDefault(PostRequest request) {
+        return request.region() != null ? request.region() : "";
+    }
+
+    // recruit_count 컬럼이 DB에서 NOT NULL이라, 새 글쓰기 폼에서 인원을 안 받는 경우 기본값 1을 넣어줍니다.
+    private Integer recruitCountOrDefault(PostRequest request) {
+        return request.recruitCount() != null ? request.recruitCount() : 1;
     }
 
     private Post findPost(Long postId) {
@@ -86,8 +98,8 @@ public class PostService {
 
     private PostResponse toResponse(Post p, String nickname) {
         return new PostResponse(
-                p.getPostId(), p.getUserId(), nickname, p.getRegion(), p.getBudgetMin(), p.getBudgetMax(),
-                p.getMoveInDate(), p.getRoomType(), p.getRecruitCount(), p.getDescription(),
+                p.getPostId(), p.getUserId(), nickname, p.getTitle(), p.getRegion(), p.getBudgetMin(), p.getBudgetMax(),
+                p.getMoveInDate(), p.getRoomType(), p.getRecruitCount(), p.getDescription(), p.getTags(), p.getBoardType(),
                 p.getStatus(), p.getCreatedAt(), p.getUpdatedAt()
         );
     }

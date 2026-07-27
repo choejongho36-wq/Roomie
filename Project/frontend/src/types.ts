@@ -2,6 +2,7 @@ export interface Post {
   postId: number;
   userId: number;
   nickname: string;
+  title: string | null;
   region: string;
   budgetMin: number | null;
   budgetMax: number | null;
@@ -9,19 +10,24 @@ export interface Post {
   roomType: string | null;
   recruitCount: number;
   description: string;
+  tags: string | null;
+  boardType: string | null;
   status: string;
   createdAt: string;
   updatedAt: string | null;
 }
 
 export interface PostRequest {
-  region: string;
+  title: string | null;
+  region: string | null;
   budgetMin: number | null;
   budgetMax: number | null;
   moveInDate: string | null;
   roomType: string | null;
-  recruitCount: number;
+  recruitCount: number | null;
   description: string;
+  tags: string | null;
+  boardType: string | null;
 }
 
 export interface Inquiry {

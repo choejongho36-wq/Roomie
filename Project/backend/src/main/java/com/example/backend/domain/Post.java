@@ -20,6 +20,9 @@ public class Post {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(length = 200)
+    private String title;
+
     @Column(nullable = false, length = 50)
     private String region;
 
@@ -40,6 +43,12 @@ public class Post {
 
     @Column(length = 1000)
     private String description;
+
+    @Column(length = 255)
+    private String tags;
+
+    @Column(name = "board_type", length = 20)
+    private String boardType;
 
     @Column(nullable = false, length = 20)
     private String status;
@@ -63,9 +72,11 @@ public class Post {
     }
 
     // 게시글 작성용 생성자
-    public Post(Long userId, String region, Integer budgetMin, Integer budgetMax,
-            LocalDate moveInDate, String roomType, Integer recruitCount, String description) {
+    public Post(Long userId, String title, String region, Integer budgetMin, Integer budgetMax,
+            LocalDate moveInDate, String roomType, Integer recruitCount, String description,
+            String tags, String boardType) {
         this.userId = userId;
+        this.title = title;
         this.region = region;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
@@ -73,11 +84,15 @@ public class Post {
         this.roomType = roomType;
         this.recruitCount = recruitCount;
         this.description = description;
+        this.tags = tags;
+        this.boardType = boardType;
         this.status = "RECRUITING";
     }
 
-    public void update(String region, Integer budgetMin, Integer budgetMax,
-            LocalDate moveInDate, String roomType, Integer recruitCount, String description) {
+    public void update(String title, String region, Integer budgetMin, Integer budgetMax,
+            LocalDate moveInDate, String roomType, Integer recruitCount, String description,
+            String tags, String boardType) {
+        this.title = title;
         this.region = region;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
@@ -85,5 +100,7 @@ public class Post {
         this.roomType = roomType;
         this.recruitCount = recruitCount;
         this.description = description;
+        this.tags = tags;
+        this.boardType = boardType;
     }
 }

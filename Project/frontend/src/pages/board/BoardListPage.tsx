@@ -53,6 +53,8 @@ const budgetOverlapsBucket = (post: Post, bucket: BudgetBucket): boolean => {
 const toggleValue = (list: string[], value: string) =>
   list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
 function BoardListPage() {
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
@@ -216,12 +218,16 @@ function BoardListPage() {
             <li key={post.postId} className="board-list-item">
               <Link to={`/board/${post.postId}`}>
                 <div className="board-list-item-top">
-                  <span className="board-list-region">{post.region}</span>
-                  <span className={`board-status board-status-${post.status.toLowerCase()}`}>
-                    {post.status === "RECRUITING" ? "모집중" : "모집완료"}
-                  </span>
+                  <span className="board-list-region">{post.title || post.region || "제목 없음"}</span>
+                  {post.boardType ? (
+                    <span className="board-status">{post.boardType}</span>
+                  ) : (
+                    <span className={`board-status board-status-${post.status.toLowerCase()}`}>
+                      {post.status === "RECRUITING" ? "모집중" : "모집완료"}
+                    </span>
+                  )}
                 </div>
-                <p className="board-list-desc">{post.description}</p>
+                <p className="board-list-desc">{stripHtml(post.description)}</p>
                 <div className="board-list-meta">
                   <span>{post.nickname}</span>
                   <span>{new Date(post.createdAt).toLocaleDateString("ko-KR")}</span>
