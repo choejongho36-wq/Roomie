@@ -1,4 +1,4 @@
 .vscode/
-
-# AI Assistant
 CLAUDE.md
+roomie-key.pem
+.env
