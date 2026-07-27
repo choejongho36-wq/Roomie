@@ -8,13 +8,6 @@ import "./BoardWritePage.css";
 
 const BOARD_OPTIONS = ["모집게시판", "고민게시판"];
 
-const FONT_SIZE_OPTIONS = [
-  { value: "2", label: "작게" },
-  { value: "3", label: "보통" },
-  { value: "5", label: "크게" },
-  { value: "7", label: "아주 크게" },
-];
-
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
 
 const BUDGET_MIN = 0;
@@ -124,6 +117,8 @@ function BoardWritePage() {
   const [moveInMonthMin, setMoveInMonthMin] = useState(MOVE_IN_MIN);
   const [moveInMonthMax, setMoveInMonthMax] = useState(MOVE_IN_MAX);
 
+  const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
+
   const contentRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const boardMenuRef = useRef<HTMLDivElement | null>(null);
@@ -165,6 +160,27 @@ function BoardWritePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    // 브라우저에 따라 execCommand의 볼드/이탤릭/밑줄 토글이 인라인 span과 <b>/<i>/<u> 태그를
+    // 섞어 쓰면서 꼬이는 경우가 있어, 항상 시맨틱 태그만 쓰도록 강제한다.
+    document.execCommand("styleWithCSS", false, false as unknown as string);
+
+    const syncActiveFormats = () => {
+      if (!contentRef.current) return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      if (!contentRef.current.contains(selection.anchorNode)) return;
+      setActiveFormats({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    };
+
+    document.addEventListener("selectionchange", syncActiveFormats);
+    return () => document.removeEventListener("selectionchange", syncActiveFormats);
+  }, []);
+
   if (!token) {
     return (
       <div className="page board-write-page">
@@ -176,6 +192,11 @@ function BoardWritePage() {
   const applyStyle = (command: string, value?: string) => {
     contentRef.current?.focus();
     document.execCommand(command, false, value);
+    setActiveFormats({
+      bold: document.queryCommandState("bold"),
+      italic: document.queryCommandState("italic"),
+      underline: document.queryCommandState("underline"),
+    });
   };
 
   const handleAddTag = () => {
@@ -398,7 +419,7 @@ function BoardWritePage() {
         <div className="board-write-toolbar">
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.bold ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("bold")}
           >
@@ -406,7 +427,7 @@ function BoardWritePage() {
           </button>
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.italic ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("italic")}
           >
@@ -414,24 +435,12 @@ function BoardWritePage() {
           </button>
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.underline ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("underline")}
           >
             <span style={{ textDecoration: "underline" }}>U</span>
           </button>
-          <select
-            className="board-write-toolbar-select"
-            defaultValue="3"
-            onMouseDown={(event) => event.preventDefault()}
-            onChange={(event) => applyStyle("fontSize", event.target.value)}
-          >
-            {FONT_SIZE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div

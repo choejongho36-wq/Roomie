@@ -188,59 +188,61 @@ function BoardListPage() {
         </Link>
       </div>
 
-      <div className="board-filter-panel">
-        <div className="board-filter-row board-filter-row-region">
-          <div className="board-filter-row-label">지역</div>
-          <div className="board-filter-row-options">
-            <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} variant="inline" />
+      {boardType !== "고민게시판" && (
+        <div className="board-filter-panel">
+          <div className="board-filter-row board-filter-row-region">
+            <div className="board-filter-row-label">지역</div>
+            <div className="board-filter-row-options">
+              <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} variant="inline" />
+            </div>
+          </div>
+
+          <div className="board-filter-row">
+            <div className="board-filter-row-label">예산</div>
+            <div className="board-filter-row-options">
+              {BUDGET_BUCKETS.map((bucket) => (
+                <button
+                  key={bucket.id}
+                  type="button"
+                  className={`board-filter-chip-toggle${selectedBudgets.includes(bucket.id) ? " is-selected" : ""}`}
+                  onClick={() => setSelectedBudgets((prev) => toggleValue(prev, bucket.id))}
+                >
+                  {bucket.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="board-filter-row">
+            <div className="board-filter-row-label">입주 시기</div>
+            <div className="board-filter-row-options">
+              {MOVE_IN_BUCKETS.map((bucket) => (
+                <button
+                  key={bucket.id}
+                  type="button"
+                  className={`board-filter-chip-toggle${selectedMoveIns.includes(bucket.id) ? " is-selected" : ""}`}
+                  onClick={() => setSelectedMoveIns((prev) => toggleValue(prev, bucket.id))}
+                >
+                  {bucket.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="board-filter-footer">
+            {hasActiveFilters ? (
+              <>
+                선택한 필터로 게시글을 찾고 있어요.
+                <button type="button" className="board-filter-reset" onClick={resetFilters}>
+                  필터 초기화
+                </button>
+              </>
+            ) : (
+              "필터를 선택하여 원하는 게시글을 빠르게 찾아보세요."
+            )}
           </div>
         </div>
-
-        <div className="board-filter-row">
-          <div className="board-filter-row-label">예산</div>
-          <div className="board-filter-row-options">
-            {BUDGET_BUCKETS.map((bucket) => (
-              <button
-                key={bucket.id}
-                type="button"
-                className={`board-filter-chip-toggle${selectedBudgets.includes(bucket.id) ? " is-selected" : ""}`}
-                onClick={() => setSelectedBudgets((prev) => toggleValue(prev, bucket.id))}
-              >
-                {bucket.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="board-filter-row">
-          <div className="board-filter-row-label">입주 시기</div>
-          <div className="board-filter-row-options">
-            {MOVE_IN_BUCKETS.map((bucket) => (
-              <button
-                key={bucket.id}
-                type="button"
-                className={`board-filter-chip-toggle${selectedMoveIns.includes(bucket.id) ? " is-selected" : ""}`}
-                onClick={() => setSelectedMoveIns((prev) => toggleValue(prev, bucket.id))}
-              >
-                {bucket.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="board-filter-footer">
-          {hasActiveFilters ? (
-            <>
-              선택한 필터로 게시글을 찾고 있어요.
-              <button type="button" className="board-filter-reset" onClick={resetFilters}>
-                필터 초기화
-              </button>
-            </>
-          ) : (
-            "필터를 선택하여 원하는 게시글을 빠르게 찾아보세요."
-          )}
-        </div>
-      </div>
+      )}
 
       {error && <p className="mypage-error">{error}</p>}
 
