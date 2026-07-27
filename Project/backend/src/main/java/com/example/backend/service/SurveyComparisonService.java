@@ -43,6 +43,7 @@ public class SurveyComparisonService {
 
     private final SurveyResultRepository surveyResultRepository;
     private final UserRepository userRepository;
+    private final CompatibilityCalculator compatibilityCalculator;
 
     public SurveyComparisonResponse compare(Long myUserId, Long otherUserId) {
         if (myUserId.equals(otherUserId)) {
@@ -152,26 +153,7 @@ public class SurveyComparisonService {
     }
 
     private int calculateCompatibilityScore(List<Integer> myAnswers, List<Integer> otherAnswers) {
-        int count = Math.min(myAnswers.size(), otherAnswers.size());
-        if (count == 0) {
-            return 0;
-        }
-
-        double dot = 0.0;
-        double myNorm = 0.0;
-        double otherNorm = 0.0;
-        for (int i = 0; i < count; i++) {
-            double myValue = (myAnswers.get(i) - 1) / 4.0;
-            double otherValue = (otherAnswers.get(i) - 1) / 4.0;
-            dot += myValue * otherValue;
-            myNorm += Math.pow(myValue, 2);
-            otherNorm += Math.pow(otherValue, 2);
-        }
-        if (myNorm == 0 || otherNorm == 0) {
-            return 0;
-        }
-        double similarity = dot / (Math.sqrt(myNorm) * Math.sqrt(otherNorm));
-        return (int) Math.round(similarity * 100);
+        return compatibilityCalculator.score(myAnswers, otherAnswers);
     }
 
     private List<Integer> parseAnswers(String answersJson) {
