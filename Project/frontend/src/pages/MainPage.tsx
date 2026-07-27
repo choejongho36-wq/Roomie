@@ -51,17 +51,6 @@ const steps = [
   },
 ];
 
-const bubbles = [
-  { left: "5%", size: 24, duration: 14, delay: 0 },
-  { left: "15%", size: 12, duration: 10, delay: 2 },
-  { left: "28%", size: 32, duration: 18, delay: 1 },
-  { left: "40%", size: 16, duration: 12, delay: 4 },
-  { left: "55%", size: 20, duration: 16, delay: 0.5 },
-  { left: "67%", size: 10, duration: 9, delay: 3 },
-  { left: "78%", size: 28, duration: 15, delay: 2.5 },
-  { left: "88%", size: 14, duration: 11, delay: 1.5 },
-];
-
 const features = [
   {
     icon: (
@@ -128,21 +117,9 @@ function MainPage() {
   return (
     <div className="page">
       <section className="hero">
-        <div className="bubbles" aria-hidden="true">
-          {bubbles.map((b, i) => (
-            <span
-              key={i}
-              className="bubble"
-              style={{
-                left: b.left,
-                width: b.size,
-                height: b.size,
-                animationDuration: `${b.duration}s`,
-                animationDelay: `${b.delay}s`,
-              }}
-            />
-          ))}
-        </div>
+        <div className="hero-blob hero-blob-1" aria-hidden="true" />
+        <div className="hero-blob hero-blob-2" aria-hidden="true" />
+        <div className="hero-blob hero-blob-3" aria-hidden="true" />
         <img className="mainpage-logo" src={logo} alt="Roomie" />
         <h1 className="logo">Roomie</h1>
       </section>
