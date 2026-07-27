@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -66,7 +66,10 @@ function RecommendationPage() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
+  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const comparisonItemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setAiSurveyInsight(null);
@@ -148,6 +151,18 @@ function RecommendationPage() {
     setIsComparisonOpen(false);
     setComparisonError("");
     setComparisonLoadingUserId(null);
+    setHighlightedCategory(null);
+  };
+
+  const scrollToCategory = (category: string) => {
+    const target = comparisonItemRefs.current[category];
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    setHighlightedCategory(category);
+
+    if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
+    highlightTimeoutRef.current = setTimeout(() => setHighlightedCategory(null), 1800);
   };
 
   return (
@@ -269,7 +284,7 @@ function RecommendationPage() {
                 <strong>더 많은 추천을 보고 싶으신가요?</strong>
                 <p>모집 게시판에서 다양한 프로필과 방 정보를 더 둘러볼 수 있어요.</p>
               </div>
-              <Link to="/board" className="btn btn-primary recommendation-more-link">
+              <Link to="/profiles" className="btn btn-primary recommendation-more-link">
                 더 많은 프로필 보기
               </Link>
             </div>
@@ -312,28 +327,36 @@ function RecommendationPage() {
                 </div>
 
                 <div className="comparison-highlight-grid">
-                  <div className="comparison-highlight-panel">
-                    <h3>잘 맞는 이유 TOP3</h3>
-                    <ul>
+                  <div className="comparison-highlight-panel comparison-highlight-panel-compact">
+                    <h3>맞는 포인트 TOP3</h3>
+                    <div className="comparison-highlight-chips">
                       {comparison.topReasons.map((item) => (
-                        <li key={`reason-${item.category}`}>
-                          <strong>{item.category}</strong>
-                          <span>{item.description}</span>
-                        </li>
+                        <button
+                          key={`reason-${item.category}`}
+                          type="button"
+                          className="comparison-highlight-chip"
+                          onClick={() => scrollToCategory(item.category)}
+                        >
+                          {item.category}
+                        </button>
                       ))}
-                    </ul>
+                    </div>
                   </div>
 
-                  <div className="comparison-highlight-panel">
-                    <h3>다른점</h3>
-                    <ul>
+                  <div className="comparison-highlight-panel comparison-highlight-panel-compact">
+                    <h3>다른 포인트 TOP3</h3>
+                    <div className="comparison-highlight-chips">
                       {comparison.differences.map((item) => (
-                        <li key={`difference-${item.category}`}>
-                          <strong>{item.category}</strong>
-                          <span>{item.description}</span>
-                        </li>
+                        <button
+                          key={`difference-${item.category}`}
+                          type="button"
+                          className="comparison-highlight-chip comparison-highlight-chip-diff"
+                          onClick={() => scrollToCategory(item.category)}
+                        >
+                          {item.category}
+                        </button>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
 
@@ -350,7 +373,15 @@ function RecommendationPage() {
                       <span>차이</span>
                     </div>
                     {comparison.items.map((item) => (
-                      <div key={item.questionId} className="comparison-table-row">
+                      <div
+                        key={item.questionId}
+                        ref={(el) => {
+                          comparisonItemRefs.current[item.category] = el;
+                        }}
+                        className={`comparison-table-row${
+                          item.category === highlightedCategory ? " is-target" : ""
+                        }`}
+                      >
                         <span className="comparison-category">{item.category}</span>
                         <span>{item.myAnswer}</span>
                         <span>{item.otherAnswer}</span>
