@@ -27,55 +27,7 @@
 }
 
 .profile-board-region-field {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 16px 20px;
-  background: #fafafa;
   margin-bottom: 24px;
-  box-sizing: border-box;
-}
-
-.profile-board-region-label {
-  flex-shrink: 0;
-  width: 56px;
-  padding-top: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #444;
-}
-
-.profile-board-region-chips {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.profile-board-region-chip {
-  border: 1px solid #e5ded8;
-  background: #fff;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-}
-
-.profile-board-region-chip:hover {
-  border-color: #ff6600;
-  color: #ff6600;
-}
-
-.profile-board-region-chip.is-selected {
-  background: #ff6600;
-  border-color: #ff6600;
-  color: #fff;
-  font-weight: 800;
 }
 
 .profile-board-error,
@@ -200,11 +152,6 @@
   .profile-board-header {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .profile-board-region-field {
-    flex-direction: column;
-    gap: 8px;
   }
 
   .profile-board-row {

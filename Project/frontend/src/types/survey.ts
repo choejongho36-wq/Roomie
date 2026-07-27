@@ -37,7 +37,6 @@ export interface SurveyComparisonHighlight {
   myAnswer: string;
   otherAnswer: string;
   difference: number;
-  description: string;
 }
 
 export interface SurveyComparisonItem {

@@ -3,7 +3,8 @@ import type { MouseEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_ORIGIN, getRecommendations, getSurveyComparison } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
-import { ALL_DISTRICTS, SEOUL_ZONES, regionMatchesDistrict } from "../data/SeoulDistricts";
+import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts";
+import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
 
@@ -15,15 +16,12 @@ const getProfileImageSrc = (url: string | null) => {
 
 const getInitial = (nickname: string) => nickname.trim().charAt(0) || "?";
 
-const ALL_DISTRICT_OPTIONS = SEOUL_ZONES.flatMap((zone) => zone.districts).sort((a, b) =>
-  a.localeCompare(b, "ko")
-);
-
 function ProfileBoardPage() {
   const { token } = useAuth();
   const [profiles, setProfiles] = useState<RecommendationResult[] | null>(null);
   const [error, setError] = useState("");
-  const [districtFilter, setDistrictFilter] = useState(ALL_DISTRICTS);
+
+  const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
 
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -56,11 +54,17 @@ function ProfileBoardPage() {
 
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
-    if (districtFilter === ALL_DISTRICTS) return profiles;
-    return profiles.filter((item) => regionMatchesDistrict(item.region, districtFilter));
-  }, [profiles, districtFilter]);
+    if (selectedRegions.length === 0) return profiles;
+    return profiles.filter((item) =>
+      selectedRegions.some((regionToken) =>
+        regionToken.dong
+          ? regionMatchesDong(item.region, regionToken.dong)
+          : regionMatchesDistrict(item.region, regionToken.district)
+      )
+    );
+  }, [profiles, selectedRegions]);
 
-  const isFiltered = districtFilter !== ALL_DISTRICTS;
+  const isFiltered = selectedRegions.length > 0;
 
   const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
     event.stopPropagation();
@@ -105,26 +109,7 @@ function ProfileBoardPage() {
       </div>
 
       <div className="profile-board-region-field">
-        <div className="profile-board-region-label">지역</div>
-        <div className="profile-board-region-chips">
-          <button
-            type="button"
-            className={`profile-board-region-chip${districtFilter === ALL_DISTRICTS ? " is-selected" : ""}`}
-            onClick={() => setDistrictFilter(ALL_DISTRICTS)}
-          >
-            전체
-          </button>
-          {ALL_DISTRICT_OPTIONS.map((district) => (
-            <button
-              key={district}
-              type="button"
-              className={`profile-board-region-chip${districtFilter === district ? " is-selected" : ""}`}
-              onClick={() => setDistrictFilter(district)}
-            >
-              {district}
-            </button>
-          ))}
-        </div>
+        <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} />
       </div>
 
       {error && <p className="profile-board-error">{error}</p>}

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types";
-import { SEOUL_ZONES, regionMatchesDistrict } from "../../data/SeoulDistricts";
+import { regionMatchesDistrict, regionMatchesDong } from "../../data/SeoulDistricts";
+import RegionPicker, { type RegionToken } from "../../components/RegionPicker";
 import "./BoardListPage.css";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
@@ -100,10 +101,13 @@ function BoardListPage() {
   const [searchParams] = useSearchParams();
   const boardType = searchParams.get("type");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const boardType = searchParams.get("type");
+
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
 
-  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
+  const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
   const [selectedBudgets, setSelectedBudgets] = useState<string[]>([]);
   const [selectedMoveIns, setSelectedMoveIns] = useState<string[]>([]);
 
@@ -135,9 +139,16 @@ function BoardListPage() {
     if (!posts) return [];
     return posts.filter((post) => {
       if (boardType && post.boardType !== boardType) return false;
-
       if (selectedDistricts.length > 0) {
         const matches = selectedDistricts.some((district) => regionMatchesDistrict(post.region, district));
+
+      if (selectedRegions.length > 0) {
+        const matches = selectedRegions.some((regionToken) =>
+          regionToken.dong
+            ? regionMatchesDong(post.region, regionToken.dong)
+            : regionMatchesDistrict(post.region, regionToken.district)
+        );
+
         if (!matches) return false;
       }
 
@@ -156,13 +167,14 @@ function BoardListPage() {
 
       return true;
     });
-  }, [posts, boardType, selectedDistricts, selectedBudgets, selectedMoveIns]);
+
+  }, [posts, boardType,selectedRegions, selectedDistricts, selectedBudgets, selectedMoveIns]);
 
   const hasActiveFilters =
-    selectedDistricts.length > 0 || selectedBudgets.length > 0 || selectedMoveIns.length > 0;
+    selectedRegions.length > 0 || selectedBudgets.length > 0 || selectedMoveIns.length > 0;
 
   const resetFilters = () => {
-    setSelectedDistricts([]);
+    setSelectedRegions([]);
     setSelectedBudgets([]);
     setSelectedMoveIns([]);
   };
@@ -183,75 +195,61 @@ function BoardListPage() {
         </Link>
       </div>
 
-      <div className="board-filter-panel">
-        <div className="board-filter-row">
-          <div className="board-filter-row-label">지역</div>
-          <div className="board-filter-row-options">
-            {SEOUL_ZONES.map((zone) => (
-              <div key={zone.zone} className="board-filter-zone-group">
-                <span className="board-filter-zone-label">{zone.zone}</span>
-                {zone.districts.map((district) => (
-                  <button
-                    key={district}
-                    type="button"
-                    className={`board-filter-chip-toggle${
-                      selectedDistricts.includes(district) ? " is-selected" : ""
-                    }`}
-                    onClick={() => setSelectedDistricts((prev) => toggleValue(prev, district))}
-                  >
-                    {district}
-                  </button>
-                ))}
-              </div>
-            ))}
+      {boardType !== "고민게시판" && (
+        <div className="board-filter-panel">
+          <div className="board-filter-row board-filter-row-region">
+            <div className="board-filter-row-label">지역</div>
+            <div className="board-filter-row-options">
+              <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} variant="inline" />
+            </div>
+          </div>
+
+          <div className="board-filter-row">
+            <div className="board-filter-row-label">예산</div>
+            <div className="board-filter-row-options">
+              {BUDGET_BUCKETS.map((bucket) => (
+                <button
+                  key={bucket.id}
+                  type="button"
+                  className={`board-filter-chip-toggle${selectedBudgets.includes(bucket.id) ? " is-selected" : ""}`}
+                  onClick={() => setSelectedBudgets((prev) => toggleValue(prev, bucket.id))}
+                >
+                  {bucket.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="board-filter-row">
+            <div className="board-filter-row-label">입주 시기</div>
+            <div className="board-filter-row-options">
+              {MOVE_IN_BUCKETS.map((bucket) => (
+                <button
+                  key={bucket.id}
+                  type="button"
+                  className={`board-filter-chip-toggle${selectedMoveIns.includes(bucket.id) ? " is-selected" : ""}`}
+                  onClick={() => setSelectedMoveIns((prev) => toggleValue(prev, bucket.id))}
+                >
+                  {bucket.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="board-filter-footer">
+            {hasActiveFilters ? (
+              <>
+                선택한 필터로 게시글을 찾고 있어요.
+                <button type="button" className="board-filter-reset" onClick={resetFilters}>
+                  필터 초기화
+                </button>
+              </>
+            ) : (
+              "필터를 선택하여 원하는 게시글을 빠르게 찾아보세요."
+            )}
           </div>
         </div>
-
-        <div className="board-filter-row">
-          <div className="board-filter-row-label">예산</div>
-          <div className="board-filter-row-options">
-            {BUDGET_BUCKETS.map((bucket) => (
-              <button
-                key={bucket.id}
-                type="button"
-                className={`board-filter-chip-toggle${selectedBudgets.includes(bucket.id) ? " is-selected" : ""}`}
-                onClick={() => setSelectedBudgets((prev) => toggleValue(prev, bucket.id))}
-              >
-                {bucket.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="board-filter-row">
-          <div className="board-filter-row-label">입주 시기</div>
-          <div className="board-filter-row-options">
-            {MOVE_IN_BUCKETS.map((bucket) => (
-              <button
-                key={bucket.id}
-                type="button"
-                className={`board-filter-chip-toggle${selectedMoveIns.includes(bucket.id) ? " is-selected" : ""}`}
-                onClick={() => setSelectedMoveIns((prev) => toggleValue(prev, bucket.id))}
-              >
-                {bucket.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="board-filter-footer">
-          {hasActiveFilters ? (
-            <>
-              선택한 필터로 게시글을 찾고 있어요.
-              <button type="button" className="board-filter-reset" onClick={resetFilters}>
-                필터 초기화
-              </button>
-            </>
-          ) : (
-            "필터를 선택하여 원하는 게시글을 빠르게 찾아보세요."
-          )}
-        </div>
-      </div>
+      )}
 
       {error && <p className="mypage-error">{error}</p>}
 
@@ -267,6 +265,7 @@ function BoardListPage() {
         <div className="board-table-wrap">
           <table className="board-table">
             <colgroup>
+              <col style={{ width: 70 }} />
               <col />
               <col style={{ width: 140 }} />
               <col style={{ width: 90 }} />
@@ -275,6 +274,7 @@ function BoardListPage() {
             </colgroup>
             <thead>
               <tr>
+                <th>번호</th>
                 <th>제목</th>
                 <th>작성자</th>
                 <th>작성일</th>
@@ -289,6 +289,7 @@ function BoardListPage() {
                   className="board-table-row"
                   onClick={() => navigate(`/board/${post.postId}`)}
                 >
+                  <td className="board-table-number-cell">{post.postId}</td>
                   <td className="board-table-title-cell">
                     <Link to={`/board/${post.postId}`} onClick={(e) => e.stopPropagation()}>
                       {post.title || post.region || "제목 없음"}

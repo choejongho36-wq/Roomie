@@ -1,6 +1,5 @@
 .board-write-page {
-  width: 100%;
-  max-width: 800px;
+  width: 800px;
   min-width: 0;
   box-sizing: border-box;
   margin: 0 auto;
@@ -161,14 +160,10 @@
   color: #ff6600;
 }
 
-.board-write-toolbar-select {
-  border: 1px solid #e5ded8;
-  border-radius: 6px;
-  background: #ffffff;
-  color: #444;
-  font-size: 13px;
-  padding: 5px 8px;
-  cursor: pointer;
+.board-write-toolbar-button.is-active {
+  background: #ff6600;
+  border-color: #ff6600;
+  color: #ffffff;
 }
 
 .board-write-content {
@@ -187,10 +182,33 @@
   overflow-wrap: break-word;
   word-break: break-word;
   overflow-x: hidden;
+  /* 전역 font-synthesis: none 때문에 폰트에 진짜 굵게/기울임 글꼴이 없으면
+     execCommand("bold"/"italic")로 넣은 <b>/<em> 태그가 안 보이던 문제 방지 */
+  font-synthesis: weight style;
+  color: #000000;
+  background: #ffffff;
 }
 
 .board-write-content:focus {
   border-color: #ff6600;
+}
+
+.board-write-content b,
+.board-write-content strong {
+  font-weight: 900;
+}
+
+.board-write-content i,
+.board-write-content em {
+  /* font-style은 반드시 "italic" 키워드를 유지해야 함 — oblique <각도>로 바꾸면
+     computed style이 "italic"과 달라져서 document.queryCommandState("italic")/
+     execCommand("italic")의 토글 판정이 깨짐(항상 "이탤릭 아님"으로 인식해 계속 새로
+     감싸기만 하고 취소가 안 되던 원인). font-synthesis: none으로 브라우저가 자체적으로
+     넣는 기울기는 끄고, transform 하나로만 기울기 각도를 정확히 제어한다. */
+  font-style: italic;
+  font-synthesis: none;
+  display: inline-block;
+  transform: skewX(-20deg);
 }
 
 .board-write-content:empty:before {
@@ -344,75 +362,6 @@
   color: #444;
 }
 
-.board-write-region-picker {
-  flex: 1;
-  min-width: 0;
-}
-
-.board-write-zone-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.board-write-zone-tab {
-  border: 1px solid #e5ded8;
-  background: #fff;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-}
-
-.board-write-zone-tab:hover {
-  border-color: #ff6600;
-  color: #ff6600;
-}
-
-.board-write-zone-tab.is-active {
-  background: #ff6600;
-  border-color: #ff6600;
-  color: #fff;
-}
-
-.board-write-district-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
-}
-
-.board-write-district-chip {
-  border: 1px solid #e5ded8;
-  background: #fff;
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-}
-
-.board-write-district-chip:hover {
-  border-color: #ff6600;
-  color: #ff6600;
-}
-
-.board-write-district-chip.is-selected {
-  background: #fff1e8;
-  border-color: #ff6600;
-  color: #ff6600;
-  font-weight: 800;
-}
-
-.board-write-region-hint {
-  font-size: 12px;
-  color: #aaa;
-}
 
 .range-slider {
   flex: 1;

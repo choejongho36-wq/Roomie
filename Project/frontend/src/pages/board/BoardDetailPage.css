@@ -1,6 +1,5 @@
 .board-detail-page {
-  width: 100%;
-  max-width: 800px;
+  width: 800px;
   min-width: 0;
   box-sizing: border-box;
   margin: 0 auto;
@@ -213,6 +212,20 @@
   color: #333;
   padding: 20px 4px;
   margin-bottom: 8px;
+  font-synthesis: weight style;
+}
+
+.board-detail-description b,
+.board-detail-description strong {
+  font-weight: 900;
+}
+
+.board-detail-description i,
+.board-detail-description em {
+  font-style: italic;
+  font-synthesis: none;
+  display: inline-block;
+  transform: skewX(-20deg);
 }
 
 .board-detail-description img {
