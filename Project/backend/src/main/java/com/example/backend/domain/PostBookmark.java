@@ -6,15 +6,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "comment")
+@Table(name = "post_bookmark", uniqueConstraints = @UniqueConstraint(columnNames = { "post_id", "user_id" }))
 @Getter
 @NoArgsConstructor
-public class Comment {
+public class PostBookmark {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id")
-    private Long commentId;
+    @Column(name = "bookmark_id")
+    private Long bookmarkId;
 
     @Column(name = "post_id", nullable = false)
     private Long postId;
@@ -22,25 +22,16 @@ public class Comment {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "parent_comment_id")
-    private Long parentCommentId;
-
-    @Column(nullable = false, length = 500)
-    private String content;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public PostBookmark(Long postId, Long userId) {
+        this.postId = postId;
+        this.userId = userId;
+    }
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-    }
-
-    // 댓글 작성용 생성자
-    public Comment(Long postId, Long userId, Long parentCommentId, String content) {
-        this.postId = postId;
-        this.userId = userId;
-        this.parentCommentId = parentCommentId;
-        this.content = content;
     }
 }

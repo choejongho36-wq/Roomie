@@ -1,9 +1,49 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { createComment, deleteComment, deletePost, getComments, getPost } from "../../api";
+import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark } from "../../api";
 import type { Comment, Post } from "../../types";
 import "./BoardDetailPage.css";
+
+const getProfileImageSrc = (url: string | null | undefined) => {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
+const getInitial = (nickname: string | null | undefined) => (nickname || "?").trim().charAt(0) || "?";
+
+const formatMoveInBudgetValue = (value: number | null) => {
+  if (value == null) return "-";
+  return value >= 200 ? "200만원 이상" : `${value}만원`;
+};
+
+const formatMoveInMonthLabel = (value: number | null) => {
+  if (value == null) return "-";
+  if (value <= 0) return "즉시입주";
+  if (value >= 3) return "3개월 이후";
+  return `${value}개월`;
+};
+
+function Avatar({
+  nickname,
+  profileImageUrl,
+  className,
+}: {
+  nickname: string | null | undefined;
+  profileImageUrl: string | null | undefined;
+  className: string;
+}) {
+  const src = getProfileImageSrc(profileImageUrl);
+  if (src) {
+    return <img className={className} src={src} alt={nickname ?? ""} />;
+  }
+  return (
+    <div className={`${className} ${className}-fallback`} aria-hidden="true">
+      {getInitial(nickname)}
+    </div>
+  );
+}
 
 interface CommentNode extends Comment {
   replies: CommentNode[];
@@ -45,28 +85,31 @@ function CommentItem({
 
   return (
     <li className="comment-item">
-      <div className="comment-header">
-        <span className="comment-nickname">{node.nickname}</span>
-        <span className="comment-date">{new Date(node.createdAt).toLocaleString("ko-KR")}</span>
-      </div>
-      <p className="comment-content">{node.content}</p>
-      <div className="comment-actions">
-        <button onClick={() => setReplying((v) => !v)}>답글</button>
-        {canDelete(node.userId) && <button onClick={() => onDelete(node.commentId)}>삭제</button>}
-      </div>
-      {replying && (
-        <div className="comment-reply-form">
-          <input value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="답글 작성..." />
-          <button onClick={submitReply}>등록</button>
+      <Avatar nickname={node.nickname} profileImageUrl={node.profileImageUrl} className="comment-avatar" />
+      <div className="comment-body">
+        <div className="comment-header">
+          <span className="comment-nickname">{node.nickname}</span>
+          <span className="comment-date">{new Date(node.createdAt).toLocaleString("ko-KR")}</span>
         </div>
-      )}
-      {node.replies.length > 0 && (
-        <ul className="comment-replies">
-          {node.replies.map((reply) => (
-            <CommentItem key={reply.commentId} node={reply} onReply={onReply} onDelete={onDelete} canDelete={canDelete} />
-          ))}
-        </ul>
-      )}
+        <p className="comment-content">{node.content}</p>
+        <div className="comment-actions">
+          <button onClick={() => setReplying((v) => !v)}>답글</button>
+          {canDelete(node.userId) && <button onClick={() => onDelete(node.commentId)}>삭제</button>}
+        </div>
+        {replying && (
+          <div className="comment-reply-form">
+            <input value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="답글 작성..." />
+            <button onClick={submitReply}>등록</button>
+          </div>
+        )}
+        {node.replies.length > 0 && (
+          <ul className="comment-replies">
+            {node.replies.map((reply) => (
+              <CommentItem key={reply.commentId} node={reply} onReply={onReply} onDelete={onDelete} canDelete={canDelete} />
+            ))}
+          </ul>
+        )}
+      </div>
     </li>
   );
 }
@@ -79,6 +122,11 @@ function BoardDetailPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [error, setError] = useState("");
+  const [authorRecentPosts, setAuthorRecentPosts] = useState<Post[] | null>(null);
+  const [infoModal, setInfoModal] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => Promise<void> | void } | null>(
+    null
+  );
 
   const loadComments = () => {
     getComments(Number(postId)).then(setComments);
@@ -91,13 +139,64 @@ function BoardDetailPage() {
     loadComments();
   }, [postId]);
 
+  useEffect(() => {
+    if (!post) return;
+    let isMounted = true;
+
+    const fetchAuthorRecentPosts = async () => {
+      try {
+        const first = await getPosts(0);
+        let all = first.content;
+        for (let page = 1; page < first.totalPages; page++) {
+          const next = await getPosts(page);
+          all = all.concat(next.content);
+        }
+        const recent = all
+          .filter((p) => p.userId === post.userId && p.postId !== post.postId)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 4);
+        if (isMounted) setAuthorRecentPosts(recent);
+      } catch {
+        if (isMounted) setAuthorRecentPosts([]);
+      }
+    };
+
+    fetchAuthorRecentPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [post]);
+
   const isAuthor = Boolean(post && user && post.userId === user.userId);
 
-  const handleDeletePost = async () => {
+  const handleToggleBookmark = async () => {
+    if (!post) return;
+    if (!token) {
+      setInfoModal("찜하려면 로그인이 필요해요.");
+      return;
+    }
+    if (isAuthor) {
+      setInfoModal("본인이 작성한 글은 찜할 수 없어요.");
+      return;
+    }
+    try {
+      const updated = await toggleBookmark(token, post.postId);
+      setPost(updated);
+    } catch {
+      setInfoModal("찜 처리에 실패했어요. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
+  const handleDeletePost = () => {
     if (!token || !post) return;
-    if (!confirm("게시글을 삭제할까요?")) return;
-    await deletePost(token, post.postId);
-    navigate("/board");
+    setConfirmModal({
+      message: "게시글을 삭제할까요?",
+      onConfirm: async () => {
+        await deletePost(token, post.postId);
+        navigate("/board");
+      },
+    });
   };
 
   const handleAddComment = async () => {
@@ -113,11 +212,15 @@ function BoardDetailPage() {
     loadComments();
   };
 
-  const handleDeleteComment = async (commentId: number) => {
+  const handleDeleteComment = (commentId: number) => {
     if (!token) return;
-    if (!confirm("댓글을 삭제할까요?")) return;
-    await deleteComment(token, commentId);
-    loadComments();
+    setConfirmModal({
+      message: "댓글을 삭제할까요?",
+      onConfirm: async () => {
+        await deleteComment(token, commentId);
+        loadComments();
+      },
+    });
   };
 
   if (error) return <div className="page board-detail-page">{error}</div>;
@@ -135,9 +238,25 @@ function BoardDetailPage() {
           </span>
         )}
         <h1>{post.title || post.region || "제목 없음"}</h1>
-        <div className="board-detail-meta">
-          <span>{post.nickname}</span>
-          <span>{new Date(post.createdAt).toLocaleString("ko-KR")}</span>
+        <div className="board-detail-profile-row">
+          <Avatar nickname={post.nickname} profileImageUrl={post.authorProfileImageUrl} className="board-detail-avatar" />
+          <div className="board-detail-profile-info">
+            <span className="board-detail-nickname">{post.nickname}</span>
+            <span className="board-detail-date">
+              {new Date(post.createdAt).toLocaleString("ko-KR")} · 조회 {post.viewCount}
+            </span>
+          </div>
+          <button
+            type="button"
+            className={`board-detail-bookmark-button${post.bookmarked ? " is-active" : ""}${
+              isAuthor ? " is-own-post" : ""
+            }`}
+            onClick={handleToggleBookmark}
+            title={isAuthor ? "본인이 작성한 글은 찜할 수 없어요" : undefined}
+          >
+            <span aria-hidden="true">{post.bookmarked ? "🧡" : "🤍"}</span>
+            찜 {post.bookmarkCount}
+          </button>
         </div>
         {post.tags && (
           <div className="board-detail-tags">
@@ -154,17 +273,37 @@ function BoardDetailPage() {
         )}
       </div>
 
-      {!post.boardType && (
+      {(post.region ||
+        post.budgetMin != null ||
+        post.budgetMax != null ||
+        post.moveInDate ||
+        post.moveInMonthMin != null ||
+        post.moveInMonthMax != null ||
+        post.roomType) && (
         <dl className="board-detail-info">
-          {(post.budgetMin || post.budgetMax) && (
+          {post.region && (
+            <div>
+              <dt>지역</dt>
+              <dd>{post.region}</dd>
+            </div>
+          )}
+          {(post.budgetMin != null || post.budgetMax != null) && (
             <div>
               <dt>예산</dt>
               <dd>
-                {post.budgetMin ?? "-"} ~ {post.budgetMax ?? "-"}만원
+                {formatMoveInBudgetValue(post.budgetMin)} ~ {formatMoveInBudgetValue(post.budgetMax)}
               </dd>
             </div>
           )}
-          {post.moveInDate && (
+          {(post.moveInMonthMin != null || post.moveInMonthMax != null) && (
+            <div>
+              <dt>입주 시기</dt>
+              <dd>
+                {formatMoveInMonthLabel(post.moveInMonthMin)} ~ {formatMoveInMonthLabel(post.moveInMonthMax)}
+              </dd>
+            </div>
+          )}
+          {post.moveInDate && !post.moveInMonthMin && !post.moveInMonthMax && (
             <div>
               <dt>입주 예정일</dt>
               <dd>{post.moveInDate}</dd>
@@ -176,14 +315,38 @@ function BoardDetailPage() {
               <dd>{post.roomType}</dd>
             </div>
           )}
-          <div>
-            <dt>모집 인원</dt>
-            <dd>{post.recruitCount}명</dd>
-          </div>
+          {!post.boardType && (
+            <div>
+              <dt>모집 인원</dt>
+              <dd>{post.recruitCount}명</dd>
+            </div>
+          )}
         </dl>
       )}
 
       <div className="board-detail-description" dangerouslySetInnerHTML={{ __html: post.description }} />
+
+      <section className="board-detail-author-posts">
+        <h2>{post.nickname}님의 최근 게시글</h2>
+        {authorRecentPosts === null ? (
+          <p className="board-detail-author-posts-empty">불러오는 중...</p>
+        ) : authorRecentPosts.length > 0 ? (
+          <ul className="board-detail-author-posts-list">
+            {authorRecentPosts.map((p) => (
+              <li key={p.postId}>
+                <Link to={`/board/${p.postId}`} className="board-detail-author-posts-link">
+                  <span className="board-detail-author-posts-title">{p.title || p.region || "제목 없음"}</span>
+                  <span className="board-detail-author-posts-date">
+                    {new Date(p.createdAt).toLocaleDateString("ko-KR")}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="board-detail-author-posts-empty">최근에 작성한 다른 게시글이 없어요.</p>
+        )}
+      </section>
 
       {isAuthor && (
         <div className="board-detail-actions">
@@ -201,6 +364,7 @@ function BoardDetailPage() {
 
         {token ? (
           <div className="comment-write">
+            <Avatar nickname={user?.nickname} profileImageUrl={user?.profileImageUrl} className="comment-avatar" />
             <input
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
@@ -226,6 +390,41 @@ function BoardDetailPage() {
           ))}
         </ul>
       </section>
+
+      {infoModal && (
+        <div className="info-modal-backdrop" onClick={() => setInfoModal(null)}>
+          <div className="info-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <p>{infoModal}</p>
+            <button type="button" className="btn btn-primary" onClick={() => setInfoModal(null)}>
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmModal && (
+        <div className="info-modal-backdrop" onClick={() => setConfirmModal(null)}>
+          <div className="info-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <p>{confirmModal.message}</p>
+            <div className="info-modal-actions">
+              <button type="button" className="btn btn-outline" onClick={() => setConfirmModal(null)}>
+                취소
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={async () => {
+                  const action = confirmModal.onConfirm;
+                  setConfirmModal(null);
+                  await action();
+                }}
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
