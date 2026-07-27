@@ -78,6 +78,11 @@ function Navbar() {
         </nav>
         <div className="navbar-auth">
           {token ? (
+            <button type="button" className="navbar-notify-btn" aria-label="알림">
+              <Icon name="bell" />
+            </button>
+          ) : null}
+          {token ? (
             <div className="navbar-dropdown navbar-profile-dropdown">
               <span className="navbar-profile-trigger">
                 <img
