@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.domain.User;
+import com.example.backend.dto.AdditionalInfoRequest;
 import com.example.backend.dto.BioRequest;
 import com.example.backend.dto.NicknameRequest;
 import com.example.backend.dto.PasswordChangeRequest;
@@ -55,6 +56,22 @@ public class UserController {
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return toResponse(findUser(authentication));
+    }
+
+    // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰을 채워 넣을 때 사용
+    @PutMapping("/me/additional-info")
+    public UserResponse completeAdditionalInfo(Authentication authentication, @RequestBody AdditionalInfoRequest request) {
+        if (request.gender() == null || request.gender().isBlank()) {
+            throw new IllegalArgumentException("성별을 선택해주세요.");
+        }
+        if (request.birthDate() == null) {
+            throw new IllegalArgumentException("생년월일을 입력해주세요.");
+        }
+
+        User user = findUser(authentication);
+        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone());
+        userRepository.save(user);
+        return toResponse(user);
     }
 
     @PostMapping("/me/profile-image")
