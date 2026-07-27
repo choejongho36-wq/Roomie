@@ -20,6 +20,12 @@ public class User {
     @Column(name = "login_id", nullable = false, unique = true, length = 20)
     private String loginId;
 
+    @Column(nullable = false, length = 20)
+    private String provider = "LOCAL";
+
+    @Column(name = "provider_id", length = 100)
+    private String providerId;
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
@@ -29,10 +35,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 30)
     private String nickname;
 
-    @Column(nullable = false, length = 10)
+    // 소셜 가입 직후엔 값이 없을 수 있어 선택값으로 변경 (추가정보 입력 페이지에서 채움)
+    @Column(length = 10)
     private String gender;
 
-    @Column(name = "birth_date", nullable = false)
+    @Column(name = "birth_date")
     private LocalDate birthDate;
 
     @Column(length = 20)
@@ -98,6 +105,14 @@ public class User {
         this.password = password;
     }
 
+    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {
+        this.gender = gender;
+        this.birthDate = birthDate;
+        if (phone != null && !phone.isBlank()) {
+            this.phone = phone;
+        }
+    }
+
     // 회원가입용 생성자
     public User(String email, String password, String nickname, String gender, LocalDate birthDate) {
         this.email = email;
@@ -110,11 +125,32 @@ public class User {
         this.status = "ACTIVE";
     }
 
-    // 더미 데이터용 생성자 (loginId, phone 포함)
     public User(String loginId, String email, String password, String nickname, String gender,
             LocalDate birthDate, String phone) {
         this(email, password, nickname, gender, birthDate);
         this.loginId = loginId;
         this.phone = phone;
+    }
+
+    public User(String provider, String providerId, String loginId, String email,
+            String password, String nickname, String profileImageUrl) {
+        this.provider = provider;
+        this.providerId = providerId;
+        this.loginId = loginId;
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.isVerified = false;
+        this.emailVerified = true;
+        this.status = "ACTIVE";
+    }
+
+    public boolean isSocialAccount() {
+        return !"LOCAL".equals(this.provider);
+    }
+
+    public boolean needsAdditionalInfo() {
+        return this.gender == null || this.birthDate == null;
     }
 }
