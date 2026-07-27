@@ -87,22 +87,33 @@
   background: #eee;
 }
 
-.login-modal-social {
-  padding: 10px;
+.login-modal-social-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 4px 0 8px;
+}
+
+.login-modal-social-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease;
+}
+
+.login-modal-social-circle:hover {
+  transform: translateY(-2px);
 }
 
 .login-modal-social-kakao {
   background: #fee500;
   color: #191919;
-}
-
-.login-modal-social-kakao:hover {
-  background: #fada0a;
 }
 
 .login-modal-link {
