@@ -104,6 +104,27 @@
 .password-field-wrapper input {
   width: 100%;
   box-sizing: border-box;
+  padding-right: 40px; /* 보기/숨기기 아이콘 버튼 자리 확보 */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: #868e96;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 0;
+}
+
+.password-toggle-btn:hover {
+  color: #495057;
 }
 
 .password-checklist-bubble {
@@ -244,4 +265,46 @@
 .password-match-message.match .password-checklist-icon {
   background: #2f9e44;
   color: #fff;
+}
+
+.signup-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.signup-terms-all {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.signup-terms-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #495057;
+}
+
+.signup-terms-item a {
+  color: #1971c2;
+  text-decoration: underline;
+}
+
+.signup-terms input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
 }
