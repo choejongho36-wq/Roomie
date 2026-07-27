@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { login } from "../api";
+import { login, API_ORIGIN } from "../api";
 import logo from "../assets/Roomie_logo.png";
 import "./LoginModal.css";
 
@@ -66,6 +66,22 @@ function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
         />
         {error && <p className="login-modal-error">{error}</p>}
         <button type="submit">로그인</button>
+
+        <div className="login-modal-divider">
+          <span>또는</span>
+        </div>
+
+        <button
+          type="button"
+          className="login-modal-social login-modal-social-kakao"
+          onClick={() => {
+            // SPA 라우팅이 아니라 실제 브라우저 이동이어야 함 (백엔드가 카카오 로그인 화면으로 리다이렉트해줌)
+            window.location.href = `${API_ORIGIN}/oauth2/authorization/kakao`;
+          }}
+        >
+          카카오로 로그인
+        </button>
+
         <p className="login-modal-footer">
           계정이 없으신가요?{" "}
           <button
