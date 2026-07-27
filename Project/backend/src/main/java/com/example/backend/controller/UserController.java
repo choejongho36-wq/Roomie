@@ -137,6 +137,10 @@ public class UserController {
             java.time.LocalDate nextChangeDate = user.getNicknameChangedAt().plusMonths(3).toLocalDate();
             throw new IllegalArgumentException("닉네임은 3개월에 한 번만 변경할 수 있어요. 다음 변경 가능일: " + nextChangeDate);
         }
+        
+        if (!nickname.equals(user.getNickname()) && userRepository.existsByNickname(nickname)) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
         user.updateNickname(nickname);
         userRepository.save(user);
         return toResponse(user);
