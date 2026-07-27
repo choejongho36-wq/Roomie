@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types";
-import { SEOUL_ZONES, regionMatchesDistrict } from "../../data/SeoulDistricts";
+import { regionMatchesDistrict, regionMatchesDong } from "../../data/SeoulDistricts";
+import RegionPicker, { type RegionToken } from "../../components/RegionPicker";
 import "./BoardListPage.css";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
@@ -100,7 +101,7 @@ function BoardListPage() {
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
 
-  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
+  const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
   const [selectedBudgets, setSelectedBudgets] = useState<string[]>([]);
   const [selectedMoveIns, setSelectedMoveIns] = useState<string[]>([]);
 
@@ -131,8 +132,12 @@ function BoardListPage() {
   const filteredPosts = useMemo(() => {
     if (!posts) return [];
     return posts.filter((post) => {
-      if (selectedDistricts.length > 0) {
-        const matches = selectedDistricts.some((district) => regionMatchesDistrict(post.region, district));
+      if (selectedRegions.length > 0) {
+        const matches = selectedRegions.some((regionToken) =>
+          regionToken.dong
+            ? regionMatchesDong(post.region, regionToken.dong)
+            : regionMatchesDistrict(post.region, regionToken.district)
+        );
         if (!matches) return false;
       }
 
@@ -151,13 +156,13 @@ function BoardListPage() {
 
       return true;
     });
-  }, [posts, selectedDistricts, selectedBudgets, selectedMoveIns]);
+  }, [posts, selectedRegions, selectedBudgets, selectedMoveIns]);
 
   const hasActiveFilters =
-    selectedDistricts.length > 0 || selectedBudgets.length > 0 || selectedMoveIns.length > 0;
+    selectedRegions.length > 0 || selectedBudgets.length > 0 || selectedMoveIns.length > 0;
 
   const resetFilters = () => {
-    setSelectedDistricts([]);
+    setSelectedRegions([]);
     setSelectedBudgets([]);
     setSelectedMoveIns([]);
   };
@@ -175,26 +180,10 @@ function BoardListPage() {
       </div>
 
       <div className="board-filter-panel">
-        <div className="board-filter-row">
+        <div className="board-filter-row board-filter-row-region">
           <div className="board-filter-row-label">지역</div>
           <div className="board-filter-row-options">
-            {SEOUL_ZONES.map((zone) => (
-              <div key={zone.zone} className="board-filter-zone-group">
-                <span className="board-filter-zone-label">{zone.zone}</span>
-                {zone.districts.map((district) => (
-                  <button
-                    key={district}
-                    type="button"
-                    className={`board-filter-chip-toggle${
-                      selectedDistricts.includes(district) ? " is-selected" : ""
-                    }`}
-                    onClick={() => setSelectedDistricts((prev) => toggleValue(prev, district))}
-                  >
-                    {district}
-                  </button>
-                ))}
-              </div>
-            ))}
+            <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} variant="inline" />
           </div>
         </div>
 

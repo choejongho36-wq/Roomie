@@ -1,5 +1,7 @@
 .board-list-page {
-  max-width: 800px;
+  width: 800px;
+  min-width: 0;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 40px 24px 80px;
   text-align: left;
@@ -34,7 +36,6 @@
 .board-filter-panel {
   border: 1px solid #eee;
   border-radius: 12px;
-  overflow: hidden;
   background: #ffffff;
   margin-bottom: 20px;
 }
@@ -67,21 +68,6 @@
   align-items: center;
   gap: 6px 10px;
   padding: 12px 16px;
-}
-
-.board-filter-zone-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-right: 10px;
-}
-
-.board-filter-zone-label {
-  color: #ff6600;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-  margin-right: 2px;
 }
 
 .board-filter-chip-toggle {

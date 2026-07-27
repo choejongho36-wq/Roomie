@@ -1,6 +1,5 @@
 .board-write-page {
-  width: 100%;
-  max-width: 800px;
+  width: 800px;
   min-width: 0;
   box-sizing: border-box;
   margin: 0 auto;
@@ -344,75 +343,6 @@
   color: #444;
 }
 
-.board-write-region-picker {
-  flex: 1;
-  min-width: 0;
-}
-
-.board-write-zone-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.board-write-zone-tab {
-  border: 1px solid #e5ded8;
-  background: #fff;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-}
-
-.board-write-zone-tab:hover {
-  border-color: #ff6600;
-  color: #ff6600;
-}
-
-.board-write-zone-tab.is-active {
-  background: #ff6600;
-  border-color: #ff6600;
-  color: #fff;
-}
-
-.board-write-district-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
-}
-
-.board-write-district-chip {
-  border: 1px solid #e5ded8;
-  background: #fff;
-  border-radius: 999px;
-  padding: 5px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-}
-
-.board-write-district-chip:hover {
-  border-color: #ff6600;
-  color: #ff6600;
-}
-
-.board-write-district-chip.is-selected {
-  background: #fff1e8;
-  border-color: #ff6600;
-  color: #ff6600;
-  font-weight: 800;
-}
-
-.board-write-region-hint {
-  font-size: 12px;
-  color: #aaa;
-}
 
 .range-slider {
   flex: 1;

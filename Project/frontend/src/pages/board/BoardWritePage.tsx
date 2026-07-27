@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
-import { SEOUL_ZONES, getDistrictsForZone } from "../../data/SeoulDistricts";
+import RegionPicker, { type RegionToken, parseRegionToken } from "../../components/RegionPicker";
 import "./BoardWritePage.css";
 
 const BOARD_OPTIONS = ["모집게시판", "고민게시판"];
@@ -113,8 +113,12 @@ function BoardWritePage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [region, setRegion] = useState<string | null>(null);
+  const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
+  const region = regionTokens[0]
+    ? regionTokens[0].dong
+      ? `${regionTokens[0].district} ${regionTokens[0].dong}`
+      : regionTokens[0].district
+    : null;
   const [budgetMin, setBudgetMin] = useState(BUDGET_MIN);
   const [budgetMax, setBudgetMax] = useState(BUDGET_MAX);
   const [moveInMonthMin, setMoveInMonthMin] = useState(MOVE_IN_MIN);
@@ -134,9 +138,8 @@ function BoardWritePage() {
         contentRef.current.innerHTML = post.description ?? "";
       }
       if (post.region) {
-        setRegion(post.region);
-        const zone = SEOUL_ZONES.find((z) => z.districts.includes(post.region));
-        if (zone) setSelectedZone(zone.zone);
+        const parsed = parseRegionToken(post.region);
+        if (parsed) setRegionTokens([parsed]);
       }
       if (post.budgetMin !== null) setBudgetMin(post.budgetMin);
       if (post.budgetMax !== null) setBudgetMax(post.budgetMax);
@@ -350,36 +353,12 @@ function BoardWritePage() {
           <div className="board-write-recruit-fields">
             <div className="board-write-field-row">
               <div className="board-write-field-label">지역</div>
-              <div className="board-write-region-picker">
-                <div className="board-write-zone-tabs">
-                  {SEOUL_ZONES.map((zone) => (
-                    <button
-                      key={zone.zone}
-                      type="button"
-                      className={`board-write-zone-tab${selectedZone === zone.zone ? " is-active" : ""}`}
-                      onClick={() => setSelectedZone(zone.zone)}
-                    >
-                      {zone.zone}
-                    </button>
-                  ))}
-                </div>
-                <div className="board-write-district-chips">
-                  {selectedZone ? (
-                    getDistrictsForZone(selectedZone).map((district) => (
-                      <button
-                        key={district}
-                        type="button"
-                        className={`board-write-district-chip${region === district ? " is-selected" : ""}`}
-                        onClick={() => setRegion(district)}
-                      >
-                        {district}
-                      </button>
-                    ))
-                  ) : (
-                    <span className="board-write-region-hint">권역을 먼저 선택해주세요.</span>
-                  )}
-                </div>
-              </div>
+              <RegionPicker
+                selected={regionTokens}
+                onChange={setRegionTokens}
+                multiple={false}
+                variant="inline"
+              />
             </div>
 
             <div className="board-write-field-row">
