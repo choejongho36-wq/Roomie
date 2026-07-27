@@ -1,8 +1,29 @@
 .navbar {
+  /* 기본값: 배경이 연한 오렌지 톤인 페이지(대부분)에서 대비되도록 진한 오렌지 필 */
+  --navbar-shell-bg: linear-gradient(135deg, #f16526, #ff8a3d);
+  --navbar-shadow: 0 12px 28px rgba(120, 40, 0, 0.3);
+  --navbar-text: #fff;
+  --navbar-text-hover: #ffe3cc;
+  --navbar-underline: linear-gradient(90deg, #ffffff, #ffe3cc);
+  --navbar-nickname: #fff;
+  --navbar-login-bg: #fff;
+  --navbar-login-text: #f16526;
   padding: 20px 24px;
   position: relative;
   z-index: 10;
   font-family: "Gowun Dodum", "Baloo 2", sans-serif;
+}
+
+/* 배경 자체가 진한 오렌지(메인 히어로, 회원가입)인 페이지에서는 연한 필로 반전 */
+.navbar-light {
+  --navbar-shell-bg: linear-gradient(135deg, #fff8f3, #ffe3cc);
+  --navbar-shadow: 0 12px 28px rgba(241, 101, 38, 0.18);
+  --navbar-text: #333;
+  --navbar-text-hover: #f16526;
+  --navbar-underline: linear-gradient(90deg, #f16526, #ff9d5c);
+  --navbar-nickname: #333;
+  --navbar-login-bg: linear-gradient(135deg, #f16526, #ff9d5c);
+  --navbar-login-text: #fff;
 }
 
 .navbar-shell {
@@ -14,8 +35,9 @@
   gap: 24px;
   padding: 14px 32px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #fff8f3, #ffe3cc);
-  box-shadow: 0 12px 28px rgba(241, 101, 38, 0.18);
+  background: var(--navbar-shell-bg);
+  box-shadow: var(--navbar-shadow);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .navbar-auth {
@@ -26,14 +48,14 @@
 }
 
 .navbar-auth-link {
-  background: linear-gradient(135deg, #f16526, #ff9d5c);
+  background: var(--navbar-login-bg);
   border: none;
   padding: 8px 20px;
   border-radius: 999px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--navbar-login-text);
   text-decoration: none;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -65,7 +87,7 @@
 .navbar-profile-nickname {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--navbar-nickname);
 }
 
 .navbar-menu {
@@ -80,20 +102,26 @@
   font-family: inherit;
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--navbar-text);
   text-decoration: none;
   background: none;
   border: none;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
 
 .navbar-menu a:hover,
 .navbar-menu button:hover {
-  color: #f16526;
+  color: var(--navbar-text-hover);
 }
 
 .navbar-menu-link {
   position: relative;
+  color: var(--navbar-text);
+}
+
+.navbar-menu-link:hover {
+  color: var(--navbar-text-hover);
 }
 
 .navbar-menu-link::after {
@@ -103,7 +131,7 @@
   bottom: -6px;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, #f16526, #ff9d5c);
+  background: var(--navbar-underline);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.25s ease;
@@ -241,10 +269,10 @@
 .navbar-menu a {
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--navbar-text);
   text-decoration: none;
 }
 
 .navbar-menu a:hover {
-  color: #f16526;
+  color: var(--navbar-text-hover);
 }

@@ -32,8 +32,8 @@
 .hero-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.45;
+  filter: blur(45px);
+  opacity: 0.4;
   pointer-events: none;
 }
 
@@ -60,7 +60,8 @@
   height: 260px;
   top: 45%;
   right: 12%;
-  background: #fff3e0;
+  background: #ffd28a;
+  opacity: 0.3;
   animation: hero-blob-float-3 14s ease-in-out infinite;
 }
 
