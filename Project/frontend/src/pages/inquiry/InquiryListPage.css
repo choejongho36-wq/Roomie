@@ -4,6 +4,7 @@
   margin: 0 auto;
   padding: 40px 24px 80px;
   box-sizing: border-box;
+  text-align: left;
 }
 
 .inquiry-list-header {
@@ -73,8 +74,8 @@
 }
 
 .inquiry-status-pending {
-  background: #fff1e8;
-  color: #f16526;
+  background: #fde8e8;
+  color: #e03131;
 }
 
 .inquiry-item-title {
@@ -97,14 +98,18 @@
 }
 
 .inquiry-item-meta {
+  flex-shrink: 0;
   display: flex;
   gap: 12px;
   font-size: 13px;
   color: #999;
-  margin-bottom: 12px;
 }
 
-.inquiry-content {
+.inquiry-content-box {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 16px;
   color: #444;
   white-space: pre-wrap;
   margin: 0 0 16px;

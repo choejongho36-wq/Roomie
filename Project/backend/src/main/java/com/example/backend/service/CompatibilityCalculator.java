@@ -33,8 +33,8 @@ public class CompatibilityCalculator {
             3, // 9 야간 생활
             2, // 10 갈등 해결
             1, // 11 벌레
-            3, // 12 코골이
-            3, // 13 흡연
+            3,  // 12 코골이
+            12, // 13 흡연 — 유무가 갈리면 크게 벌어지도록 가중치를 확 높임
             2, // 14 음주
             2, // 15 음주 후 행동
             1, // 16 야식
@@ -45,10 +45,9 @@ public class CompatibilityCalculator {
     };
 
     // 흡연은 "얼마나 피우냐"의 정도가 아니라 "피우냐 / 아예 안 피우냐"의 범주 문제다.
-    // 한쪽만 비흡연이면 나머지가 아무리 맞아도 좋은 매칭이 될 수 없다.
+    // 하드 캡 대신 위 WEIGHTS의 높은 가중치로 자연스럽게 점수를 크게 끌어내린다.
     private static final int SMOKING_QUESTION_ID = 13;
     private static final int SMOKER_MAX_ANSWER = 4; // 1~4 흡연(전자담배 포함), 5 비흡연
-    private static final double DEAL_BREAKER_CAP = 0.5; // 흡연 성향 충돌 시 최종 점수 상한 50%
 
     /**
      * @param a 내 답변 목록 (각 원소 1~5)
@@ -63,7 +62,6 @@ public class CompatibilityCalculator {
 
         double weightedPenalty = 0.0;
         double totalWeight = 0.0;
-        boolean dealBreakerHit = false;
 
         for (int i = 0; i < count; i++) {
             int questionId = i + 1;
@@ -74,12 +72,7 @@ public class CompatibilityCalculator {
                 // 흡연 정도(1~4)의 차이는 무시하고, 흡연자/비흡연자 경계만 본다.
                 boolean aSmokes = a.get(i) <= SMOKER_MAX_ANSWER;
                 boolean bSmokes = b.get(i) <= SMOKER_MAX_ANSWER;
-                if (aSmokes == bSmokes) {
-                    diff = 0;
-                } else {
-                    diff = MAX_DIFF;
-                    dealBreakerHit = true;
-                }
+                diff = aSmokes == bSmokes ? 0 : MAX_DIFF;
             } else {
                 diff = Math.abs(a.get(i) - b.get(i));
             }
@@ -93,9 +86,6 @@ public class CompatibilityCalculator {
         }
 
         double ratio = 1.0 - (weightedPenalty / totalWeight);
-        if (dealBreakerHit) {
-            ratio = Math.min(ratio, DEAL_BREAKER_CAP);
-        }
         return (int) Math.round(ratio * 100);
     }
 
