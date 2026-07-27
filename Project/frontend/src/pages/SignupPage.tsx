@@ -4,6 +4,26 @@ import axios from "axios";
 import { signup, checkEmailAvailability, checkLoginIdAvailability } from "../api";
 import "./SignupPage.css";
 
+// 라이브러리 설치 없이 쓰는 눈/눈-슬래시 아이콘 (비밀번호 보기/숨기기 토글용)
+function EyeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A11.6 11.6 0 0 1 12 5c7 0 11 7 11 7a13.16 13.16 0 0 1-2.29 3.35M6.61 6.61C3.9 8.24 2 12 2 12s4 7 10 7a9.8 9.8 0 0 0 4.39-1.02" />
+      <path d="M1 1l22 22" />
+    </svg>
+  );
+}
+
 const currentYear = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -65,8 +85,10 @@ function SignupPage() {
   const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -74,6 +96,8 @@ function SignupPage() {
   const [birthDay, setBirthDay] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
 
   const passwordStrength = getPasswordStrength(password);
   const strengthMeta = STRENGTH_META[passwordStrength];
@@ -165,6 +189,10 @@ function SignupPage() {
     }
     if (!PHONE_PATTERN.test(phone)) {
       setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
+      return;
+    }
+    if (!agreeTerms || !agreePrivacy) {
+      setError("이용약관과 개인정보처리방침에 모두 동의해주세요.");
       return;
     }
 
@@ -277,7 +305,7 @@ function SignupPage() {
           비밀번호
           <div className="password-field-wrapper">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setPasswordFocused(true)}
@@ -286,6 +314,15 @@ function SignupPage() {
               maxLength={24}
               required
             />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword((prev) => !prev)}
+              tabIndex={-1}
+              aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
             {passwordFocused && !passwordAllValid && (
               <div className="password-checklist-bubble" role="tooltip">
                 <ul className="password-checklist-list">
@@ -328,7 +365,7 @@ function SignupPage() {
           비밀번호 확인
           <div className="password-field-wrapper">
             <input
-              type="password"
+              type={showPasswordConfirm ? "text" : "password"}
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
               onFocus={() => setPasswordConfirmFocused(true)}
@@ -337,6 +374,15 @@ function SignupPage() {
               maxLength={24}
               required
             />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPasswordConfirm((prev) => !prev)}
+              tabIndex={-1}
+              aria-label={showPasswordConfirm ? "비밀번호 숨기기" : "비밀번호 보기"}
+            >
+              {showPasswordConfirm ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
             {passwordConfirmFocused && passwordConfirm.length > 0 && (
               <div className="password-checklist-bubble password-match-bubble" role="tooltip">
                 <p className={`password-match-message ${passwordsMatch ? "match" : "mismatch"}`}>
@@ -420,6 +466,41 @@ function SignupPage() {
             </select>
           </div>
         </label>
+        <div className="signup-terms">
+          <label className="signup-terms-all">
+            <input
+              type="checkbox"
+              checked={agreeTerms && agreePrivacy}
+              onChange={(e) => {
+                setAgreeTerms(e.target.checked);
+                setAgreePrivacy(e.target.checked);
+              }}
+            />
+            전체 동의합니다
+          </label>
+          <label className="signup-terms-item">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              required
+            />
+            <span>
+              (필수) <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>이용약관</a>에 동의합니다
+            </span>
+          </label>
+          <label className="signup-terms-item">
+            <input
+              type="checkbox"
+              checked={agreePrivacy}
+              onChange={(e) => setAgreePrivacy(e.target.checked)}
+              required
+            />
+            <span>
+              (필수) <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>개인정보처리방침</a>에 동의합니다
+            </span>
+          </label>
+        </div>
         {error && <p className="signup-error">{error}</p>}
         <button type="submit" className="btn btn-primary">
           가입하기
