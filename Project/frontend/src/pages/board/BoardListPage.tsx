@@ -101,8 +101,6 @@ function BoardListPage() {
   const [searchParams] = useSearchParams();
   const boardType = searchParams.get("type");
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const boardType = searchParams.get("type");
 
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
@@ -110,6 +108,7 @@ function BoardListPage() {
   const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
   const [selectedBudgets, setSelectedBudgets] = useState<string[]>([]);
   const [selectedMoveIns, setSelectedMoveIns] = useState<string[]>([]);
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -166,7 +165,7 @@ function BoardListPage() {
       }
 
       return true;
-    });
+   }});
 
   }, [posts, boardType,selectedRegions, selectedDistricts, selectedBudgets, selectedMoveIns]);
 
@@ -177,6 +176,7 @@ function BoardListPage() {
     setSelectedRegions([]);
     setSelectedBudgets([]);
     setSelectedMoveIns([]);
+    setSelectedDistricts([]);
   };
 
   return (
