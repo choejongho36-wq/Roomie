@@ -7,6 +7,7 @@ public record PostResponse(
         Long postId,
         Long userId,
         String nickname,
+        String title,
         String region,
         Integer budgetMin,
         Integer budgetMax,
@@ -14,6 +15,8 @@ public record PostResponse(
         String roomType,
         Integer recruitCount,
         String description,
+        String tags,
+        String boardType,
         String status,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

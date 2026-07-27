@@ -8,6 +8,32 @@
   margin: 8px 0;
 }
 
+.board-detail-board-type {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff6600;
+  background: #fff1e8;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.board-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -12px 0 20px;
+}
+
+.board-detail-tag {
+  background: #f6f6f6;
+  color: #555;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .board-detail-meta {
   display: flex;
   gap: 12px;
