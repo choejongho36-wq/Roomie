@@ -152,9 +152,19 @@
   border-bottom: 1px solid #eee;
 }
 
-.board-table th:not(:first-child),
-.board-table td:not(:first-child) {
+.board-table th:not(:first-child):not(:nth-child(2)),
+.board-table td:not(:first-child):not(:nth-child(2)) {
   text-align: right;
+}
+
+.board-table th:first-child,
+.board-table td:first-child {
+  text-align: center;
+}
+
+.board-table th:nth-child(2),
+.board-table td:nth-child(2) {
+  text-align: left;
 }
 
 .board-table td {
@@ -185,6 +195,12 @@
   white-space: nowrap;
   display: block;
   max-width: 420px;
+}
+
+.board-table-number-cell {
+  color: #999;
+  font-weight: 600;
+  text-align: center;
 }
 
 .board-table-author-cell {

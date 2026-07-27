@@ -258,6 +258,7 @@ function BoardListPage() {
         <div className="board-table-wrap">
           <table className="board-table">
             <colgroup>
+              <col style={{ width: 70 }} />
               <col />
               <col style={{ width: 140 }} />
               <col style={{ width: 90 }} />
@@ -266,6 +267,7 @@ function BoardListPage() {
             </colgroup>
             <thead>
               <tr>
+                <th>번호</th>
                 <th>제목</th>
                 <th>작성자</th>
                 <th>작성일</th>
@@ -280,6 +282,7 @@ function BoardListPage() {
                   className="board-table-row"
                   onClick={() => navigate(`/board/${post.postId}`)}
                 >
+                  <td className="board-table-number-cell">{post.postId}</td>
                   <td className="board-table-title-cell">
                     <Link to={`/board/${post.postId}`} onClick={(e) => e.stopPropagation()}>
                       {post.title || post.region || "제목 없음"}
