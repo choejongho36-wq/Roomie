@@ -455,6 +455,35 @@
   }
 }
 
+.scroll-top-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f16526, #ff9d5c);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(241, 101, 38, 0.35);
+  z-index: 40;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scroll-top-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(241, 101, 38, 0.45);
+}
+
+.scroll-top-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
 .auth-box {
   position: relative;
   z-index: 1;
