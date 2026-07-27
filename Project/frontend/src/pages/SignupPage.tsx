@@ -5,7 +5,7 @@ import { signup, checkEmailAvailability, checkLoginIdAvailability } from "../api
 import "./SignupPage.css";
 
 const currentYear = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i); 
+const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 
@@ -22,12 +22,13 @@ type PasswordStrength = 0 | 1 | 2 | 3 | 4;
 const getPasswordStrength = (pw: string): PasswordStrength => {
   if (!pw) return 0;
   let score = 0;
-  const categoryCount = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((regex) =>
+  const categoryCount = [/[A-Za-z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((regex) =>
     regex.test(pw)
   ).length;
-  if (categoryCount >= 8) score++;
-  if (categoryCount >= 12) score++;
-  if (categoryCount === 4 && pw.length >= 10) score++;
+  if (categoryCount === 3 && pw.length >= 8) score++;
+  if (categoryCount === 3 && pw.length >= 10) score++;
+  if (categoryCount === 3 && pw.length >= 12) score++;
+  if (categoryCount === 3 && pw.length >= 14) score++;
   return Math.min(score, 4) as PasswordStrength;
 };
 
@@ -38,6 +39,19 @@ const STRENGTH_META: Record<PasswordStrength, { label: string; color: string }> 
   3: { label: "강함", color: "#2f9e44" },
   4: { label: "매우 강함", color: "#1971c2" },
 };
+
+type PasswordRule = {
+  key: string;
+  label: string;
+  test: (pw: string) => boolean;
+};
+
+const PASSWORD_RULES: PasswordRule[] = [
+  { key: "length", label: "8자 이상 24자 이하", test: (pw) => pw.length >= 8 && pw.length <= 24 },
+  { key: "letter", label: "영문 포함", test: (pw) => /[A-Za-z]/.test(pw) },
+  { key: "number", label: "숫자 포함", test: (pw) => /[0-9]/.test(pw) },
+  { key: "special", label: "특수문자 포함", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+];
 
 type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
@@ -51,6 +65,7 @@ function SignupPage() {
   const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState("");
@@ -60,9 +75,11 @@ function SignupPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-
   const passwordStrength = getPasswordStrength(password);
   const strengthMeta = STRENGTH_META[passwordStrength];
+  const passwordAllValid = PASSWORD_RULES.every((rule) => rule.test(password));
+  const [passwordConfirmFocused, setPasswordConfirmFocused] = useState(false);
+  const passwordsMatch = passwordConfirm.length > 0 && password === passwordConfirm;
 
   const dayOptions = (() => {
     if (!birthYear || !birthMonth) return Array.from({ length: 31 }, (_, i) => i + 1);
@@ -211,7 +228,7 @@ function SignupPage() {
           )}
           {loginIdCheckStatus === "error" && (
             <small className="signup-hint signup-hint-error">
-             아이디는 4~20자로 입력해주세요.
+              아이디는 4~20자로 입력해주세요.
             </small>
           )}
         </label>
@@ -258,14 +275,36 @@ function SignupPage() {
         </label>
         <label>
           비밀번호
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            minLength={8}
-            maxLength={24}
-            required
-          />
+          <div className="password-field-wrapper">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
+              minLength={8}
+              maxLength={24}
+              required
+            />
+            {passwordFocused && !passwordAllValid && (
+              <div className="password-checklist-bubble" role="tooltip">
+                <ul className="password-checklist-list">
+                  {PASSWORD_RULES.map((rule) => {
+                    const met = rule.test(password);
+                    return (
+                      <li
+                        key={rule.key}
+                        className={`password-checklist-item${met ? " met" : ""}`}
+                      >
+                        <span className="password-checklist-icon">{met ? "✓" : "·"}</span>
+                        {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
           <div className="password-strength">
             <div className="password-strength-bar">
               {[0, 1, 2, 3].map((i) => (
@@ -284,18 +323,29 @@ function SignupPage() {
               </small>
             )}
           </div>
-          <small className="signup-hint">영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하</small>
         </label>
         <label>
           비밀번호 확인
-          <input
-            type="password"
-            value={passwordConfirm}
-            onChange={(e) => setPasswordConfirm(e.target.value)}
-            minLength={8}
-            maxLength={24}
-            required
-          />
+          <div className="password-field-wrapper">
+            <input
+              type="password"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              onFocus={() => setPasswordConfirmFocused(true)}
+              onBlur={() => setPasswordConfirmFocused(false)}
+              minLength={8}
+              maxLength={24}
+              required
+            />
+            {passwordConfirmFocused && passwordConfirm.length > 0 && (
+              <div className="password-checklist-bubble password-match-bubble" role="tooltip">
+                <p className={`password-match-message ${passwordsMatch ? "match" : "mismatch"}`}>
+                  <span className="password-checklist-icon">{passwordsMatch ? "✓" : "·"}</span>
+                  {passwordsMatch ? "비밀번호가 일치해요" : "비밀번호가 일치하지 않아요"}
+                </p>
+              </div>
+            )}
+          </div>
         </label>
         <label>
           닉네임
