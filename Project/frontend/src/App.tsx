@@ -8,6 +8,7 @@ import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
 import SurveyCompletePage from "./pages/SurveyCompletePage";
 import RecommendationPage from "./pages/RecommendationPage";
+import ProfileBoardPage from "./pages/ProfileBoardPage";
 import ProfilePage from "./pages/mypage/ProfilePage";
 import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/recommend" element={<RecommendationPage />} />
+          <Route path="/profiles" element={<ProfileBoardPage />} />
            <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/board" element={<BoardListPage />} />
