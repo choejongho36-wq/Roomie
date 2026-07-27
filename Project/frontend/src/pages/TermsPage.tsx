@@ -1,4 +1,7 @@
 import "./TermsPage.css";
+import { useEffect } from "react";
+
+
 
 // 이용약관 조항 (제1조 ~ 제15조)
 const ARTICLES = [
@@ -65,6 +68,11 @@ const ARTICLES = [
 ];
 
 function TermsPage() {
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
   return (
     <div className="terms-page">
       <div className="terms-inner">
