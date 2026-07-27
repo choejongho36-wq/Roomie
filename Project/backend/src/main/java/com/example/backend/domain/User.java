@@ -35,7 +35,6 @@ public class User {
     @Column(nullable = false, unique = true, length = 30)
     private String nickname;
 
-    // 소셜 가입 직후엔 값이 없을 수 있어 선택값으로 변경 (추가정보 입력 페이지에서 채움)
     @Column(length = 10)
     private String gender;
 
