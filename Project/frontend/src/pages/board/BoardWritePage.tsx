@@ -3,17 +3,10 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
-import { SEOUL_ZONES, getDistrictsForZone } from "../../data/SeoulDistricts";
+import RegionPicker, { type RegionToken, parseRegionToken } from "../../components/RegionPicker";
 import "./BoardWritePage.css";
 
 const BOARD_OPTIONS = ["모집게시판", "고민게시판"];
-
-const FONT_SIZE_OPTIONS = [
-  { value: "2", label: "작게" },
-  { value: "3", label: "보통" },
-  { value: "5", label: "크게" },
-  { value: "7", label: "아주 크게" },
-];
 
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
 
@@ -113,12 +106,18 @@ function BoardWritePage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [selectedZone, setSelectedZone] = useState<string | null>(null);
-  const [region, setRegion] = useState<string | null>(null);
+  const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
+  const region = regionTokens[0]
+    ? regionTokens[0].dong
+      ? `${regionTokens[0].district} ${regionTokens[0].dong}`
+      : regionTokens[0].district
+    : null;
   const [budgetMin, setBudgetMin] = useState(BUDGET_MIN);
   const [budgetMax, setBudgetMax] = useState(BUDGET_MAX);
   const [moveInMonthMin, setMoveInMonthMin] = useState(MOVE_IN_MIN);
   const [moveInMonthMax, setMoveInMonthMax] = useState(MOVE_IN_MAX);
+
+  const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
 
   const contentRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -134,9 +133,8 @@ function BoardWritePage() {
         contentRef.current.innerHTML = post.description ?? "";
       }
       if (post.region) {
-        setRegion(post.region);
-        const zone = SEOUL_ZONES.find((z) => z.districts.includes(post.region));
-        if (zone) setSelectedZone(zone.zone);
+        const parsed = parseRegionToken(post.region);
+        if (parsed) setRegionTokens([parsed]);
       }
       if (post.budgetMin !== null) setBudgetMin(post.budgetMin);
       if (post.budgetMax !== null) setBudgetMax(post.budgetMax);
@@ -162,6 +160,27 @@ function BoardWritePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    // 브라우저에 따라 execCommand의 볼드/이탤릭/밑줄 토글이 인라인 span과 <b>/<i>/<u> 태그를
+    // 섞어 쓰면서 꼬이는 경우가 있어, 항상 시맨틱 태그만 쓰도록 강제한다.
+    document.execCommand("styleWithCSS", false, false as unknown as string);
+
+    const syncActiveFormats = () => {
+      if (!contentRef.current) return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      if (!contentRef.current.contains(selection.anchorNode)) return;
+      setActiveFormats({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    };
+
+    document.addEventListener("selectionchange", syncActiveFormats);
+    return () => document.removeEventListener("selectionchange", syncActiveFormats);
+  }, []);
+
   if (!token) {
     return (
       <div className="page board-write-page">
@@ -173,6 +192,11 @@ function BoardWritePage() {
   const applyStyle = (command: string, value?: string) => {
     contentRef.current?.focus();
     document.execCommand(command, false, value);
+    setActiveFormats({
+      bold: document.queryCommandState("bold"),
+      italic: document.queryCommandState("italic"),
+      underline: document.queryCommandState("underline"),
+    });
   };
 
   const handleAddTag = () => {
@@ -350,36 +374,12 @@ function BoardWritePage() {
           <div className="board-write-recruit-fields">
             <div className="board-write-field-row">
               <div className="board-write-field-label">지역</div>
-              <div className="board-write-region-picker">
-                <div className="board-write-zone-tabs">
-                  {SEOUL_ZONES.map((zone) => (
-                    <button
-                      key={zone.zone}
-                      type="button"
-                      className={`board-write-zone-tab${selectedZone === zone.zone ? " is-active" : ""}`}
-                      onClick={() => setSelectedZone(zone.zone)}
-                    >
-                      {zone.zone}
-                    </button>
-                  ))}
-                </div>
-                <div className="board-write-district-chips">
-                  {selectedZone ? (
-                    getDistrictsForZone(selectedZone).map((district) => (
-                      <button
-                        key={district}
-                        type="button"
-                        className={`board-write-district-chip${region === district ? " is-selected" : ""}`}
-                        onClick={() => setRegion(district)}
-                      >
-                        {district}
-                      </button>
-                    ))
-                  ) : (
-                    <span className="board-write-region-hint">권역을 먼저 선택해주세요.</span>
-                  )}
-                </div>
-              </div>
+              <RegionPicker
+                selected={regionTokens}
+                onChange={setRegionTokens}
+                multiple={false}
+                variant="inline"
+              />
             </div>
 
             <div className="board-write-field-row">
@@ -419,7 +419,7 @@ function BoardWritePage() {
         <div className="board-write-toolbar">
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.bold ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("bold")}
           >
@@ -427,7 +427,7 @@ function BoardWritePage() {
           </button>
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.italic ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("italic")}
           >
@@ -435,24 +435,12 @@ function BoardWritePage() {
           </button>
           <button
             type="button"
-            className="board-write-toolbar-button"
+            className={`board-write-toolbar-button${activeFormats.underline ? " is-active" : ""}`}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => applyStyle("underline")}
           >
             <span style={{ textDecoration: "underline" }}>U</span>
           </button>
-          <select
-            className="board-write-toolbar-select"
-            defaultValue="3"
-            onMouseDown={(event) => event.preventDefault()}
-            onChange={(event) => applyStyle("fontSize", event.target.value)}
-          >
-            {FONT_SIZE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div

@@ -85,13 +85,13 @@ function MyPageSidebar() {
             }
           >
             <Icon name={item.icon} />
-            {item.label}
+            <span className="mypage-nav-label">{item.label}</span>
           </NavLink>
         ))}
       </nav>
       <button className="mypage-nav-item mypage-nav-item-logout" onClick={handleLogout}>
         <Icon name="logout" />
-        로그아웃
+        <span className="mypage-nav-label">로그아웃</span>
       </button>
     </aside>
   );
