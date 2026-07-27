@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "POST")
+@Table(name = "post")
 @Getter
 @NoArgsConstructor
 public class Post {
@@ -35,6 +35,12 @@ public class Post {
     @Column(name = "move_in_date")
     private LocalDate moveInDate;
 
+    @Column(name = "move_in_month_min")
+    private Integer moveInMonthMin;
+
+    @Column(name = "move_in_month_max")
+    private Integer moveInMonthMax;
+
     @Column(name = "room_type", length = 20)
     private String roomType;
 
@@ -52,6 +58,9 @@ public class Post {
 
     @Column(nullable = false, length = 20)
     private String status;
+
+    @Column(name = "view_count", nullable = false)
+    private Integer viewCount = 0;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -73,14 +82,16 @@ public class Post {
 
     // 게시글 작성용 생성자
     public Post(Long userId, String title, String region, Integer budgetMin, Integer budgetMax,
-            LocalDate moveInDate, String roomType, Integer recruitCount, String description,
-            String tags, String boardType) {
+            LocalDate moveInDate, Integer moveInMonthMin, Integer moveInMonthMax, String roomType,
+            Integer recruitCount, String description, String tags, String boardType) {
         this.userId = userId;
         this.title = title;
         this.region = region;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
         this.moveInDate = moveInDate;
+        this.moveInMonthMin = moveInMonthMin;
+        this.moveInMonthMax = moveInMonthMax;
         this.roomType = roomType;
         this.recruitCount = recruitCount;
         this.description = description;
@@ -90,17 +101,23 @@ public class Post {
     }
 
     public void update(String title, String region, Integer budgetMin, Integer budgetMax,
-            LocalDate moveInDate, String roomType, Integer recruitCount, String description,
-            String tags, String boardType) {
+            LocalDate moveInDate, Integer moveInMonthMin, Integer moveInMonthMax, String roomType,
+            Integer recruitCount, String description, String tags, String boardType) {
         this.title = title;
         this.region = region;
         this.budgetMin = budgetMin;
         this.budgetMax = budgetMax;
         this.moveInDate = moveInDate;
+        this.moveInMonthMin = moveInMonthMin;
+        this.moveInMonthMax = moveInMonthMax;
         this.roomType = roomType;
         this.recruitCount = recruitCount;
         this.description = description;
         this.tags = tags;
         this.boardType = boardType;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
     }
 }

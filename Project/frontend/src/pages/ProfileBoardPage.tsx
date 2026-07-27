@@ -3,14 +3,7 @@ import type { MouseEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_ORIGIN, getRecommendations, getSurveyComparison } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
-import {
-  ALL_DISTRICTS,
-  ALL_ZONES,
-  SEOUL_ZONES,
-  getDistrictsForZone,
-  regionMatchesDistrict,
-  regionMatchesZone,
-} from "../data/SeoulDistricts";
+import { ALL_DISTRICTS, SEOUL_ZONES, regionMatchesDistrict } from "../data/SeoulDistricts";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
 
@@ -22,11 +15,14 @@ const getProfileImageSrc = (url: string | null) => {
 
 const getInitial = (nickname: string) => nickname.trim().charAt(0) || "?";
 
+const ALL_DISTRICT_OPTIONS = SEOUL_ZONES.flatMap((zone) => zone.districts).sort((a, b) =>
+  a.localeCompare(b, "ko")
+);
+
 function ProfileBoardPage() {
   const { token } = useAuth();
   const [profiles, setProfiles] = useState<RecommendationResult[] | null>(null);
   const [error, setError] = useState("");
-  const [zoneFilter, setZoneFilter] = useState(ALL_ZONES);
   const [districtFilter, setDistrictFilter] = useState(ALL_DISTRICTS);
 
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
@@ -58,23 +54,13 @@ function ProfileBoardPage() {
     };
   }, [token]);
 
-  const districtOptions = useMemo(() => getDistrictsForZone(zoneFilter), [zoneFilter]);
-
-  const handleZoneChange = (zone: string) => {
-    setZoneFilter(zone);
-    setDistrictFilter(ALL_DISTRICTS);
-  };
-
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
-    if (zoneFilter === ALL_ZONES) return profiles;
-    if (districtFilter === ALL_DISTRICTS) {
-      return profiles.filter((item) => regionMatchesZone(item.region, zoneFilter));
-    }
+    if (districtFilter === ALL_DISTRICTS) return profiles;
     return profiles.filter((item) => regionMatchesDistrict(item.region, districtFilter));
-  }, [profiles, zoneFilter, districtFilter]);
+  }, [profiles, districtFilter]);
 
-  const isFiltered = zoneFilter !== ALL_ZONES;
+  const isFiltered = districtFilter !== ALL_DISTRICTS;
 
   const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
     event.stopPropagation();
@@ -116,35 +102,28 @@ function ProfileBoardPage() {
           <h1>호환성 높은 프로필</h1>
           <p className="profile-board-subtitle">설문 기반 호환성 점수가 높은 순서대로 모든 프로필을 볼 수 있어요.</p>
         </div>
+      </div>
 
-        <div className="profile-board-filter">
-          <label htmlFor="profile-zone-filter">지역</label>
-          <select
-            id="profile-zone-filter"
-            value={zoneFilter}
-            onChange={(event) => handleZoneChange(event.target.value)}
+      <div className="profile-board-region-field">
+        <div className="profile-board-region-label">지역</div>
+        <div className="profile-board-region-chips">
+          <button
+            type="button"
+            className={`profile-board-region-chip${districtFilter === ALL_DISTRICTS ? " is-selected" : ""}`}
+            onClick={() => setDistrictFilter(ALL_DISTRICTS)}
           >
-            <option value={ALL_ZONES}>전체 권역</option>
-            {SEOUL_ZONES.map((item) => (
-              <option key={item.zone} value={item.zone}>
-                {item.zone}
-              </option>
-            ))}
-          </select>
-
-          <select
-            id="profile-district-filter"
-            value={districtFilter}
-            onChange={(event) => setDistrictFilter(event.target.value)}
-            disabled={zoneFilter === ALL_ZONES}
-          >
-            <option value={ALL_DISTRICTS}>{zoneFilter === ALL_ZONES ? "구 선택" : `${zoneFilter} 전체`}</option>
-            {districtOptions.map((district) => (
-              <option key={district} value={district}>
-                {district}
-              </option>
-            ))}
-          </select>
+            전체
+          </button>
+          {ALL_DISTRICT_OPTIONS.map((district) => (
+            <button
+              key={district}
+              type="button"
+              className={`profile-board-region-chip${districtFilter === district ? " is-selected" : ""}`}
+              onClick={() => setDistrictFilter(district)}
+            >
+              {district}
+            </button>
+          ))}
         </div>
       </div>
 

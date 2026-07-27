@@ -24,9 +24,9 @@ public class CommentService {
 
     public List<CommentResponse> getComments(Long postId) {
         List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtAsc(postId);
-        Map<Long, String> nicknames = userRepository.findAllById(comments.stream().map(Comment::getUserId).toList())
-                .stream().collect(Collectors.toMap(User::getUserId, User::getNickname));
-        return comments.stream().map(c -> toResponse(c, nicknames.get(c.getUserId()))).toList();
+        Map<Long, User> authors = userRepository.findAllById(comments.stream().map(Comment::getUserId).toList())
+                .stream().collect(Collectors.toMap(User::getUserId, u -> u));
+        return comments.stream().map(c -> toResponse(c, authors.get(c.getUserId()))).toList();
     }
 
     public CommentResponse create(Long userId, Long postId, CommentRequest request) {
@@ -45,7 +45,7 @@ public class CommentService {
         }
         Comment comment = commentRepository.save(new Comment(postId, userId, request.parentCommentId(), request.content()));
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        return toResponse(comment, user.getNickname());
+        return toResponse(comment, user);
     }
 
     public void delete(Long userId, Long commentId) {
@@ -57,8 +57,10 @@ public class CommentService {
         commentRepository.delete(comment);
     }
 
-    private CommentResponse toResponse(Comment c, String nickname) {
-        return new CommentResponse(c.getCommentId(), c.getUserId(), nickname, c.getParentCommentId(),
+    private CommentResponse toResponse(Comment c, User author) {
+        String nickname = author != null ? author.getNickname() : "알 수 없음";
+        String profileImageUrl = author != null ? author.getProfileImageUrl() : null;
+        return new CommentResponse(c.getCommentId(), c.getUserId(), nickname, profileImageUrl, c.getParentCommentId(),
                 c.getContent(), c.getCreatedAt());
     }
 }
