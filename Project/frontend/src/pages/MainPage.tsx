@@ -1,6 +1,10 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import logo from "../assets/Roomie_logo2.png";
+import { useAuth } from "../context/AuthContext";
+import { getMySurveys } from "../api";
+import LoginModal from "../components/LoginModal";
 
 const matchStats = [
   { label: "생활 패턴", percent: 95 },
@@ -100,6 +104,27 @@ const features = [
 ];
 
 function MainPage() {
+  const navigate = useNavigate();
+  const { token, login } = useAuth();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  const goToMatching = async (authToken: string) => {
+    try {
+      const surveys = await getMySurveys(authToken);
+      navigate(surveys.length > 0 ? "/recommend" : "/survey");
+    } catch {
+      navigate("/survey");
+    }
+  };
+
+  const handleMatchClick = () => {
+    if (!token) {
+      setIsLoginOpen(true);
+      return;
+    }
+    goToMatching(token);
+  };
+
   return (
     <div className="page">
       <section className="hero">
@@ -157,9 +182,9 @@ function MainPage() {
               Roomie의 AI는 생활습관, 성격, 가치관, 선호도를 종합 분석하여
               당신과 가장 잘 맞는 룸메이트를 추천합니다.
             </p>
-            <Link to="/survey" className="btn btn-primary">
+            <button type="button" className="btn btn-primary" onClick={handleMatchClick}>
               AI 매칭 시작
-            </Link>
+            </button>
           </div>
 
           <div className="ai-match-card">
@@ -234,6 +259,17 @@ function MainPage() {
           ))}
         </div>
       </section>
+
+      {isLoginOpen && (
+        <LoginModal
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={(authToken) => {
+            login(authToken);
+            setIsLoginOpen(false);
+            goToMatching(authToken);
+          }}
+        />
+      )}
     </div>
   );
 }

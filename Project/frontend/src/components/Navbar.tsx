@@ -43,7 +43,14 @@ function Navbar() {
         <Link to="/board" className="navbar-menu-link">
           모집
         </Link>
-        <a href="#">고객센터</a>
+        <div className="navbar-dropdown">
+          <span className="navbar-menu-link navbar-dropdown-trigger">고객센터</span>
+          <div className="navbar-dropdown-menu">
+            <Link to="/inquiry" className="navbar-dropdown-item">
+              문의 게시판
+            </Link>
+          </div>
+        </div>
       </nav>
       <div className="navbar-auth">
         {token ? (

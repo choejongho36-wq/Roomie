@@ -17,6 +17,8 @@ import PrivacyPage from "./pages/PrivacyPage";
 import BoardListPage from "./pages/board/BoardListPage";
 import BoardDetailPage from "./pages/board/BoardDetailPage";
 import BoardWritePage from "./pages/board/BoardWritePage";
+import InquiryListPage from "./pages/inquiry/InquiryListPage";
+import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
 
 function App() {
   return (
@@ -35,6 +37,9 @@ function App() {
           <Route path="/board/write" element={<BoardWritePage />} />
           <Route path="/board/edit/:postId" element={<BoardWritePage />} />
           <Route path="/board/:postId" element={<BoardDetailPage />} />
+          <Route path="/inquiry" element={<InquiryListPage />} />
+          <Route path="/inquiry/write" element={<InquiryWritePage />} />
+          <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
           <Route path="/mypage" element={<MyPage />}>
             <Route index element={<ProfilePage />} />
             <Route path="edit" element={<EditProfilePage />} />

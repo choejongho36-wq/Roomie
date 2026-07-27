@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record UserResponse(
+        Long userId,
         String loginId,
         String email,
         String nickname,
