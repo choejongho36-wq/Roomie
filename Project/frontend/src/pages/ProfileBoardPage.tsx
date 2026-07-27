@@ -3,10 +3,16 @@ import type { MouseEvent } from "react";
 import { useAuth } from "../context/AuthContext";
 import { API_ORIGIN, getRecommendations, getSurveyComparison } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
+import {
+  ALL_DISTRICTS,
+  ALL_ZONES,
+  SEOUL_ZONES,
+  getDistrictsForZone,
+  regionMatchesDistrict,
+  regionMatchesZone,
+} from "../data/SeoulDistricts";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
-
-const ALL_REGIONS = "전체";
 
 const getProfileImageSrc = (url: string | null) => {
   if (!url) return null;
@@ -20,7 +26,8 @@ function ProfileBoardPage() {
   const { token } = useAuth();
   const [profiles, setProfiles] = useState<RecommendationResult[] | null>(null);
   const [error, setError] = useState("");
-  const [regionFilter, setRegionFilter] = useState(ALL_REGIONS);
+  const [zoneFilter, setZoneFilter] = useState(ALL_ZONES);
+  const [districtFilter, setDistrictFilter] = useState(ALL_DISTRICTS);
 
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -51,23 +58,23 @@ function ProfileBoardPage() {
     };
   }, [token]);
 
-  const regionOptions = useMemo(() => {
-    if (!profiles) return [];
-    const unique = Array.from(
-      new Set(
-        profiles
-          .map((item) => item.region)
-          .filter((region): region is string => Boolean(region && region.trim().length > 0))
-      )
-    );
-    return unique.sort((a, b) => a.localeCompare(b, "ko"));
-  }, [profiles]);
+  const districtOptions = useMemo(() => getDistrictsForZone(zoneFilter), [zoneFilter]);
+
+  const handleZoneChange = (zone: string) => {
+    setZoneFilter(zone);
+    setDistrictFilter(ALL_DISTRICTS);
+  };
 
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
-    if (regionFilter === ALL_REGIONS) return profiles;
-    return profiles.filter((item) => item.region === regionFilter);
-  }, [profiles, regionFilter]);
+    if (zoneFilter === ALL_ZONES) return profiles;
+    if (districtFilter === ALL_DISTRICTS) {
+      return profiles.filter((item) => regionMatchesZone(item.region, zoneFilter));
+    }
+    return profiles.filter((item) => regionMatchesDistrict(item.region, districtFilter));
+  }, [profiles, zoneFilter, districtFilter]);
+
+  const isFiltered = zoneFilter !== ALL_ZONES;
 
   const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
     event.stopPropagation();
@@ -111,16 +118,30 @@ function ProfileBoardPage() {
         </div>
 
         <div className="profile-board-filter">
-          <label htmlFor="profile-region-filter">지역</label>
+          <label htmlFor="profile-zone-filter">지역</label>
           <select
-            id="profile-region-filter"
-            value={regionFilter}
-            onChange={(event) => setRegionFilter(event.target.value)}
+            id="profile-zone-filter"
+            value={zoneFilter}
+            onChange={(event) => handleZoneChange(event.target.value)}
           >
-            <option value={ALL_REGIONS}>전체 지역</option>
-            {regionOptions.map((region) => (
-              <option key={region} value={region}>
-                {region}
+            <option value={ALL_ZONES}>전체 권역</option>
+            {SEOUL_ZONES.map((item) => (
+              <option key={item.zone} value={item.zone}>
+                {item.zone}
+              </option>
+            ))}
+          </select>
+
+          <select
+            id="profile-district-filter"
+            value={districtFilter}
+            onChange={(event) => setDistrictFilter(event.target.value)}
+            disabled={zoneFilter === ALL_ZONES}
+          >
+            <option value={ALL_DISTRICTS}>{zoneFilter === ALL_ZONES ? "구 선택" : `${zoneFilter} 전체`}</option>
+            {districtOptions.map((district) => (
+              <option key={district} value={district}>
+                {district}
               </option>
             ))}
           </select>
@@ -133,7 +154,7 @@ function ProfileBoardPage() {
         <p className="profile-board-empty">로딩 중...</p>
       ) : filteredProfiles.length === 0 ? (
         <p className="profile-board-empty">
-          {regionFilter === ALL_REGIONS ? "추천 프로필이 없습니다." : "해당 지역의 프로필이 없습니다."}
+          {isFiltered ? "해당 지역의 프로필이 없습니다." : "추천 프로필이 없습니다."}
         </p>
       ) : (
         <ul className="profile-board-list">

@@ -55,6 +55,12 @@
   outline-offset: 1px;
 }
 
+.profile-board-filter select:disabled {
+  color: #aaa;
+  background: #f6f6f6;
+  cursor: not-allowed;
+}
+
 .profile-board-error,
 .profile-board-empty {
   padding: 40px 0;
