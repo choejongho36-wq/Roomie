@@ -1,9 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { getPosts } from "../../api";
+import { Link, useNavigate } from "react-router-dom";
+import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types";
 import { SEOUL_ZONES, regionMatchesDistrict } from "../../data/SeoulDistricts";
 import "./BoardListPage.css";
+
+const getProfileImageSrc = (url: string | null | undefined) => {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
+const getInitial = (nickname: string | null | undefined) => (nickname || "?").trim().charAt(0) || "?";
+
+function AuthorAvatar({ nickname, profileImageUrl }: { nickname: string; profileImageUrl: string | null }) {
+  const src = getProfileImageSrc(profileImageUrl);
+  if (src) {
+    return <img className="board-table-avatar" src={src} alt={nickname} />;
+  }
+  return (
+    <div className="board-table-avatar board-table-avatar-fallback" aria-hidden="true">
+      {getInitial(nickname)}
+    </div>
+  );
+}
 
 interface BudgetBucket {
   id: string;
@@ -20,11 +40,11 @@ const BUDGET_BUCKETS: BudgetBucket[] = [
 ];
 
 const MOVE_IN_BUCKETS = [
-  { id: "immediate", label: "즉시입주" },
-  { id: "within-1m", label: "1개월 이내" },
-  { id: "within-3m", label: "3개월 이내" },
-  { id: "after-3m", label: "3개월 이후" },
-  { id: "undecided", label: "날짜 협의" },
+  { id: "immediate", label: "즉시입주", min: 0, max: 0 },
+  { id: "within-1m", label: "1개월 이내", min: 0, max: 1 },
+  { id: "within-3m", label: "3개월 이내", min: 0, max: 3 },
+  { id: "after-3m", label: "3개월 이후", min: 3, max: Infinity },
+  { id: "undecided", label: "날짜 협의", min: 0, max: 0 },
 ];
 
 const getMoveInBucketId = (moveInDate: string | null): string => {
@@ -43,6 +63,21 @@ const getMoveInBucketId = (moveInDate: string | null): string => {
   return "after-3m";
 };
 
+const moveInMatchesBucket = (post: Post, bucketId: string): boolean => {
+  if (post.moveInMonthMin != null || post.moveInMonthMax != null) {
+    if (bucketId === "undecided") return false;
+    const bucket = MOVE_IN_BUCKETS.find((b) => b.id === bucketId);
+    if (!bucket) return false;
+    const postMin = post.moveInMonthMin ?? 0;
+    const postMax = post.moveInMonthMax ?? Infinity;
+    return postMin <= bucket.max && postMax >= bucket.min;
+  }
+  if (post.moveInDate) {
+    return getMoveInBucketId(post.moveInDate) === bucketId;
+  }
+  return bucketId === "undecided";
+};
+
 const budgetOverlapsBucket = (post: Post, bucket: BudgetBucket): boolean => {
   const min = post.budgetMin ?? post.budgetMax;
   const max = post.budgetMax ?? post.budgetMin;
@@ -53,9 +88,15 @@ const budgetOverlapsBucket = (post: Post, bucket: BudgetBucket): boolean => {
 const toggleValue = (list: string[], value: string) =>
   list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
-const stripHtml = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+const formatShortDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}.${day}`;
+};
 
 function BoardListPage() {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
 
@@ -104,7 +145,8 @@ function BoardListPage() {
       }
 
       if (selectedMoveIns.length > 0) {
-        if (!selectedMoveIns.includes(getMoveInBucketId(post.moveInDate))) return false;
+        const matches = selectedMoveIns.some((id) => moveInMatchesBucket(post, id));
+        if (!matches) return false;
       }
 
       return true;
@@ -213,29 +255,50 @@ function BoardListPage() {
       )}
 
       {filteredPosts.length > 0 && (
-        <ul className="board-list">
-          {filteredPosts.map((post) => (
-            <li key={post.postId} className="board-list-item">
-              <Link to={`/board/${post.postId}`}>
-                <div className="board-list-item-top">
-                  <span className="board-list-region">{post.title || post.region || "제목 없음"}</span>
-                  {post.boardType ? (
-                    <span className="board-status">{post.boardType}</span>
-                  ) : (
-                    <span className={`board-status board-status-${post.status.toLowerCase()}`}>
-                      {post.status === "RECRUITING" ? "모집중" : "모집완료"}
+        <div className="board-table-wrap">
+          <table className="board-table">
+            <colgroup>
+              <col />
+              <col style={{ width: 140 }} />
+              <col style={{ width: 90 }} />
+              <col style={{ width: 70 }} />
+              <col style={{ width: 60 }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>제목</th>
+                <th>작성자</th>
+                <th>작성일</th>
+                <th>조회수</th>
+                <th>찜</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPosts.map((post) => (
+                <tr
+                  key={post.postId}
+                  className="board-table-row"
+                  onClick={() => navigate(`/board/${post.postId}`)}
+                >
+                  <td className="board-table-title-cell">
+                    <Link to={`/board/${post.postId}`} onClick={(e) => e.stopPropagation()}>
+                      {post.title || post.region || "제목 없음"}
+                    </Link>
+                  </td>
+                  <td className="board-table-author-cell">
+                    <span className="board-table-author">
+                      <AuthorAvatar nickname={post.nickname} profileImageUrl={post.authorProfileImageUrl} />
+                      {post.nickname}
                     </span>
-                  )}
-                </div>
-                <p className="board-list-desc">{stripHtml(post.description)}</p>
-                <div className="board-list-meta">
-                  <span>{post.nickname}</span>
-                  <span>{new Date(post.createdAt).toLocaleDateString("ko-KR")}</span>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  </td>
+                  <td>{formatShortDate(post.createdAt)}</td>
+                  <td>{post.viewCount}</td>
+                  <td>{post.bookmarkCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

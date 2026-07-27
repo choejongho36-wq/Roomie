@@ -6,6 +6,7 @@ public record CommentResponse(
         Long commentId,
         Long userId,
         String nickname,
+        String profileImageUrl,
         Long parentCommentId,
         String content,
         LocalDateTime createdAt

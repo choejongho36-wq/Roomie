@@ -27,8 +27,8 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public PostResponse getPost(@PathVariable Long postId) {
-        return postService.getPost(postId);
+    public PostResponse getPost(Authentication authentication, @PathVariable Long postId) {
+        return postService.getPost(postId, resolveOptionalUserId(authentication));
     }
 
     @PostMapping
@@ -47,8 +47,22 @@ public class PostController {
         postService.delete(findUser(authentication).getUserId(), postId);
     }
 
+    @PostMapping("/{postId}/bookmark")
+    public PostResponse toggleBookmark(Authentication authentication, @PathVariable Long postId) {
+        return postService.toggleBookmark(postId, findUser(authentication).getUserId());
+    }
+
     private User findUser(Authentication authentication) {
         return userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    }
+
+    // 비로그인 상태(또는 유효하지 않은 토큰)에서도 조회는 가능해야 하므로, 로그인 여부를 안전하게 확인합니다.
+    private Long resolveOptionalUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return null;
+        }
+        return userRepository.findByLoginId(authentication.getName()).map(User::getUserId).orElse(null);
     }
 }
