@@ -6,14 +6,102 @@
 .hero {
   position: relative;
   overflow: hidden;
-  min-height: calc(100vh - 72px);
+  margin-top: -110px;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 32px;
   text-align: center;
-  background: #f16526;
+  background: linear-gradient(135deg, #f16526 0%, #f4834f 45%, #ffc79b 100%);
+  background-size: 200% 200%;
+  animation: hero-gradient-shift 16s ease infinite;
+}
+
+@keyframes hero-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.hero-blob-1 {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -100px;
+  background: #ffb37a;
+  animation: hero-blob-float-1 18s ease-in-out infinite;
+}
+
+.hero-blob-2 {
+  width: 380px;
+  height: 380px;
+  bottom: -140px;
+  right: -80px;
+  background: #c2410c;
+  animation: hero-blob-float-2 22s ease-in-out infinite;
+}
+
+.hero-blob-3 {
+  width: 260px;
+  height: 260px;
+  top: 45%;
+  right: 12%;
+  background: #fff3e0;
+  animation: hero-blob-float-3 14s ease-in-out infinite;
+}
+
+@keyframes hero-blob-float-1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(60px, 40px);
+  }
+}
+
+@keyframes hero-blob-float-2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-50px, -30px);
+  }
+}
+
+@keyframes hero-blob-float-3 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-30px, 50px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    animation: none;
+  }
+
+  .hero-blob {
+    animation: none;
+  }
 }
 
 .why-section {
@@ -350,38 +438,6 @@
   }
 }
 
-.bubbles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.bubble {
-  position: absolute;
-  bottom: -60px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  box-shadow: inset -4px -4px 8px rgba(255, 255, 255, 0.15);
-  animation-name: rise;
-  animation-timing-function: ease-in;
-  animation-iteration-count: infinite;
-}
-
-@keyframes rise {
-  0% {
-    transform: translate(0, 0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translate(20px, -110vh);
-    opacity: 0;
-  }
-}
-
 .logo {
   position: relative;
   z-index: 1;
@@ -390,6 +446,7 @@
   font-size: 96px;
   color: #fff;
   margin: 0;
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.35);
 }
 
 @media (max-width: 640px) {
@@ -457,4 +514,5 @@
   height: 200px;
   margin-bottom: -70px;
   display: block;
+  filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.3));
 }
