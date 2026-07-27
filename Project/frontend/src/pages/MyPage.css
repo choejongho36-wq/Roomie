@@ -1,7 +1,6 @@
 .mypage {
   min-height: calc(100vh - 72px);
   display: flex;
-  background: #f7f7f7;
 }
 
 .mypage-content {

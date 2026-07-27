@@ -1,5 +1,5 @@
 .mypage-sidebar {
-  width: 220px;
+  width: 72px;
   flex-shrink: 0;
   background: #fff;
   border-right: 1px solid #eee;
@@ -7,6 +7,12 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+.mypage-sidebar:hover {
+  width: 220px;
 }
 
 .mypage-sidebar-title {
@@ -14,6 +20,13 @@
   font-weight: 700;
   color: #222;
   margin: 0 0 4px 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mypage-sidebar:hover .mypage-sidebar-title {
+  opacity: 1;
 }
 
 .mypage-nav {
@@ -37,6 +50,16 @@
   background: none;
   cursor: pointer;
   text-align: left;
+  white-space: nowrap;
+}
+
+.mypage-nav-label {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mypage-sidebar:hover .mypage-nav-label {
+  opacity: 1;
 }
 
 .mypage-nav-item:hover {

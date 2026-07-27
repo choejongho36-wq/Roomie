@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types";
 import { regionMatchesDistrict, regionMatchesDong } from "../../data/SeoulDistricts";
@@ -98,6 +98,9 @@ const formatShortDate = (dateString: string) => {
 
 function BoardListPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const boardType = searchParams.get("type");
+
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
 
@@ -132,6 +135,8 @@ function BoardListPage() {
   const filteredPosts = useMemo(() => {
     if (!posts) return [];
     return posts.filter((post) => {
+      if (boardType && post.boardType !== boardType) return false;
+
       if (selectedRegions.length > 0) {
         const matches = selectedRegions.some((regionToken) =>
           regionToken.dong
@@ -156,7 +161,7 @@ function BoardListPage() {
 
       return true;
     });
-  }, [posts, selectedRegions, selectedBudgets, selectedMoveIns]);
+  }, [posts, boardType, selectedRegions, selectedBudgets, selectedMoveIns]);
 
   const hasActiveFilters =
     selectedRegions.length > 0 || selectedBudgets.length > 0 || selectedMoveIns.length > 0;
@@ -171,8 +176,12 @@ function BoardListPage() {
     <div className="page board-list-page">
       <div className="board-list-header">
         <div>
-          <h1>모집 게시판</h1>
-          <p className="board-list-subtitle">원하는 조건으로 룸메이트 모집글을 찾아보세요.</p>
+          <h1>{boardType ?? "커뮤니티"}</h1>
+          <p className="board-list-subtitle">
+            {boardType === "고민게시판"
+              ? "함께 나누고 싶은 고민을 이야기해보세요."
+              : "원하는 조건으로 룸메이트 모집글을 찾아보세요."}
+          </p>
         </div>
         <Link to="/board/write" className="btn btn-primary">
           글쓰기
