@@ -1,5 +1,5 @@
 .board-detail-page {
-  width: 800px;
+  width: min(900px, calc(100% - 48px));
   min-width: 0;
   box-sizing: border-box;
   margin: 0 auto;
