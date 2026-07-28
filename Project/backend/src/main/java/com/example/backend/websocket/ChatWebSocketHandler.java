@@ -2,6 +2,7 @@ package com.example.backend.websocket;
 
 import com.example.backend.dto.ChatMessageResponse;
 import com.example.backend.service.ChatService;
+import com.example.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -20,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final ChatService chatService;
+    private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
     private final Map<Long, WebSocketSession> sessionsByUserId = new ConcurrentHashMap<>();
 
@@ -47,6 +49,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         try {
             IncomingMessage incoming = objectMapper.readValue(message.getPayload(), IncomingMessage.class);
             ChatMessageResponse saved = chatService.saveMessage(senderId, incoming.toUserId(), incoming.content());
+            notificationService.createChatNotification(saved.receiverId(), saved.senderId(), saved.content());
             String json = objectMapper.writeValueAsString(saved);
 
             if (session.isOpen()) {

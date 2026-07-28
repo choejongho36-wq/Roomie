@@ -59,7 +59,6 @@ export const NAV_ITEMS = [
   { to: "/mypage/interests", label: "관심 목록", icon: "heart" },
   { to: "/mypage/chat", label: "채팅", icon: "chat" },
   { to: "/mypage/activity", label: "설문 기록", icon: "clock" },
-  { to: "/mypage/notifications", label: "알림", icon: "bell" },
 ];
 
 function MyPageSidebar() {
