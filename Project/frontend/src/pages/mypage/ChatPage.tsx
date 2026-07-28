@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useChat } from "../../context/ChatContext";
 import { API_ORIGIN, getChatMessages, getConversations, searchUsers } from "../../api";
-import { useChatSocket } from "../../hooks/useChatSocket";
 import type { ChatMessage, Conversation, UserSearchResult } from "../../types/chat";
 import "./MyPageContent.css";
 import "./ChatPage.css";
@@ -22,7 +22,7 @@ interface ActivePartner {
 function ChatPage() {
   const { token, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { lastMessage, sendMessage } = useChatSocket(token);
+  const { lastMessage, sendMessage } = useChat();
 
   const [conversations, setConversations] = useState<Conversation[] | null>(null);
   const [activePartner, setActivePartner] = useState<ActivePartner | null>(null);

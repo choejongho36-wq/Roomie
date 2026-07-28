@@ -19,3 +19,13 @@ export interface UserSearchResult {
   nickname: string;
   profileImageUrl: string | null;
 }
+
+export interface NotificationItem {
+  notificationId: number;
+  senderId: number;
+  senderNickname: string;
+  senderProfileImageUrl: string | null;
+  content: string;
+  read: boolean;
+  createdAt: string;
+}

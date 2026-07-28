@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useChat } from "../context/ChatContext";
 import { API_ORIGIN } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
@@ -19,6 +20,7 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { token, user, login, logout } = useAuth();
+  const { notifications, unreadCount, markAsRead } = useChat();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
@@ -38,6 +40,11 @@ function Navbar() {
     }
 
     goToMatching(token);
+  };
+
+  const handleNotificationClick = (notificationId: number, senderId: number) => {
+    markAsRead(notificationId);
+    navigate(`/mypage/chat?userId=${senderId}`);
   };
 
   return (
@@ -78,9 +85,29 @@ function Navbar() {
         </nav>
         <div className="navbar-auth">
           {token ? (
-            <button type="button" className="navbar-notify-btn" aria-label="알림">
-              <Icon name="bell" />
-            </button>
+            <div className="navbar-dropdown">
+              <button type="button" className="navbar-notify-btn" aria-label="알림">
+                <Icon name="bell" />
+                {unreadCount > 0 && <span className="navbar-notify-dot" />}
+              </button>
+              <div className="navbar-dropdown-menu navbar-notify-menu">
+                {notifications.length === 0 ? (
+                  <p className="navbar-notify-empty">알림이 없어요.</p>
+                ) : (
+                  notifications.map((notification) => (
+                    <button
+                      key={notification.notificationId}
+                      type="button"
+                      className={`navbar-notify-item${notification.read ? "" : " navbar-notify-item-unread"}`}
+                      onClick={() => handleNotificationClick(notification.notificationId, notification.senderId)}
+                    >
+                      <span className="navbar-notify-item-title">{notification.senderNickname}</span>
+                      <span className="navbar-notify-item-content">{notification.content}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
           ) : null}
           {token ? (
             <div className="navbar-dropdown navbar-profile-dropdown">
