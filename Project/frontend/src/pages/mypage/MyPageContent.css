@@ -43,6 +43,8 @@
   justify-content: center;
   text-align: center;
   padding: 40px 28px 60px;
+  max-width: 980px;
+  margin: 0 auto;
   gap: 8px;
 }
 
@@ -394,6 +396,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .survey-history-item {
@@ -421,23 +425,29 @@
 .survey-history-answers {
   list-style: none;
   margin: 0;
-  padding: 12px 0 0;
+  padding: 16px 0 0;
   border-top: 1px solid #f0f0f0;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px 24px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 260px));
+  gap: 12px;
 }
 
 .survey-history-answers li {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 14px;
+  flex-direction: column;
+  gap: 6px;
+  background: #F5E9D8;
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #3E2C23;
 }
 
 .survey-history-category {
-  color: #999;
-  flex-shrink: 0;
+  color: #f16526;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .mypage-empty {

@@ -1,4 +1,8 @@
 .mypage-sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
   width: 72px;
   flex-shrink: 0;
   background: #fff;
@@ -12,21 +16,7 @@
 }
 
 .mypage-sidebar:hover {
-  width: 220px;
-}
-
-.mypage-sidebar-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #222;
-  margin: 0 0 4px 12px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.mypage-sidebar:hover .mypage-sidebar-title {
-  opacity: 1;
+  width: 200px;
 }
 
 .mypage-nav {
@@ -74,7 +64,6 @@
 
 .mypage-nav-item-logout {
   color: #999;
-  margin-top: auto;
 }
 
 .mypage-nav-icon {

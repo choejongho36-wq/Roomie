@@ -4,6 +4,8 @@
   gap: 20px;
   height: 640px;
   max-height: 70vh;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .chat-sidebar {

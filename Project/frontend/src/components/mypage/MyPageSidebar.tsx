@@ -72,7 +72,6 @@ function MyPageSidebar() {
 
   return (
     <aside className="mypage-sidebar">
-      <h2 className="mypage-sidebar-title">마이페이지</h2>
       <nav className="mypage-nav">
         {NAV_ITEMS.map((item) => (
           <NavLink
