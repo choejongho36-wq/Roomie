@@ -233,6 +233,21 @@
   height: auto;
 }
 
+.board-detail-description [data-role="inline-images"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.board-detail-description [data-role="inline-images"] img {
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
 .board-detail-actions {
   display: flex;
   justify-content: flex-end;

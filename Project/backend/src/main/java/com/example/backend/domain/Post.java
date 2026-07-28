@@ -47,7 +47,9 @@ public class Post {
     @Column(name = "recruit_count", nullable = false)
     private Integer recruitCount;
 
-    @Column(length = 1000)
+    // 본문에 첨부 이미지를 base64로 통째로 심어 넣기 때문에(별도 이미지 업로드 API가
+    // 아직 없음) 기존 VARCHAR(1000)로는 턱없이 부족해서 MEDIUMTEXT(최대 16MB)로 확장.
+    @Column(columnDefinition = "MEDIUMTEXT")
     private String description;
 
     @Column(length = 255)

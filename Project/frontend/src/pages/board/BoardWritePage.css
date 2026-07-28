@@ -211,9 +211,21 @@
   transform: skewX(-20deg);
 }
 
-.board-write-content:empty:before {
+/* :empty는 "자식 노드가 아예 없을 때"만 잡아내는데, 숨겨둔 이미지 컨테이너가 항상
+   자식으로 남아있어서 :empty만으로는 부족하다(텍스트 유무와 무관하게 항상 자식이
+   1개 있는 상태가 됨). 그래서 실제 텍스트 유무는 JS(updateEmptyState)가 판단해서
+   is-empty 클래스로 토글하고, 진짜 완전히 빈 최초 상태만 :empty로 보조한다. */
+.board-write-content:empty:before,
+.board-write-content.is-empty:before {
   content: attr(data-placeholder);
   color: #aaa;
+}
+
+/* 글쓰기 편집창에서는 안 보이게 숨긴다 (아래 썸네일 목록으로만 확인).
+   실제 이미지 태그는 description HTML에 그대로 남아 있어서 등록 시 저장되고,
+   게시글 상세 화면(BoardDetailPage)에는 정상적으로 표시된다. */
+.board-write-content [data-role="inline-images"] {
+  display: none;
 }
 
 .board-write-tags input,
@@ -323,6 +335,11 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.board-write-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .board-write-actions .btn-outline {
