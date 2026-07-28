@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSurvey } from "../hooks/UseSurvey";
 import { surveyQuestions } from "../data/SurveyQuestions";
@@ -26,6 +26,30 @@ function SurveyPage() {
   const currentSurveyQuestion = surveyQuestions[currentQuestion];
   const totalQuestions = surveyQuestions.length;
 
+  // 선택하면 자동으로 다음 문항으로 (마지막 문항 제외)
+  const handleSelect = (score: number) => {
+    selectAnswer(score);
+    if (currentQuestion < totalQuestions - 1) {
+      setTimeout(nextQuestion, 280);
+    }
+  };
+
+  // 숫자키 1~5로 선택, 좌우 화살표로 이동
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const index = Number(event.key) - 1;
+      if (index >= 0 && index < currentSurveyQuestion.options.length) {
+        handleSelect(currentSurveyQuestion.options[index].score);
+      } else if (event.key === "ArrowLeft") {
+        previousQuestion();
+      } else if (event.key === "ArrowRight" && answers[currentQuestion] !== undefined) {
+        nextQuestion();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   const handleComplete = async () => {
     if (!token) {
       navigate("/");
@@ -52,10 +76,11 @@ function SurveyPage() {
           totalQuestions={totalQuestions}
         />
         <QuestionCard
+          key={currentQuestion}
           question={currentSurveyQuestion}
           currentQuestion={currentQuestion}
           answers={answers}
-          selectAnswer={selectAnswer}
+          selectAnswer={handleSelect}
         />
         {submitError && <p className="survey-error">{submitError}</p>}
         <Navigation

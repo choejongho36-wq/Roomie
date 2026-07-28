@@ -1,11 +1,12 @@
 interface OptionButtonProps {
   text: string;
   score: number;
+  hotkey: number;
   selected: boolean;
   onClick: () => void;
 }
 
-function OptionButton({ text, selected, onClick }: OptionButtonProps) {
+function OptionButton({ text, hotkey, selected, onClick }: OptionButtonProps) {
   return (
     <button
       type="button"
@@ -13,7 +14,10 @@ function OptionButton({ text, selected, onClick }: OptionButtonProps) {
       onClick={onClick}
       aria-pressed={selected}
     >
-      {text}
+      <span className="option-key" aria-hidden="true">
+        {hotkey}
+      </span>
+      <span className="option-text">{text}</span>
     </button>
   );
 }
