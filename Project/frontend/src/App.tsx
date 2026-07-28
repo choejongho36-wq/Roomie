@@ -13,6 +13,7 @@ import ProfileBoardPage from "./pages/ProfileBoardPage";
 import ProfilePage from "./pages/mypage/ProfilePage";
 import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
+import InterestsPage from "./pages/mypage/InterestsPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -49,7 +50,7 @@ function App() {
             <Route path="edit" element={<EditProfilePage />} />
             <Route path="activity" element={<ActivityPage />} />
             <Route path="my-activity" element={<PlaceholderPage title="내 활동" />} />
-            <Route path="interests" element={<PlaceholderPage title="관심 목록" />} />
+            <Route path="interests" element={<InterestsPage />} />
             <Route path="chat" element={<PlaceholderPage title="채팅" />} />
             <Route path="notifications" element={<PlaceholderPage title="알림" />} />
             <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />

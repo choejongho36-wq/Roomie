@@ -12,6 +12,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -29,6 +31,11 @@ public class PostController {
     @GetMapping("/{postId}")
     public PostResponse getPost(Authentication authentication, @PathVariable Long postId) {
         return postService.getPost(postId, resolveOptionalUserId(authentication));
+    }
+
+    @GetMapping("/bookmarked")
+    public List<PostResponse> getBookmarkedPosts(Authentication authentication) {
+        return postService.getBookmarkedPosts(findUser(authentication).getUserId());
     }
 
     @PostMapping

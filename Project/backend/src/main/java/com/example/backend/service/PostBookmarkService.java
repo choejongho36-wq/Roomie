@@ -24,6 +24,11 @@ public class PostBookmarkService {
         return postBookmarkRepository.countByPostId(postId);
     }
 
+    // 찜목록 화면용: 이 사용자가 찜한 글들을, 찜한 시각이 최근인 순서대로 반환한다.
+    public List<PostBookmark> myBookmarksOrderedByRecent(Long userId) {
+        return postBookmarkRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
     public Map<Long, Long> countsFor(List<Long> postIds) {
         if (postIds.isEmpty()) return Map.of();
         return postBookmarkRepository.countGroupedByPostIds(postIds).stream()
