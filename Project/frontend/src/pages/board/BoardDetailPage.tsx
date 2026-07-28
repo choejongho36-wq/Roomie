@@ -154,7 +154,7 @@ function BoardDetailPage() {
         const recent = all
           .filter((p) => p.userId === post.userId && p.postId !== post.postId)
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 4);
+          .slice(0, 3);
         if (isMounted) setAuthorRecentPosts(recent);
       } catch {
         if (isMounted) setAuthorRecentPosts([]);
