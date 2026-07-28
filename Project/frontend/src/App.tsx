@@ -5,7 +5,7 @@ import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
-import CompleteProfilePage from "./pages/CompleteprofilePage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
 import SurveyCompletePage from "./pages/SurveyCompletePage";
