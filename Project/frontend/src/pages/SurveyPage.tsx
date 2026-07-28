@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSurvey } from "../hooks/UseSurvey";
 import { surveyQuestions } from "../data/SurveyQuestions";
@@ -17,6 +17,7 @@ function SurveyPage() {
     selectAnswer,
     nextQuestion,
     previousQuestion,
+    goToQuestion,
   } = useSurvey(surveyQuestions.length);
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -27,12 +28,16 @@ function SurveyPage() {
   const totalQuestions = surveyQuestions.length;
 
   // 선택하면 자동으로 다음 문항으로 (마지막 문항 제외)
+  // 예약된 이동은 항상 1개만 유지해야 문항을 건너뛰지 않는다
+  const advanceTimer = useRef<number | undefined>(undefined);
   const handleSelect = (score: number) => {
     selectAnswer(score);
     if (currentQuestion < totalQuestions - 1) {
-      setTimeout(nextQuestion, 280);
+      window.clearTimeout(advanceTimer.current);
+      advanceTimer.current = window.setTimeout(nextQuestion, 280);
     }
   };
+  useEffect(() => () => window.clearTimeout(advanceTimer.current), []);
 
   // 숫자키 1~5로 선택, 좌우 화살표로 이동
   useEffect(() => {
@@ -53,6 +58,13 @@ function SurveyPage() {
   const handleComplete = async () => {
     if (!token) {
       navigate("/");
+      return;
+    }
+    // 빈 문항이 있으면 서버로 보내지 않고 해당 문항으로 되돌린다
+    const missing = surveyQuestions.findIndex((_, i) => answers[i] === undefined);
+    if (missing !== -1) {
+      setSubmitError(`${missing + 1}번 문항에 답하지 않았어요.`);
+      goToQuestion(missing);
       return;
     }
     setSubmitting(true);
