@@ -41,15 +41,6 @@ export const deletePost = async (token: string, postId: number): Promise<void> =
   });
 };
 
-export const toggleBookmark = async (token: string, postId: number): Promise<Post> => {
-  const response = await axios.post<Post>(
-    `${API_BASE_URL}/posts/${postId}/bookmark`,
-    {},
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return response.data;
-};
-
 export const getComments = async (postId: number): Promise<Comment[]> => {
   const response = await axios.get<Comment[]>(`${API_BASE_URL}/posts/${postId}/comments`);
   return response.data;
@@ -133,6 +124,20 @@ export const getMyProfile = async (token: string): Promise<User> => {
   const response = await axios.get<User>(`${API_BASE_URL}/users/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  return response.data;
+};
+
+export const completeAdditionalInfo = async (
+  token: string,
+  gender: string,
+  birthDate: string,
+  phone: string
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/additional-info`,
+    { gender, birthDate, phone: phone || null },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return response.data;
 };
 
