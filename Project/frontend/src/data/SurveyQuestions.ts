@@ -1,5 +1,28 @@
 import type { SurveyQuestion } from "../types/survey";
 
+export const categoryEmoji: Record<string, string> = {
+  청결: "🧹",
+  "취침 시간": "🌙",
+  요리: "🍳",
+  "전화 통화": "📞",
+  "생활 소음": "🔊",
+  "공용 비품": "🧴",
+  "친구 초대": "🎉",
+  "이어폰 사용": "🎧",
+  "야간 생활": "🌃",
+  "갈등 해결": "🤝",
+  벌레: "🐛",
+  코골이: "😴",
+  흡연: "🚬",
+  음주: "🍻",
+  "음주 후 행동": "🕺",
+  야식: "🍜",
+  "실내 취식": "🍽️",
+  "실내 온도": "🌡️",
+  "월 생활비": "💸",
+  "방 크기": "📐",
+};
+
 export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 1,
