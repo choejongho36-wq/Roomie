@@ -6,7 +6,10 @@ function Footer() {
   return (
     <footer className="footer">
       <div className="footer-top">
-        <img src={logo} alt="Roomie" className="footer-logo" />
+        <div className="footer-brand">
+          <img src={logo} alt="Roomie" className="footer-logo" />
+          <span className="footer-brand-name">Roomie</span>
+        </div>
         <nav className="footer-links">
           <Link to="/terms">이용약관 </Link><p>|</p>
           <Link to="/privacy">개인정보처리방침</Link><p>|</p>

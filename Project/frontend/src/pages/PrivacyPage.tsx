@@ -45,7 +45,7 @@ const SECTIONS = [
   },
   {
     title: "11. 개인정보 보호책임자 및 문의처",
-    body: "회사는 개인정보 보호 및 관련 불만 처리를 위해 아래와 같이 담당자를 지정합니다.\n· 성명/닉네임: 병아리반\n· 이메일: [개발자 이메일 주소]\n· 전화번호: [고객센터 전화번호]",
+    body: "회사는 개인정보 보호 및 관련 불만 처리를 위해 아래와 같이 담당자를 지정합니다.\n· 성명: 루미\n· 이메일: roomie@gmail.com\n· 전화번호: 010-0000-0000",
   },
   {
     title: "12. 권익침해 구제방법",
@@ -72,7 +72,7 @@ function PrivacyPage() {
         ))}
 
         <p className="terms-footer">이 방침은 2026-07-23부터 시행합니다.</p>
-        <p className="terms-company">병아리반 | URL | 이메일</p>
+        <p className="terms-company">Roomie | URL | 이메일</p>
       </div>
     </div>
   );

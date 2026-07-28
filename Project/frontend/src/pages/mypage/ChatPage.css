@@ -1,0 +1,245 @@
+.chat-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  height: 640px;
+  max-height: 70vh;
+}
+
+.chat-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.chat-search {
+  position: relative;
+}
+
+.chat-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.chat-search input:focus {
+  outline: none;
+  border-color: #f16526;
+}
+
+.chat-search-results {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.chat-search-result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+}
+
+.chat-search-result:hover {
+  background: #fff4ee;
+}
+
+.chat-conversation-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.chat-conversation-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chat-conversation-item:hover {
+  background: #f7f7f7;
+}
+
+.chat-conversation-item.is-active {
+  background: #fff1e8;
+}
+
+.chat-conversation-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-conversation-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #222;
+}
+
+.chat-conversation-preview {
+  font-size: 12px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f1f1f1;
+  flex-shrink: 0;
+}
+
+.chat-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f16526;
+  background: #fff1e8;
+  font-weight: 800;
+}
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.chat-thread-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.chat-thread-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0ece8;
+}
+
+.chat-message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 70%;
+}
+
+.chat-message.is-mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-message-bubble {
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #f2f2f2;
+  color: #222;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.chat-message.is-mine .chat-message-bubble {
+  background: #f16526;
+  color: #fff;
+}
+
+.chat-message-time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.chat-composer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid #f0ece8;
+}
+
+.chat-composer input {
+  flex: 1;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.chat-composer input:focus {
+  outline: none;
+  border-color: #f16526;
+}
+
+.chat-empty-hint {
+  color: #999;
+  font-size: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+
+  .chat-sidebar {
+    max-height: 260px;
+  }
+
+  .chat-message-list {
+    max-height: 360px;
+  }
+}

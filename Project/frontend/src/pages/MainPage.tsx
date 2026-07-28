@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./MainPage.css";
 import logo from "../assets/Roomie_logo2.png";
 import { useAuth } from "../context/AuthContext";
-import { getMySurveys } from "../api";
 import LoginModal from "../components/LoginModal";
+import MatchingLoadingOverlay from "../components/MatchingLoadingOverlay";
+import { useInView } from "../hooks/useInView";
+import { useMatchingRedirect } from "../hooks/useMatchingRedirect";
 
 const matchStats = [
   { label: "생활 패턴", percent: 95 },
@@ -93,18 +94,12 @@ const features = [
 ];
 
 function MainPage() {
-  const navigate = useNavigate();
   const { token, login } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  const goToMatching = async (authToken: string) => {
-    try {
-      const surveys = await getMySurveys(authToken);
-      navigate(surveys.length > 0 ? "/recommend" : "/survey");
-    } catch {
-      navigate("/survey");
-    }
-  };
+  const [featureRef, featureInView] = useInView<HTMLDivElement>();
+  const [aiMatchRef, aiMatchInView] = useInView<HTMLDivElement>();
+  const [stepsRef, stepsInView] = useInView<HTMLDivElement>();
+  const { isRedirecting, goToMatching } = useMatchingRedirect();
 
   const handleMatchClick = () => {
     if (!token) {
@@ -117,10 +112,11 @@ function MainPage() {
   return (
     <div className="page">
       <section className="hero">
-        <div className="hero-blob hero-blob-1" aria-hidden="true" />
-        <div className="hero-blob hero-blob-2" aria-hidden="true" />
-        <div className="hero-blob hero-blob-3" aria-hidden="true" />
-        <div className="hero-center-glow" aria-hidden="true" />
+        <div className="hero-particles" aria-hidden="true">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <span key={i} className="hero-particle" />
+          ))}
+        </div>
         <img className="mainpage-logo" src={logo} alt="Roomie" />
         <h1 className="logo">Roomie</h1>
         <h1 className="hero-tagline">
@@ -132,9 +128,12 @@ function MainPage() {
       </section>
 
       <section className="why-section">
-        <h2>왜 Roomie인가요?</h2>
+        <h2>왜 <span className="roomie-brand">Roomie</span>인가요?</h2>
         <p className="why-subtitle">생활 패턴부터 가치관까지, 중요한 것들을 함께 고려해요.</p>
-        <div className="feature-grid">
+        <div
+          ref={featureRef}
+          className={`feature-grid${featureInView ? " in-view" : ""}`}
+        >
           {features.map((feature) => (
             <div key={feature.title} className="feature-card">
               <div className="feature-icon" aria-hidden="true">
@@ -163,12 +162,15 @@ function MainPage() {
               <span className="ai-match-highlight">맞춤형 룸메이트 매칭</span>
             </h2>
             <p>
-              Roomie의 AI는 생활습관, 성격, 가치관, 선호도를 종합 분석하여
+              <span className="roomie-brand">Roomie</span>의 AI는 생활습관, 성격, 가치관, 선호도를 종합 분석하여
               당신과 가장 잘 맞는 룸메이트를 추천합니다.
             </p>
           </div>
 
-          <div className="ai-match-card">
+          <div
+            ref={aiMatchRef}
+            className={`ai-match-card${aiMatchInView ? " in-view" : ""}`}
+          >
             <h3>매칭 분석 결과</h3>
             <div className="ai-match-body">
               <div className="ai-match-bars">
@@ -213,8 +215,11 @@ function MainPage() {
       </section>
 
       <section className="steps-section">
-        <h2>Roomie 이용 방법</h2>
-        <div className="steps-row">
+        <h2><span className="roomie-brand">Roomie</span> 이용 방법</h2>
+        <div
+          ref={stepsRef}
+          className={`steps-row${stepsInView ? " in-view" : ""}`}
+        >
           {steps.map((step, i) => (
             <div key={step.title} className="step-item-wrap">
               <div className="step-item">
@@ -262,6 +267,8 @@ function MainPage() {
           <path d="M12 19V5M5 12l7-7 7 7" />
         </svg>
       </button>
+
+      {isRedirecting && <MatchingLoadingOverlay />}
     </div>
   );
 }

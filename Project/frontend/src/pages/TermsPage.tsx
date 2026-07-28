@@ -86,7 +86,7 @@ function TermsPage() {
         ))}
 
         <p className="terms-footer">이 약관은 2026-07-23부터 시행합니다.</p>
-        <p className="terms-company">병아리반 | URL | 이메일</p>
+        <p className="terms-company">Roomie | URL | 이메일</p>
       </div>
     </div>
   );
