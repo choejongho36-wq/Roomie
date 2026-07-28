@@ -164,7 +164,7 @@ function ProfileBoardPage() {
                     className="profile-compare-button"
                     onClick={(event) => openComparison(event, item)}
                   >
-                    호환성 점수 <span aria-hidden="true">&gt;</span>
+                    점수 <span aria-hidden="true">&gt;</span>
                   </button>
                 </div>
               </li>
