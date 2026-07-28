@@ -124,9 +124,11 @@ function BoardDetailPage() {
   const [error, setError] = useState("");
   const [authorRecentPosts, setAuthorRecentPosts] = useState<Post[] | null>(null);
   const [infoModal, setInfoModal] = useState<string | null>(null);
-  const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => Promise<void> | void } | null>(
-    null
-  );
+  const [confirmModal, setConfirmModal] = useState<{
+    message: string;
+    confirmLabel?: string;
+    onConfirm: () => Promise<void> | void;
+  } | null>(null);
 
   const loadComments = () => {
     getComments(Number(postId)).then(setComments);
@@ -195,6 +197,28 @@ function BoardDetailPage() {
       onConfirm: async () => {
         await deletePost(token, post.postId);
         navigate("/board");
+      },
+    });
+  };
+
+  const handleGoToList = () => {
+    if (!post) {
+      navigate("/board");
+      return;
+    }
+    navigate(post.boardType ? `/board?type=${encodeURIComponent(post.boardType)}` : "/board");
+  };
+
+  const handleReportPost = () => {
+    if (!token) {
+      setInfoModal("신고하려면 로그인이 필요해요.");
+      return;
+    }
+    setConfirmModal({
+      message: "이 게시글을 신고할까요?",
+      confirmLabel: "신고",
+      onConfirm: () => {
+        setInfoModal("신고가 접수됐어요. 운영팀이 확인 후 조치할게요.");
       },
     });
   };
@@ -348,16 +372,25 @@ function BoardDetailPage() {
         )}
       </section>
 
-      {isAuthor && (
-        <div className="board-detail-actions">
-          <Link to={`/board/edit/${post.postId}`} className="btn btn-outline">
-            수정
-          </Link>
-          <button className="btn btn-outline" onClick={handleDeletePost}>
-            삭제
+      <div className="board-detail-actions">
+        {isAuthor ? (
+          <>
+            <Link to={`/board/edit/${post.postId}`} className="btn btn-outline">
+              수정
+            </Link>
+            <button className="btn btn-outline" onClick={handleDeletePost}>
+              삭제
+            </button>
+          </>
+        ) : (
+          <button className="btn btn-outline" onClick={handleReportPost}>
+            신고
           </button>
-        </div>
-      )}
+        )}
+        <button className="btn btn-outline" onClick={handleGoToList}>
+          목록
+        </button>
+      </div>
 
       <section className="board-comments">
         <h2>댓글 {comments.length}</h2>
@@ -419,7 +452,7 @@ function BoardDetailPage() {
                   await action();
                 }}
               >
-                삭제
+                {confirmModal.confirmLabel ?? "삭제"}
               </button>
             </div>
           </div>
