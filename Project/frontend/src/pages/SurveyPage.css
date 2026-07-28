@@ -182,12 +182,14 @@
   transition: all 0.2s ease;
 }
 
-.option-button:hover {
+/* 선택된 버튼에는 hover 스타일을 걸지 않는다.
+   안 그러면 클릭 후 마우스가 그대로 올라가 있는 동안 선택 상태가 hover에 덮인다. */
+.option-button:not(.option-button-selected):hover {
   border-color: #f16526;
   transform: translateY(-1px);
 }
 
-.option-button:hover .option-key {
+.option-button:not(.option-button-selected):hover .option-key {
   background: #ffe8d9;
   color: #f16526;
 }
