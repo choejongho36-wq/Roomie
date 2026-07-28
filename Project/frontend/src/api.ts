@@ -136,6 +136,20 @@ export const getMyProfile = async (token: string): Promise<User> => {
   return response.data;
 };
 
+export const completeAdditionalInfo = async (
+  token: string,
+  gender: string,
+  birthDate: string,
+  phone: string
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/additional-info`,
+    { gender, birthDate, phone: phone || null },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const uploadProfileImage = async (token: string, file: File): Promise<User> => {
   const formData = new FormData();
   formData.append("file", file);

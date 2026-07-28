@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
+import CompleteProfilePage from "./pages/CompleteprofilePage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
 import SurveyCompletePage from "./pages/SurveyCompletePage";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
+          <Route path="/complete-profile" element={<CompleteProfilePage />} />
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/recommend" element={<RecommendationPage />} />
