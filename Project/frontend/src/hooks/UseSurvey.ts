@@ -28,5 +28,6 @@ export const useSurvey = (totalQuestions: number) => {
     selectAnswer,
     nextQuestion,
     previousQuestion,
+    goToQuestion: setCurrentQuestion,
   };
 };

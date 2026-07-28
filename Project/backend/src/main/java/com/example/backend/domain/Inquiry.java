@@ -22,6 +22,10 @@ public class Inquiry {
     @Column(nullable = false, length = 100)
     private String title;
 
+    // 대분류: 버그 / 신고 / 문의 / 제안
+    @Column(nullable = false, length = 20)
+    private String category;
+
     @Column(nullable = false, length = 2000)
     private String content;
 
@@ -44,15 +48,17 @@ public class Inquiry {
             this.status = "PENDING";
     }
 
-    public Inquiry(Long userId, String title, String content) {
+    public Inquiry(Long userId, String title, String category, String content) {
         this.userId = userId;
         this.title = title;
+        this.category = category;
         this.content = content;
         this.status = "PENDING";
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String category, String content) {
         this.title = title;
+        this.category = category;
         this.content = content;
     }
 }
