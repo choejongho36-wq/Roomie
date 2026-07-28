@@ -1,10 +1,13 @@
 package com.example.backend.service;
 
 import com.example.backend.domain.Post;
+import com.example.backend.domain.PostBookmark;
+import com.example.backend.domain.PostView;
 import com.example.backend.domain.User;
 import com.example.backend.dto.PostRequest;
 import com.example.backend.dto.PostResponse;
 import com.example.backend.repository.PostRepository;
+import com.example.backend.repository.PostViewRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +26,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostBookmarkService postBookmarkService;
+    private final PostViewRepository postViewRepository;
 
     public Page<PostResponse> getPosts(Pageable pageable) {
         Page<Post> posts = postRepository.findAll(pageable);
@@ -33,8 +38,17 @@ public class PostService {
 
     public PostResponse getPost(Long postId, Long viewerUserId) {
         Post post = findPost(postId);
-        post.increaseViewCount();
-        postRepository.save(post);
+        // 작성자 본인이 자기 글을 보는 경우는 조회수에 아예 반영하지 않는다.
+        boolean isAuthor = viewerUserId != null && viewerUserId.equals(post.getUserId());
+        // 로그인한 사용자(작성자 제외)가 이 글을 이미 조회한 적이 없을 때만 조회수를 올린다.
+        // (비로그인 조회는 누구인지 특정할 수 없어 기존처럼 매번 올라간다.)
+        if (!isAuthor && (viewerUserId == null || !postViewRepository.existsByPostIdAndUserId(postId, viewerUserId))) {
+            post.increaseViewCount();
+            postRepository.save(post);
+            if (viewerUserId != null) {
+                postViewRepository.save(new PostView(postId, viewerUserId));
+            }
+        }
         long bookmarkCount = postBookmarkService.countFor(postId);
         boolean bookmarked = postBookmarkService.isBookmarked(postId, viewerUserId);
         return toResponse(post, authorOf(post.getUserId()), bookmarkCount, bookmarked);
@@ -70,6 +84,28 @@ public class PostService {
             throw new IllegalArgumentException("본인이 작성한 글만 삭제할 수 있습니다.");
         }
         postRepository.delete(post);
+    }
+
+    // 마이페이지 "찜목록" 화면용. 최근에 찜한 글이 위로 오도록 정렬해서 반환한다.
+    public List<PostResponse> getBookmarkedPosts(Long userId) {
+        List<PostBookmark> bookmarks = postBookmarkService.myBookmarksOrderedByRecent(userId);
+        List<Long> postIds = bookmarks.stream().map(PostBookmark::getPostId).toList();
+        if (postIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, Post> postsById = postRepository.findAllById(postIds).stream()
+                .collect(Collectors.toMap(Post::getPostId, p -> p));
+        Map<Long, User> authors = authorsOf(postsById.values().stream().map(Post::getUserId).toList());
+        Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
+
+        // postRepository.findAllById는 순서를 보장하지 않아서, 찜한 순서(postIds)를 기준으로 다시 나열한다.
+        // 찜한 뒤 글이 삭제됐을 수 있으니 postsById에 없는 건 건너뛴다.
+        return postIds.stream()
+                .map(postsById::get)
+                .filter(Objects::nonNull)
+                .map(p -> toResponse(p, authors.get(p.getUserId()), bookmarkCounts.getOrDefault(p.getPostId(), 0L), true))
+                .toList();
     }
 
     public PostResponse toggleBookmark(Long postId, Long userId) {

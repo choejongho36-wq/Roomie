@@ -26,11 +26,69 @@ const formatMoveInLabel = (value: number) => {
   return `${value}개월`;
 };
 
+// 서버 에러 응답이 문자열이 아니라 객체({timestamp, status, error, path} 같은 스프링 기본 에러
+// 포맷 등)로 올 수 있어서, 그걸 그대로 화면에 렌더링하면 "Objects are not valid as a React
+// child" 에러로 페이지 전체가 하얗게 죽어버린다. 항상 안전하게 문자열로 변환한다.
+const extractErrorMessage = (err: unknown): string => {
+  if (!err || typeof err !== "object" || !("response" in err)) {
+    return "등록에 실패했습니다.";
+  }
+  const response = (err as { response?: { data?: unknown; status?: number } }).response;
+  const data = response?.data;
+
+  // 401(인증 만료)은 스프링 기본 에러의 "Unauthorized" 같은 기술적 문구보다
+  // 사용자가 바로 이해할 수 있는 안내를 우선 보여준다.
+  if (response?.status === 401) return "로그인이 만료됐어요. 다시 로그인해주세요.";
+  if (typeof data === "string" && data.trim()) return data;
+  if (data && typeof data === "object") {
+    const maybeMessage = (data as Record<string, unknown>).message ?? (data as Record<string, unknown>).error;
+    if (typeof maybeMessage === "string" && maybeMessage.trim()) return maybeMessage;
+  }
+  return "등록에 실패했습니다.";
+};
+
 interface ImageItem {
   id: string;
-  file: File;
+  // 새로 첨부한 이미지는 File이 있지만, 기존 글을 수정하러 들어와서 본문에서
+  // 복원한 이미지는 원본 File이 없다(이미 base64로 저장된 데이터만 있음).
+  file?: File;
   previewUrl: string;
 }
+
+const INLINE_IMAGES_ROLE = "inline-images";
+const MAX_IMAGE_WIDTH = 900;
+const IMAGE_JPEG_QUALITY = 0.82;
+
+// 첨부한 이미지를 캔버스로 리사이즈해서 base64 data URL로 변환한다. 백엔드에 별도
+// 이미지 업로드 API가 없어서, 본문 description(HTML 텍스트) 안에 이미지를 통째로
+// 심어 넣는 방식으로 저장한다. 원본 그대로 넣으면 용량이 너무 커지니 가로 폭을
+// 줄이고 JPEG로 압축한다.
+const resizeImageToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("이미지를 읽지 못했습니다."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("이미지를 불러오지 못했습니다."));
+      img.onload = () => {
+        const scale = Math.min(1, MAX_IMAGE_WIDTH / img.width);
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(reader.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", IMAGE_JPEG_QUALITY));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 
 function DualRangeSlider({
   min,
@@ -103,6 +161,9 @@ function BoardWritePage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [images, setImages] = useState<ImageItem[]>([]);
+  // 이미지 리사이즈(비동기) 처리가 몇 개 남았는지. 0보다 크면 등록 버튼을 잠시 막아서,
+  // 이미지가 본문에 다 심어지기 전에 제출돼버리는 문제를 방지한다.
+  const [pendingImageCount, setPendingImageCount] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -122,6 +183,13 @@ function BoardWritePage() {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const boardMenuRef = useRef<HTMLDivElement | null>(null);
+  // 이미지 리사이즈는 비동기라서, 등록 버튼을 누르는 시점에 아직 본문에 안 심어진
+  // 이미지가 있을 수 있다. 제출 전에 이 작업들이 다 끝나길 기다리기 위한 저장소.
+  const pendingImageWorkRef = useRef<Promise<void>[]>([]);
+  // 이미지가 리사이즈되는 도중에 사용자가 썸네일에서 그 이미지를 지워버리면,
+  // 리사이즈가 끝난 뒤 뒤늦게 본문에 삽입되어 "지웠는데 다시 생기는" 문제가
+  // 생길 수 있어 취소된 이미지 id를 기록해둔다.
+  const cancelledImageIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isEdit || !postId) return;
@@ -131,6 +199,17 @@ function BoardWritePage() {
       setTags(post.tags ? post.tags.split(",").map((t) => t.trim()).filter(Boolean) : []);
       if (contentRef.current) {
         contentRef.current.innerHTML = post.description ?? "";
+        updateEmptyState();
+        // 본문 안에 이미 심어져 있는 이미지들을 찾아서, 아래 썸네일 목록에도
+        // 다시 보여준다. (수정 화면에 들어왔을 때 "이미지가 없어졌다"고 보이는
+        // 문제 방지 — 실제로는 본문 안에 그대로 있고, 썸네일 목록만 비어있던 것)
+        const existingImages = Array.from(
+          contentRef.current.querySelectorAll<HTMLImageElement>(`[data-role="${INLINE_IMAGES_ROLE}"] img[data-image-id]`)
+        ).map((img) => ({
+          id: img.getAttribute("data-image-id") ?? img.src,
+          previewUrl: img.src,
+        }));
+        if (existingImages.length > 0) setImages(existingImages);
       }
       if (post.region) {
         const parsed = parseRegionToken(post.region);
@@ -155,7 +234,11 @@ function BoardWritePage() {
 
   useEffect(() => {
     return () => {
-      images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+      // file이 있는(=새로 첨부해서 createObjectURL로 만든) 이미지만 해제한다.
+      // 수정 화면에서 본문으로부터 복원한 이미지는 data URL이라 해제 대상이 아니다.
+      images.forEach((image) => {
+        if (image.file) URL.revokeObjectURL(image.previewUrl);
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -188,6 +271,11 @@ function BoardWritePage() {
       </div>
     );
   }
+
+  const showError = (message: string) => {
+    setError(message);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const applyStyle = (command: string, value?: string) => {
     contentRef.current?.focus();
@@ -225,25 +313,100 @@ function BoardWritePage() {
     setTags((prev) => prev.filter((t) => t !== tag));
   };
 
+  // 본문(contentEditable) 맨 위에 이미지 전용 컨테이너를 하나 두고, 그 안에 이미지를
+  // 순서대로 쌓는다. 이 영역은 contentEditable=false로 막아서 타이핑 중 실수로
+  // 이미지 사이에 글자가 끼어들지 않게 한다.
+  const ensureInlineImageContainer = (): HTMLElement | null => {
+    const el = contentRef.current;
+    if (!el) return null;
+    let container = el.querySelector<HTMLElement>(`:scope > [data-role="${INLINE_IMAGES_ROLE}"]`);
+    if (!container) {
+      container = document.createElement("div");
+      container.setAttribute("data-role", INLINE_IMAGES_ROLE);
+      container.contentEditable = "false";
+      el.insertBefore(container, el.firstChild);
+    }
+    return container;
+  };
+
+  // 이미지 컨테이너를 본문 안에 숨겨서 넣어두기 때문에, CSS :empty만으로는 "실제
+  // 글자가 있는지"를 판단할 수 없다(:empty/:only-child는 텍스트 노드를 신경 안 써서
+  // 이미지만 있고 글자가 없을 때도, 이미지+글자가 같이 있을 때도 구분이 안 됨).
+  // 그래서 실제 텍스트 유무를 JS로 직접 확인해서 플레이스홀더 표시 여부를 클래스로 제어한다.
+  const updateEmptyState = () => {
+    const el = contentRef.current;
+    if (!el) return;
+    const hasText = (el.textContent ?? "").trim().length > 0;
+    el.classList.toggle("is-empty", !hasText);
+  };
+
+  const insertImageIntoContent = (imageId: string, dataUrl: string) => {
+    const container = ensureInlineImageContainer();
+    if (!container) return;
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    img.alt = "첨부 이미지";
+    img.setAttribute("data-image-id", imageId);
+    container.appendChild(img);
+    updateEmptyState();
+  };
+
+  const removeImageFromContent = (imageId: string) => {
+    const el = contentRef.current;
+    if (!el) return;
+    const img = el.querySelector<HTMLImageElement>(`img[data-image-id="${imageId}"]`);
+    if (!img) return;
+    const container = img.parentElement;
+    img.remove();
+    if (container && container.getAttribute("data-role") === INLINE_IMAGES_ROLE && container.childElementCount === 0) {
+      container.remove();
+    }
+    updateEmptyState();
+  };
+
   const handleImageSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+    const selectedFiles = Array.from(files);
+    event.target.value = "";
 
-    const newImages: ImageItem[] = Array.from(files).map((file) => ({
+    const newImages: ImageItem[] = selectedFiles.map((file) => ({
       id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       file,
       previewUrl: URL.createObjectURL(file),
     }));
     setImages((prev) => [...prev, ...newImages]);
-    event.target.value = "";
+    setPendingImageCount((count) => count + newImages.length);
+
+    // 선택한 순서대로 본문 위쪽에 이미지가 쌓이도록 순차적으로 처리하고,
+    // 등록 버튼이 이 작업을 기다릴 수 있도록 Promise를 저장해둔다.
+    const work = (async () => {
+      for (const image of newImages) {
+        try {
+          const dataUrl = await resizeImageToDataUrl(image.file as File);
+          if (cancelledImageIdsRef.current.has(image.id)) {
+            cancelledImageIdsRef.current.delete(image.id);
+          } else {
+            insertImageIntoContent(image.id, dataUrl);
+          }
+        } catch {
+          showError("이미지를 본문에 넣지 못했어요. 다른 이미지를 시도해주세요.");
+        } finally {
+          setPendingImageCount((count) => Math.max(0, count - 1));
+        }
+      }
+    })();
+    pendingImageWorkRef.current.push(work);
   };
 
   const removeImage = (id: string) => {
+    cancelledImageIdsRef.current.add(id);
     setImages((prev) => {
       const target = prev.find((image) => image.id === id);
-      if (target) URL.revokeObjectURL(target.previewUrl);
+      if (target?.file) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((image) => image.id !== id);
     });
+    removeImageFromContent(id);
   };
 
   const getPayload = () => ({
@@ -265,26 +428,33 @@ function BoardWritePage() {
     setStatusMessage("");
 
     if (!selectedBoard) {
-      setError("게시판을 선택해주세요.");
+      showError("게시판을 선택해주세요.");
       return;
     }
     if (!title.trim()) {
-      setError("제목을 입력해주세요.");
+      showError("제목을 입력해주세요.");
       return;
     }
     const isRecruitBoard = selectedBoard === "모집게시판";
     if (isRecruitBoard && !region) {
-      setError("지역을 선택해주세요.");
+      showError("지역을 선택해주세요.");
       return;
     }
     const contentText = contentRef.current?.textContent?.trim() ?? "";
     if (!contentText) {
-      setError("내용을 입력해주세요.");
+      showError("내용을 입력해주세요.");
       return;
     }
     if (!token) {
-      setError("로그인이 필요합니다.");
+      showError("로그인이 필요합니다.");
       return;
+    }
+
+    // 이미지 리사이즈가 아직 끝나지 않았으면 본문에 이미지가 안 심어진 상태로
+    // 그대로 등록될 수 있어서, 제출 전에 진행 중인 작업을 전부 기다린다.
+    if (pendingImageWorkRef.current.length > 0) {
+      await Promise.all(pendingImageWorkRef.current);
+      pendingImageWorkRef.current = [];
     }
 
     setError("");
@@ -306,19 +476,9 @@ function BoardWritePage() {
 
     try {
       const saved = isEdit ? await updatePost(token, Number(postId), request) : await createPost(token, request);
-      // 이미지 업로드는 아직 백엔드 연동 전이라 개수만 안내합니다.
-      if (images.length > 0) {
-        setStatusMessage(
-          `게시글이 등록됐어요. (이미지 ${images.length}장은 아직 업로드 연동 전이라 저장되지 않았어요)`
-        );
-      }
       navigate(`/board/${saved.postId}`);
     } catch (err: unknown) {
-      const message =
-        err && typeof err === "object" && "response" in err
-          ? (err as { response?: { data?: string } }).response?.data
-          : undefined;
-      setError(message ?? "등록에 실패했습니다.");
+      showError(extractErrorMessage(err));
     }
   };
 
@@ -449,6 +609,7 @@ function BoardWritePage() {
           contentEditable
           data-placeholder="내용을 입력해주세요."
           suppressContentEditableWarning
+          onInput={updateEmptyState}
         />
 
         <div className="board-write-tags">
@@ -493,8 +654,8 @@ function BoardWritePage() {
           <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
             임시저장
           </button>
-          <button type="submit" className="btn btn-primary">
-            등록
+          <button type="submit" className="btn btn-primary" disabled={pendingImageCount > 0}>
+            {pendingImageCount > 0 ? "이미지 처리 중..." : "등록"}
           </button>
         </div>
       </form>

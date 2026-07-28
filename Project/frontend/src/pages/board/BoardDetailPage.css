@@ -1,5 +1,5 @@
 .board-detail-page {
-  width: 800px;
+  width: min(900px, calc(100% - 48px));
   min-width: 0;
   box-sizing: border-box;
   margin: 0 auto;
@@ -49,7 +49,7 @@
 }
 
 .board-detail-header {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #000000;
   padding-bottom: 20px;
   margin-bottom: 24px;
 }
@@ -231,6 +231,21 @@
 .board-detail-description img {
   max-width: 100%;
   height: auto;
+}
+
+.board-detail-description [data-role="inline-images"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.board-detail-description [data-role="inline-images"] img {
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
 .board-detail-actions {

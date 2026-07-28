@@ -167,7 +167,10 @@ function BoardListPage() {
       }
 
       return true;
-    });
+    })
+      // 최신 글이 맨 위로 오도록 작성일 기준 내림차순 정렬. (백엔드가 정렬 없이
+      // 그냥 저장 순서대로 내려주고 있어서 프론트에서 한 번 더 정렬해준다.)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [posts, boardType, selectedRegions, selectedDistricts, selectedBudgets, selectedMoveIns]);
 
   const hasActiveFilters =
@@ -182,6 +185,18 @@ function BoardListPage() {
 
   return (
     <div className="page board-list-page">
+      <div className="board-floating-menu">
+        <Link to="/inquiry" className="board-floating-menu-button">
+          문의
+        </Link>
+        <Link to="/mypage/interests" className="board-floating-menu-button">
+          찜목록
+        </Link>
+        <Link to="/mypage/chat" className="board-floating-menu-button">
+          채팅목록
+        </Link>
+      </div>
+
       <div className="board-list-header">
         <div>
           <h1>{boardType ?? "커뮤니티"}</h1>
@@ -284,13 +299,17 @@ function BoardListPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredPosts.map((post) => (
+              {filteredPosts.map((post, index) => (
                 <tr
                   key={post.postId}
                   className="board-table-row"
                   onClick={() => navigate(`/board/${post.postId}`)}
                 >
-                  <td className="board-table-number-cell">{post.postId}</td>
+                  {/* 게시글 고유 id(postId)는 게시판 구분 없이 전체 글에 걸쳐 매겨지는 값이라
+                      그대로 쓰면 모집/고민 게시판 번호가 섞이고, 삭제해도 auto-increment라
+                      숫자가 줄어들지 않고 구멍이 남는다. 그래서 지금 이 목록(현재 게시판/필터
+                      기준)에서의 순서로 매번 다시 계산해서 보여준다. */}
+                  <td className="board-table-number-cell">{filteredPosts.length - index}</td>
                   <td className="board-table-title-cell">
                     <Link to={`/board/${post.postId}`} onClick={(e) => e.stopPropagation()}>
                       {post.title || post.region || "제목 없음"}

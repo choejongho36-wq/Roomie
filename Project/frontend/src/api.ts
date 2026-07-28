@@ -43,6 +43,13 @@ export const deletePost = async (token: string, postId: number): Promise<void> =
   });
 };
 
+export const getBookmarkedPosts = async (token: string): Promise<Post[]> => {
+  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/bookmarked`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const toggleBookmark = async (token: string, postId: number): Promise<Post> => {
   const response = await axios.post<Post>(
     `${API_BASE_URL}/posts/${postId}/bookmark`,
