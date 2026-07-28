@@ -219,10 +219,27 @@
   border-color: #ff6600;
   transform: scale(1.03);
   box-shadow: 0 24px 54px rgba(255, 102, 0, 0.26);
+  animation: recommendation-card-pulse 2.4s ease-in-out infinite;
 }
 
 .recommendation-card.is-selected:hover {
   transform: scale(1.04);
+}
+
+@keyframes recommendation-card-pulse {
+  0%,
+  100% {
+    box-shadow: 0 24px 54px rgba(255, 102, 0, 0.26);
+  }
+  50% {
+    box-shadow: 0 24px 64px rgba(255, 102, 0, 0.44);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recommendation-card.is-selected {
+    animation: none;
+  }
 }
 
 .profile-card-main {
@@ -296,13 +313,29 @@
   margin-top: 4px;
 }
 
+.profile-card-bio {
+  margin: 16px 0 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.recommendation-card.is-selected .profile-card-bio {
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .profile-card-tags {
   min-height: 36px;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
   gap: 8px;
-  margin: 40px 0 26px;
+  margin: 20px 0 26px;
 }
 
 .profile-card-tag {

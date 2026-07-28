@@ -174,15 +174,15 @@ function RecommendationPage() {
             <div className="gauge-center">
               <div className="compatibility-score">
                 <span className="compatibility-score-value">{selectedScore}</span>
-                <span className="compatibility-score-unit">%</span>
+                <span className="compatibility-score-unit">점</span>
               </div>
-              <div className="compatibility-label">호환성 점수</div>
+              <div className="compatibility-label">궁합도</div>
             </div>
           </div>
         </div>
         <div className="summary-note">
           {selectedRecommendation
-            ? `${selectedRecommendation.nickname}님과의 호환성은 ${selectedScore}% 입니다.`
+            ? `${selectedRecommendation.nickname}님과의 궁합도는 ${selectedScore}점 입니다.`
             : "추천 데이터를 불러오는 중이거나 설문이 필요합니다."}
         </div>
 
@@ -204,7 +204,7 @@ function RecommendationPage() {
 
       <section className="recommendation-list">
         <div className="recommendation-header">
-          <h1>호환성 높은 순</h1>
+          <h1>점수 높은 순</h1>
           <Link to="/survey" className="btn btn-outline">
             설문 다시 하기
           </Link>
@@ -251,6 +251,10 @@ function RecommendationPage() {
                         <p>{item.region ?? "지역 정보 준비 중"}</p>
                       </div>
                     </div>
+
+                    <p className="profile-card-bio">
+                      {item.bio && item.bio.trim() ? item.bio : "없음"}
+                    </p>
 
                     <div className="profile-card-tags">
                       {item.tags.length > 0 ? (

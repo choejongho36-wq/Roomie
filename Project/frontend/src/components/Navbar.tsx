@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API_ORIGIN, getMySurveys } from "../api";
+import { API_ORIGIN } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
+import MatchingLoadingOverlay from "./MatchingLoadingOverlay";
 import logo from "../assets/Roomie_logo.png";
 import logoWhite from "../assets/Roomie_logo2.png";
 import { Icon, NAV_ITEMS } from "./mypage/MyPageSidebar";
+import { useMatchingRedirect } from "../hooks/useMatchingRedirect";
 
 const PROFILE_MENU_ITEMS = NAV_ITEMS.filter((item) => item.icon !== "bell");
 
@@ -19,6 +21,7 @@ function Navbar() {
   const { token, user, login, logout } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
+  const { isRedirecting, goToMatching } = useMatchingRedirect();
 
   const isOnVividBackground = VIVID_BACKGROUND_PATHS.has(location.pathname);
 
@@ -27,23 +30,14 @@ function Navbar() {
     navigate("/");
   };
 
-  const handleMatchClick = async () => {
+  const handleMatchClick = () => {
     if (!token) {
       setRedirectAfterLogin(true);
       setIsLoginOpen(true);
       return;
     }
 
-    try {
-      const surveys = await getMySurveys(token);
-      if (surveys.length > 0) {
-        navigate("/recommend");
-      } else {
-        navigate("/survey");
-      }
-    } catch {
-      navigate("/survey");
-    }
+    goToMatching(token);
   };
 
   return (
@@ -72,6 +66,12 @@ function Navbar() {
             <div className="navbar-dropdown-menu">
               <Link to="/inquiry" className="navbar-dropdown-item">
                 문의 게시판
+              </Link>
+              <Link to="/terms" className="navbar-dropdown-item">
+                이용약관
+              </Link>
+              <Link to="/privacy" className="navbar-dropdown-item">
+                개인정보처리방침
               </Link>
             </div>
           </div>
@@ -129,25 +129,17 @@ function Navbar() {
             setIsLoginOpen(false);
             setRedirectAfterLogin(false);
           }}
-          onLoginSuccess={async (token) => {
+          onLoginSuccess={(token) => {
             login(token);
             setIsLoginOpen(false);
             if (redirectAfterLogin) {
               setRedirectAfterLogin(false);
-              try {
-                const surveys = await getMySurveys(token);
-                if (surveys.length > 0) {
-                  navigate("/recommend");
-                } else {
-                  navigate("/survey");
-                }
-              } catch {
-                navigate("/survey");
-              }
+              goToMatching(token);
             }
           }}
         />
       )}
+      {isRedirecting && <MatchingLoadingOverlay />}
     </header>
   );
 }

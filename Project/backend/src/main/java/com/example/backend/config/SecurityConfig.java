@@ -24,52 +24,56 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final CustomOAuth2UserService customOAuth2UserService;
+        private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+        private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
-    @Value("${cors.allowed-origins:http://localhost:5174}")
-    private String[] allowedOrigins;
+        @Value("${cors.allowed-origins:http://localhost:5174}")
+        private String[] allowedOrigins;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // 완전한 STATELESS로 두면 카카오/네이버 로그인 중간 단계(리다이렉트 왕복)에서
-                // state 값을 저장할 곳이 없어서 실패함. 그래서 "필요할 때만" 세션을 쓰도록 변경.
-                // 일반 JWT API 호출은 세션을 쓰지 않으니 이전과 동작 차이 없음.
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .exceptionHandling(e -> e.authenticationEntryPoint(
-                        (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(oAuth2LoginFailureHandler)
-                )
-                .authorizeHttpRequests(auth -> auth
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                // 완전한 STATELESS로 두면 카카오/네이버 로그인 중간 단계(리다이렉트 왕복)에서
+                                // state 값을 저장할 곳이 없어서 실패함. 그래서 "필요할 때만" 세션을 쓰도록 변경.
+                                // 일반 JWT API 호출은 세션을 쓰지 않으니 이전과 동작 차이 없음.
+                                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                                .exceptionHandling(e -> e.authenticationEntryPoint(
+                                                (request, response, authException) -> response
+                                                                .sendError(HttpServletResponse.SC_UNAUTHORIZED)))
+                                .oauth2Login(oauth2 -> oauth2
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService))
+                                                .successHandler(oAuth2LoginSuccessHandler)
+                                                .failureHandler(oAuth2LoginFailureHandler))
+                                .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/api/users/**", "/api/surveys/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-                        .requestMatchers("/api/posts/**", "/api/comments/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/inquiries/**").permitAll()
-                        .requestMatchers("/api/inquiries/**").authenticated()
-                        .requestMatchers("/api/users/**", "/api/surveys/**", "/api/recommendations", "/api/recommendations/**").authenticated()
-                        .anyRequest().permitAll())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+                                                .requestMatchers("/api/users/**", "/api/surveys/**").authenticated()
+                                                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                                                .requestMatchers("/api/posts/**", "/api/comments/**").authenticated()
+                                                .requestMatchers(HttpMethod.GET, "/api/inquiries/**").permitAll()
+                                                .requestMatchers("/api/inquiries/**").authenticated()
+                                                .requestMatchers("/api/users/**", "/api/surveys/**",
+                                                                "/api/recommendations", "/api/recommendations/**",
+                                                                "/api/chat/**")
+                                                .authenticated()
+                                                .anyRequest().permitAll())
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(List.of(allowedOrigins));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+                return source;
+        }
 }

@@ -7,6 +7,7 @@ import com.example.backend.dto.NicknameRequest;
 import com.example.backend.dto.PasswordChangeRequest;
 import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
+import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,6 +57,19 @@ public class UserController {
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return toResponse(findUser(authentication));
+    }
+
+    @GetMapping("/search")
+    public List<UserSearchResponse> search(Authentication authentication, @RequestParam String nickname) {
+        User currentUser = findUser(authentication);
+        if (nickname == null || nickname.isBlank()) {
+            return List.of();
+        }
+        return userRepository
+                .findTop10ByNicknameContainingIgnoreCaseAndUserIdNot(nickname.trim(), currentUser.getUserId())
+                .stream()
+                .map(user -> new UserSearchResponse(user.getUserId(), user.getNickname(), user.getProfileImageUrl()))
+                .toList();
     }
 
     // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰을 채워 넣을 때 사용

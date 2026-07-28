@@ -1,0 +1,76 @@
+.complete-profile-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7f7;
+  padding: 24px;
+}
+
+.complete-profile-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.complete-profile-box h1 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  text-align: center;
+}
+
+.complete-profile-box p {
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.complete-profile-box label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.complete-profile-optional {
+  font-weight: 400;
+  color: #999;
+  font-size: 12px;
+}
+
+.complete-profile-box input,
+.complete-profile-box select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: inherit;
+  background: #fff;
+}
+
+.birth-select-group {
+  display: flex;
+  gap: 8px;
+}
+
+.birth-select-group select {
+  flex: 1;
+  min-width: 0;
+}
+
+.complete-profile-error {
+  color: #e03131;
+  font-size: 13px;
+  margin: 0;
+}

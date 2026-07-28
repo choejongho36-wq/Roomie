@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
+import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPage from "./pages/MyPage";
 import SurveyPage from "./pages/SurveyPage";
 import SurveyCompletePage from "./pages/SurveyCompletePage";
@@ -14,6 +15,7 @@ import ProfilePage from "./pages/mypage/ProfilePage";
 import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
 import InterestsPage from "./pages/mypage/InterestsPage";
+import ChatPage from "./pages/mypage/ChatPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -32,6 +34,7 @@ function App() {
           <Route path="/" element={<MainPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
+          <Route path="/complete-profile" element={<CompleteProfilePage />} />
           <Route path="/survey" element={<SurveyPage />} />
           <Route path="/survey/complete" element={<SurveyCompletePage />} />
           <Route path="/recommend" element={<RecommendationPage />} />
@@ -51,7 +54,7 @@ function App() {
             <Route path="activity" element={<ActivityPage />} />
             <Route path="my-activity" element={<PlaceholderPage title="내 활동" />} />
             <Route path="interests" element={<InterestsPage />} />
-            <Route path="chat" element={<PlaceholderPage title="채팅" />} />
+            <Route path="chat" element={<ChatPage />} />
             <Route path="notifications" element={<PlaceholderPage title="알림" />} />
             <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
           </Route>

@@ -6,10 +6,12 @@ import type {
   SurveyResult,
   SurveySummaryResult,
 } from "./types/survey";
+import type { ChatMessage, Conversation, UserSearchResult } from "./types/chat";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
 export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
+export const CHAT_WS_URL = `${API_ORIGIN.replace(/^http/, "ws")}/ws/chat`;
 
 export const getPosts = async (page: number): Promise<Page<Post>> => {
   const response = await axios.get<Page<Post>>(`${API_BASE_URL}/posts`, { params: { page } });
@@ -143,6 +145,20 @@ export const getMyProfile = async (token: string): Promise<User> => {
   return response.data;
 };
 
+export const completeAdditionalInfo = async (
+  token: string,
+  gender: string,
+  birthDate: string,
+  phone: string
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/additional-info`,
+    { gender, birthDate, phone: phone || null },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const uploadProfileImage = async (token: string, file: File): Promise<User> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -258,5 +274,27 @@ export const getSurveyComparison = async (
     `${API_BASE_URL}/recommendations/${userId}/comparison`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
+  return response.data;
+};
+
+export const getConversations = async (token: string): Promise<Conversation[]> => {
+  const response = await axios.get<Conversation[]>(`${API_BASE_URL}/chat/conversations`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getChatMessages = async (token: string, otherUserId: number): Promise<ChatMessage[]> => {
+  const response = await axios.get<ChatMessage[]>(`${API_BASE_URL}/chat/${otherUserId}/messages`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const searchUsers = async (token: string, nickname: string): Promise<UserSearchResult[]> => {
+  const response = await axios.get<UserSearchResult[]>(`${API_BASE_URL}/users/search`, {
+    params: { nickname },
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
