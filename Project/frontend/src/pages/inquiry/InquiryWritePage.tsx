@@ -2,12 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createInquiry, getInquiry, updateInquiry } from "../../api";
-import "./InquiryWritePage.css";
+import "../board/BoardWritePage.css";
+
+const DRAFT_STORAGE_KEY = "roomie_inquiry_write_draft";
+
+const CATEGORY_OPTIONS = ["버그", "신고", "문의", "제안"];
 
 const FORMAT_BUTTONS = [
-  { label: "B", title: "굵게", marker: "**", className: "inquiry-editor-bold" },
-  { label: "I", title: "기울임", marker: "*", className: "inquiry-editor-italic" },
-  { label: "U", title: "밑줄", marker: "++", className: "inquiry-editor-underline" },
+  { label: <strong>B</strong>, title: "굵게", marker: "**" },
+  { label: <em>I</em>, title: "기울임", marker: "*" },
+  { label: <span style={{ textDecoration: "underline" }}>U</span>, title: "밑줄", marker: "++" },
 ];
 
 function InquiryWritePage() {
@@ -16,9 +20,13 @@ function InquiryWritePage() {
   const { inquiryId } = useParams();
   const isEdit = Boolean(inquiryId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
 
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -26,12 +34,23 @@ function InquiryWritePage() {
     getInquiry(Number(inquiryId)).then((inquiry) => {
       setTitle(inquiry.title);
       setContent(inquiry.content);
+      setSelectedCategory(inquiry.category ?? null);
     });
   }, [isEdit, inquiryId]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!token) {
     return (
-      <div className="page inquiry-write-page">
+      <div className="page board-write-page">
         <p>로그인이 필요합니다.</p>
       </div>
     );
@@ -52,59 +71,123 @@ function InquiryWritePage() {
     });
   };
 
+  const showError = (message: string) => {
+    setError(message);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSaveDraft = () => {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ title, category: selectedCategory, content }));
+    setError("");
+    setStatusMessage("임시저장되었습니다. (이 브라우저에만 저장돼요)");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStatusMessage("");
+
+    if (!selectedCategory) {
+      showError("분류를 선택해주세요.");
+      return;
+    }
+
     setError("");
     try {
       if (isEdit) {
-        await updateInquiry(token, Number(inquiryId), { title, content });
+        await updateInquiry(token, Number(inquiryId), { title, category: selectedCategory, content });
       } else {
-        await createInquiry(token, { title, content });
+        await createInquiry(token, { title, category: selectedCategory, content });
       }
       navigate("/inquiry");
     } catch (err: any) {
-      setError(err.response?.data ?? "저장에 실패했습니다.");
+      showError(err.response?.data ?? "저장에 실패했습니다.");
     }
   };
 
   return (
-    <div className="page inquiry-write-page">
-      <h1>{isEdit ? "문의 수정" : "문의하기"}</h1>
-      {error && <p className="mypage-error">{error}</p>}
-      <form onSubmit={handleSubmit} className="inquiry-write-form">
-        <label>
-          제목
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} required />
-        </label>
-        <label>
-          내용
-          <div className="inquiry-editor">
-            <div className="inquiry-editor-toolbar">
-              {FORMAT_BUTTONS.map((btn) => (
+    <div className="page board-write-page">
+      <div className="board-write-header">
+        <div>
+          <h1>{isEdit ? "문의 수정" : "문의하기"}</h1>
+          <p className="board-write-subtitle">궁금한 점을 자유롭게 남겨주세요.</p>
+        </div>
+
+        <div className="board-write-board-select" ref={categoryMenuRef}>
+          <button
+            type="button"
+            className={`board-write-board-button${selectedCategory ? " is-selected" : ""}`}
+            onClick={() => setIsCategoryMenuOpen((prev) => !prev)}
+          >
+            {selectedCategory ?? "분류를 선택하세요"}
+            <span aria-hidden="true">▾</span>
+          </button>
+          {isCategoryMenuOpen && (
+            <div className="board-write-board-menu">
+              {CATEGORY_OPTIONS.map((category) => (
                 <button
-                  key={btn.marker}
+                  key={category}
                   type="button"
-                  className={btn.className}
-                  title={btn.title}
-                  onClick={() => applyFormat(btn.marker)}
+                  className={`board-write-board-option${selectedCategory === category ? " is-active" : ""}`}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setIsCategoryMenuOpen(false);
+                  }}
                 >
-                  {btn.label}
+                  {category}
                 </button>
               ))}
             </div>
-            <textarea
-              ref={textareaRef}
-              rows={10}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              maxLength={2000}
-              required
-            />
-          </div>
-        </label>
-        <button type="submit" className="btn btn-primary">
-          {isEdit ? "수정하기" : "등록하기"}
-        </button>
+          )}
+        </div>
+      </div>
+
+      {error && <p className="mypage-error">{error}</p>}
+      {statusMessage && <p className="board-write-status">{statusMessage}</p>}
+
+      <form onSubmit={handleSubmit} className="board-write-form">
+        <input
+          className="board-write-title-input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="제목을 입력해주세요."
+          maxLength={100}
+          required
+        />
+
+        <div className="board-write-toolbar">
+          {FORMAT_BUTTONS.map((btn) => (
+            <button
+              key={btn.marker}
+              type="button"
+              className="board-write-toolbar-button"
+              title={btn.title}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => applyFormat(btn.marker)}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          ref={textareaRef}
+          className="board-write-content"
+          rows={10}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="내용을 입력해주세요."
+          maxLength={2000}
+          required
+        />
+
+        <div className="board-write-actions">
+          <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
+            임시저장
+          </button>
+          <button type="submit" className="btn btn-primary">
+            {isEdit ? "수정하기" : "등록하기"}
+          </button>
+        </div>
       </form>
     </div>
   );

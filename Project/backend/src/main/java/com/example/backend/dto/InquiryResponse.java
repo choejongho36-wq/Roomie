@@ -7,6 +7,7 @@ public record InquiryResponse(
         Long userId,
         String nickname,
         String title,
+        String category,
         String content,
         String status,
         String answer,

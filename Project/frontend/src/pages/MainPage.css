@@ -1,5 +1,9 @@
 .page {
   font-family: "Pretendard", var(--sans);
+  /* #root가 flex-column이라, 내용이 짧은 페이지(예: 고민게시판)에서는
+     이 영역이 남는 세로 공간을 채워주지 않으면 하단바(Footer)가 화면
+     맨 아래가 아니라 내용 바로 아래로 붙어 올라와 보인다. */
+  flex: 1 0 auto;
 }
 
 .page h2,
