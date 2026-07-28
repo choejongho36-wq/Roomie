@@ -1,6 +1,6 @@
-/* 문의 게시판 표(번호/제목/작성자/작성일/상태)는 고민게시판과 동일하게
+/* 문의 게시판 표(번호/분류/제목/작성자/작성일/상태)는 고민게시판과 동일하게
    ../board/BoardListPage.css의 클래스를 그대로 재사용한다. 여기서는
-   그 표에 없는, 문의글만의 아코디언(펼침) 영역 스타일만 정의한다. */
+   그 표에 없는, 문의글만의 분류 배지 · 아코디언(펼침) 영역 스타일만 정의한다. */
 
 .board-table-title-cell span {
   color: #222;
@@ -10,6 +10,30 @@
   white-space: nowrap;
   display: block;
   max-width: 420px;
+}
+
+/* board-table.css는 2번째 컬럼(제목)을 기준으로 좌/우 정렬을 나눠두는데,
+   문의 게시판은 그 앞에 "분류" 컬럼이 하나 더 있어서 제목이 3번째 컬럼이 된다.
+   컬럼 위치 기준 정렬 규칙을 문의 표에 맞게 다시 지정한다. */
+.inquiry-table th:nth-child(2),
+.inquiry-table td:nth-child(2) {
+  text-align: center;
+}
+
+.inquiry-table th:nth-child(3),
+.inquiry-table td:nth-child(3) {
+  text-align: left;
+}
+
+.inquiry-category-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f1eeff;
+  color: #6b4ef0;
+  white-space: nowrap;
 }
 
 .inquiry-detail-row td {

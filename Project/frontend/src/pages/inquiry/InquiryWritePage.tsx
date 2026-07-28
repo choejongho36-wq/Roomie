@@ -6,6 +6,8 @@ import "../board/BoardWritePage.css";
 
 const DRAFT_STORAGE_KEY = "roomie_inquiry_write_draft";
 
+const CATEGORY_OPTIONS = ["버그", "신고", "문의", "제안"];
+
 const FORMAT_BUTTONS = [
   { label: <strong>B</strong>, title: "굵게", marker: "**" },
   { label: <em>I</em>, title: "기울임", marker: "*" },
@@ -18,7 +20,10 @@ function InquiryWritePage() {
   const { inquiryId } = useParams();
   const isEdit = Boolean(inquiryId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
 
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -29,8 +34,19 @@ function InquiryWritePage() {
     getInquiry(Number(inquiryId)).then((inquiry) => {
       setTitle(inquiry.title);
       setContent(inquiry.content);
+      setSelectedCategory(inquiry.category ?? null);
     });
   }, [isEdit, inquiryId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (!token) {
     return (
@@ -55,8 +71,13 @@ function InquiryWritePage() {
     });
   };
 
+  const showError = (message: string) => {
+    setError(message);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSaveDraft = () => {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ title, content }));
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ title, category: selectedCategory, content }));
     setError("");
     setStatusMessage("임시저장되었습니다. (이 브라우저에만 저장돼요)");
   };
@@ -64,16 +85,22 @@ function InquiryWritePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage("");
+
+    if (!selectedCategory) {
+      showError("분류를 선택해주세요.");
+      return;
+    }
+
     setError("");
     try {
       if (isEdit) {
-        await updateInquiry(token, Number(inquiryId), { title, content });
+        await updateInquiry(token, Number(inquiryId), { title, category: selectedCategory, content });
       } else {
-        await createInquiry(token, { title, content });
+        await createInquiry(token, { title, category: selectedCategory, content });
       }
       navigate("/inquiry");
     } catch (err: any) {
-      setError(err.response?.data ?? "저장에 실패했습니다.");
+      showError(err.response?.data ?? "저장에 실패했습니다.");
     }
   };
 
@@ -83,6 +110,34 @@ function InquiryWritePage() {
         <div>
           <h1>{isEdit ? "문의 수정" : "문의하기"}</h1>
           <p className="board-write-subtitle">궁금한 점을 자유롭게 남겨주세요.</p>
+        </div>
+
+        <div className="board-write-board-select" ref={categoryMenuRef}>
+          <button
+            type="button"
+            className={`board-write-board-button${selectedCategory ? " is-selected" : ""}`}
+            onClick={() => setIsCategoryMenuOpen((prev) => !prev)}
+          >
+            {selectedCategory ?? "분류를 선택하세요"}
+            <span aria-hidden="true">▾</span>
+          </button>
+          {isCategoryMenuOpen && (
+            <div className="board-write-board-menu">
+              {CATEGORY_OPTIONS.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  className={`board-write-board-option${selectedCategory === category ? " is-active" : ""}`}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setIsCategoryMenuOpen(false);
+                  }}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

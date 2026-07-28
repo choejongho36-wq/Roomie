@@ -76,9 +76,10 @@ function InquiryListPage() {
 
       {inquiries.length > 0 && (
         <div className="board-table-wrap">
-          <table className="board-table">
+          <table className="board-table inquiry-table">
             <colgroup>
               <col style={{ width: 70 }} />
+              <col style={{ width: 80 }} />
               <col />
               <col style={{ width: 140 }} />
               <col style={{ width: 90 }} />
@@ -87,6 +88,7 @@ function InquiryListPage() {
             <thead>
               <tr>
                 <th>번호</th>
+                <th>분류</th>
                 <th>제목</th>
                 <th>작성자</th>
                 <th>작성일</th>
@@ -106,6 +108,9 @@ function InquiryListPage() {
                       aria-expanded={isOpen}
                     >
                       <td className="board-table-number-cell">{inquiries.length - index}</td>
+                      <td>
+                        <span className="inquiry-category-badge">{inquiry.category}</span>
+                      </td>
                       <td className="board-table-title-cell">
                         <span>{inquiry.title}</span>
                       </td>
@@ -124,7 +129,7 @@ function InquiryListPage() {
 
                     {isOpen && (
                       <tr className="inquiry-detail-row">
-                        <td colSpan={5}>
+                        <td colSpan={6}>
                           <div
                             className="inquiry-content-box"
                             dangerouslySetInnerHTML={{ __html: renderRichText(inquiry.content) }}
