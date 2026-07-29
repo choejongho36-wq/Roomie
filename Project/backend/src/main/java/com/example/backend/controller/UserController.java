@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5174")
 public class UserController {
 
     private static final Set<String> ALLOWED_IMAGE_TYPES =
