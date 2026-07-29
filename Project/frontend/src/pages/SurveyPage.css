@@ -53,6 +53,63 @@
   gap: 8px;
 }
 
+.question-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.help-tip {
+  position: relative;
+  flex: none;
+}
+
+.help-tip-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #f6d2bc;
+  background: #fff1e8;
+  color: #f16526;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* 모바일에서 화면 밖으로 나가지 않도록 오른쪽 기준 + vw 제한 */
+.help-tip-bubble {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  margin: 0;
+  padding: 12px 14px 12px 30px;
+  border-radius: 12px;
+  background: #2f2a27;
+  color: #ffffff;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-align: left;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.help-tip-bubble li + li {
+  margin-top: 6px;
+}
+
+.survey-intro-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #4a4a4a;
+  font-size: 0.96rem;
+  line-height: 1.7;
+}
+
 .survey-title {
   margin: 0;
   font-size: 1.65rem;
@@ -121,13 +178,6 @@
   }
 }
 
-.question-hint {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #b0a49d;
-  text-align: center;
-}
-
 .question-category {
   display: inline-flex;
   align-self: flex-start;
@@ -182,12 +232,14 @@
   transition: all 0.2s ease;
 }
 
-.option-button:hover {
+/* 선택된 버튼에는 hover 스타일을 걸지 않는다.
+   안 그러면 클릭 후 마우스가 그대로 올라가 있는 동안 선택 상태가 hover에 덮인다. */
+.option-button:not(.option-button-selected):hover {
   border-color: #f16526;
   transform: translateY(-1px);
 }
 
-.option-button:hover .option-key {
+.option-button:not(.option-button-selected):hover .option-key {
   background: #ffe8d9;
   color: #f16526;
 }
