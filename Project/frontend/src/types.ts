@@ -85,4 +85,5 @@ export interface User {
   profileImageUrl: string | null;
   tags: string[];
   bio: string | null;
+  provider: string;
 }
