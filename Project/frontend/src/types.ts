@@ -42,6 +42,7 @@ export interface Inquiry {
   inquiryId: number;
   userId: number;
   nickname: string;
+  profileImageUrl: string | null;
   title: string;
   category: string;
   content: string;
@@ -86,4 +87,5 @@ export interface User {
   profileImageUrl: string | null;
   tags: string[];
   bio: string | null;
+  provider: string;
 }

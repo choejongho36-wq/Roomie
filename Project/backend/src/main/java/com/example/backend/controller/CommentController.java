@@ -30,6 +30,12 @@ public class CommentController {
         return commentService.create(findUser(authentication).getUserId(), postId, request);
     }
 
+    @PutMapping("/api/comments/{commentId}")
+    public CommentResponse updateComment(Authentication authentication, @PathVariable Long commentId,
+            @RequestBody CommentRequest request) {
+        return commentService.update(findUser(authentication).getUserId(), commentId, request.content());
+    }
+
     @DeleteMapping("/api/comments/{commentId}")
     public void deleteComment(Authentication authentication, @PathVariable Long commentId) {
         commentService.delete(findUser(authentication).getUserId(), commentId);

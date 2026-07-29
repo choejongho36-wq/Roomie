@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark } from "../../api";
+import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark, updateComment } from "../../api";
 import type { Comment, Post } from "../../types";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardDetailPage.css";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
@@ -10,8 +11,6 @@ const getProfileImageSrc = (url: string | null | undefined) => {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
-
-const getInitial = (nickname: string | null | undefined) => (nickname || "?").trim().charAt(0) || "?";
 
 const formatMoveInBudgetValue = (value: number | null) => {
   if (value == null) return "-";
@@ -34,82 +33,199 @@ function Avatar({
   profileImageUrl: string | null | undefined;
   className: string;
 }) {
-  const src = getProfileImageSrc(profileImageUrl);
-  if (src) {
-    return <img className={className} src={src} alt={nickname ?? ""} />;
+  return <img className={className} src={getProfileImageSrc(profileImageUrl) ?? defaultAvatar} alt={nickname ?? ""} />;
+}
+
+interface FlatReply extends Comment {
+  replyToNickname: string | null;
+}
+
+interface CommentThread {
+  root: Comment;
+  replies: FlatReply[];
+}
+
+// 답글의 답글도 전부 같은 레벨로 펼치고, 직속 부모가 원댓글이 아니면 @닉네임 멘션만 붙인다.
+function buildThreads(comments: Comment[]): CommentThread[] {
+  const byId = new Map(comments.map((c) => [c.commentId, c]));
+  const rootIdOf = (c: Comment): number => {
+    let cur = c;
+    while (cur.parentCommentId && byId.has(cur.parentCommentId)) cur = byId.get(cur.parentCommentId)!;
+    return cur.commentId;
+  };
+
+  const threads = new Map<number, CommentThread>();
+  const order: number[] = [];
+  for (const c of comments) {
+    if (!c.parentCommentId) {
+      threads.set(c.commentId, { root: c, replies: [] });
+      order.push(c.commentId);
+    }
   }
+
+  for (const c of comments) {
+    if (!c.parentCommentId) continue;
+    const thread = threads.get(rootIdOf(c));
+    if (!thread) continue;
+    const parent = byId.get(c.parentCommentId);
+    thread.replies.push({
+      ...c,
+      replyToNickname: parent && parent.commentId !== thread.root.commentId ? parent.nickname : null,
+    });
+  }
+
+  for (const id of order) {
+    threads.get(id)!.replies.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+  return order.map((id) => threads.get(id)!);
+}
+
+function CommentActions({
+  targetId,
+  userId,
+  content,
+  replyingTo,
+  setReplyingTo,
+  onEdit,
+  onDelete,
+  canManage,
+}: {
+  targetId: number;
+  userId: number;
+  content: string;
+  replyingTo: number | null;
+  setReplyingTo: (id: number | null) => void;
+  onEdit: (id: number, content: string) => void;
+  onDelete: (commentId: number) => void;
+  canManage: (userId: number) => boolean;
+}) {
   return (
-    <div className={`${className} ${className}-fallback`} aria-hidden="true">
-      {getInitial(nickname)}
+    <div className="comment-actions">
+      <button onClick={() => setReplyingTo(replyingTo === targetId ? null : targetId)}>답글</button>
+      {canManage(userId) && (
+        <>
+          <button onClick={() => onEdit(targetId, content)}>수정</button>
+          <button onClick={() => onDelete(targetId)}>삭제</button>
+        </>
+      )}
     </div>
   );
 }
 
-interface CommentNode extends Comment {
-  replies: CommentNode[];
-}
-
-function buildTree(comments: Comment[]): CommentNode[] {
-  const nodes = new Map<number, CommentNode>(comments.map((c) => [c.commentId, { ...c, replies: [] }]));
-  const roots: CommentNode[] = [];
-  for (const node of nodes.values()) {
-    if (node.parentCommentId && nodes.has(node.parentCommentId)) {
-      nodes.get(node.parentCommentId)!.replies.push(node);
-    } else {
-      roots.push(node);
-    }
-  }
-  return roots;
-}
-
-function CommentItem({
-  node,
+function CommentThreadItem({
+  thread,
   onReply,
+  onEdit,
   onDelete,
-  canDelete,
+  canManage,
 }: {
-  node: CommentNode;
+  thread: CommentThread;
   onReply: (parentId: number, content: string) => void;
+  onEdit: (commentId: number, content: string) => void;
   onDelete: (commentId: number) => void;
-  canDelete: (userId: number) => boolean;
+  canManage: (userId: number) => boolean;
 }) {
-  const [replying, setReplying] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
 
   const submitReply = () => {
-    if (!replyText.trim()) return;
-    onReply(node.commentId, replyText);
+    if (!replyText.trim() || replyingTo == null) return;
+    onReply(replyingTo, replyText);
     setReplyText("");
-    setReplying(false);
+    setReplyingTo(null);
   };
 
-  return (
-    <li className="comment-item">
-      <Avatar nickname={node.nickname} profileImageUrl={node.profileImageUrl} className="comment-avatar" />
-      <div className="comment-body">
-        <div className="comment-header">
-          <span className="comment-nickname">{node.nickname}</span>
-          <span className="comment-date">{new Date(node.createdAt).toLocaleString("ko-KR")}</span>
-        </div>
-        <p className="comment-content">{node.content}</p>
-        <div className="comment-actions">
-          <button onClick={() => setReplying((v) => !v)}>답글</button>
-          {canDelete(node.userId) && <button onClick={() => onDelete(node.commentId)}>삭제</button>}
-        </div>
-        {replying && (
-          <div className="comment-reply-form">
-            <input value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="답글 작성..." />
-            <button onClick={submitReply}>등록</button>
-          </div>
-        )}
-        {node.replies.length > 0 && (
-          <ul className="comment-replies">
-            {node.replies.map((reply) => (
-              <CommentItem key={reply.commentId} node={reply} onReply={onReply} onDelete={onDelete} canDelete={canDelete} />
-            ))}
-          </ul>
-        )}
+  const startEdit = (id: number, content: string) => {
+    setReplyingTo(null);
+    setEditingId(id);
+    setEditText(content);
+  };
+
+  const submitEdit = () => {
+    if (!editText.trim() || editingId == null) return;
+    onEdit(editingId, editText);
+    setEditingId(null);
+  };
+
+  const replyForm = (targetId: number, targetNickname: string) =>
+    replyingTo === targetId && (
+      <div className="comment-reply-form">
+        <input
+          value={replyText}
+          onChange={(e) => setReplyText(e.target.value)}
+          placeholder={`${targetNickname}에게 답글 작성...`}
+        />
+        <button onClick={submitReply}>등록</button>
       </div>
+    );
+
+  const content = (id: number, text: string, mention?: string | null) =>
+    editingId === id ? (
+      <div className="comment-reply-form">
+        <input value={editText} onChange={(e) => setEditText(e.target.value)} />
+        <button onClick={submitEdit}>저장</button>
+        <button onClick={() => setEditingId(null)}>취소</button>
+      </div>
+    ) : (
+      <p className="comment-content">
+        {mention && <span className="comment-mention">@{mention}</span>}
+        {text}
+      </p>
+    );
+
+  return (
+    <li className="comment-thread">
+      <div className="comment-item">
+        <Avatar nickname={thread.root.nickname} profileImageUrl={thread.root.profileImageUrl} className="comment-avatar" />
+        <div className="comment-body">
+          <div className="comment-header">
+            <span className="comment-nickname">{thread.root.nickname}</span>
+            <span className="comment-date">{new Date(thread.root.createdAt).toLocaleString("ko-KR")}</span>
+          </div>
+          {content(thread.root.commentId, thread.root.content)}
+          <CommentActions
+            targetId={thread.root.commentId}
+            userId={thread.root.userId}
+            content={thread.root.content}
+            replyingTo={replyingTo}
+            setReplyingTo={setReplyingTo}
+            onEdit={startEdit}
+            onDelete={onDelete}
+            canManage={canManage}
+          />
+          {replyForm(thread.root.commentId, thread.root.nickname)}
+        </div>
+      </div>
+
+      {thread.replies.length > 0 && (
+        <ul className="comment-replies">
+          {thread.replies.map((reply) => (
+            <li key={reply.commentId} className="comment-item">
+              <Avatar nickname={reply.nickname} profileImageUrl={reply.profileImageUrl} className="comment-avatar" />
+              <div className="comment-body">
+                <div className="comment-header">
+                  <span className="comment-nickname">{reply.nickname}</span>
+                  <span className="comment-date">{new Date(reply.createdAt).toLocaleString("ko-KR")}</span>
+                </div>
+                {content(reply.commentId, reply.content, reply.replyToNickname)}
+                <CommentActions
+                  targetId={reply.commentId}
+                  userId={reply.userId}
+                  content={reply.content}
+                  replyingTo={replyingTo}
+                  setReplyingTo={setReplyingTo}
+                  onEdit={startEdit}
+                  onDelete={onDelete}
+                  canManage={canManage}
+                />
+                {replyForm(reply.commentId, reply.nickname)}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   );
 }
@@ -236,6 +352,12 @@ function BoardDetailPage() {
     loadComments();
   };
 
+  const handleEditComment = async (commentId: number, content: string) => {
+    if (!token) return;
+    await updateComment(token, commentId, content);
+    loadComments();
+  };
+
   const handleDeleteComment = (commentId: number) => {
     if (!token) return;
     setConfirmModal({
@@ -250,7 +372,7 @@ function BoardDetailPage() {
   if (error) return <div className="page board-detail-page">{error}</div>;
   if (!post) return <div className="page board-detail-page">불러오는 중...</div>;
 
-  const tree = buildTree(comments);
+  const threads = buildThreads(comments);
 
   return (
     <div className="page board-detail-page">
@@ -412,13 +534,14 @@ function BoardDetailPage() {
         )}
 
         <ul className="comment-list">
-          {tree.map((node) => (
-            <CommentItem
-              key={node.commentId}
-              node={node}
+          {threads.map((thread) => (
+            <CommentThreadItem
+              key={thread.root.commentId}
+              thread={thread}
               onReply={handleReply}
+              onEdit={handleEditComment}
               onDelete={handleDeleteComment}
-              canDelete={(userId) => Boolean(user) && userId === user!.userId}
+              canManage={(userId) => Boolean(user) && userId === user!.userId}
             />
           ))}
         </ul>

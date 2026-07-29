@@ -78,6 +78,15 @@ export const createComment = async (
   return response.data;
 };
 
+export const updateComment = async (token: string, commentId: number, content: string): Promise<Comment> => {
+  const response = await axios.put<Comment>(
+    `${API_BASE_URL}/comments/${commentId}`,
+    { content },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const deleteComment = async (token: string, commentId: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/comments/${commentId}`, {
     headers: { Authorization: `Bearer ${token}` },

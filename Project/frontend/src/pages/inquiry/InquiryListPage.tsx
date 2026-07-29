@@ -1,9 +1,10 @@
 import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { deleteInquiry, getInquiries } from "../../api";
+import { API_ORIGIN, deleteInquiry, getInquiries } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import type { Inquiry } from "../../types";
 import { renderRichText } from "../../utils/richText";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../board/BoardListPage.css";
 import "./InquiryListPage.css";
 
@@ -12,6 +13,12 @@ const formatShortDate = (dateString: string) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${month}.${day}`;
+};
+
+const getProfileImageSrc = (url: string | null) => {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
 function InquiryListPage() {
@@ -115,7 +122,14 @@ function InquiryListPage() {
                         <span>{inquiry.title}</span>
                       </td>
                       <td className="board-table-author-cell">
-                        <span className="board-table-author">{inquiry.nickname}</span>
+                        <span className="board-table-author">
+                          <img
+                            className="board-table-avatar"
+                            src={getProfileImageSrc(inquiry.profileImageUrl) ?? defaultAvatar}
+                            alt={inquiry.nickname}
+                          />
+                          {inquiry.nickname}
+                        </span>
                       </td>
                       <td>{formatShortDate(inquiry.createdAt)}</td>
                       <td>

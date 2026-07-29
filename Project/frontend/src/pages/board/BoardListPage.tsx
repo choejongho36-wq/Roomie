@@ -4,6 +4,7 @@ import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types";
 import { regionMatchesDistrict, regionMatchesDong } from "../../data/SeoulDistricts";
 import RegionPicker, { type RegionToken } from "../../components/RegionPicker";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardListPage.css";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
@@ -12,18 +13,8 @@ const getProfileImageSrc = (url: string | null | undefined) => {
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
-const getInitial = (nickname: string | null | undefined) => (nickname || "?").trim().charAt(0) || "?";
-
 function AuthorAvatar({ nickname, profileImageUrl }: { nickname: string; profileImageUrl: string | null }) {
-  const src = getProfileImageSrc(profileImageUrl);
-  if (src) {
-    return <img className="board-table-avatar" src={src} alt={nickname} />;
-  }
-  return (
-    <div className="board-table-avatar board-table-avatar-fallback" aria-hidden="true">
-      {getInitial(nickname)}
-    </div>
-  );
+  return <img className="board-table-avatar" src={getProfileImageSrc(profileImageUrl) ?? defaultAvatar} alt={nickname} />;
 }
 
 interface BudgetBucket {

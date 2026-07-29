@@ -5,6 +5,7 @@ import { API_ORIGIN, getRecommendations, getSurveyComparison } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
 import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
+import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
 
@@ -13,8 +14,6 @@ const getProfileImageSrc = (url: string | null) => {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
-
-const getInitial = (nickname: string) => nickname.trim().charAt(0) || "?";
 
 function ProfileBoardPage() {
   const { token } = useAuth();
@@ -128,13 +127,7 @@ function ProfileBoardPage() {
             return (
               <li key={item.userId} className="profile-board-row">
                 <div className="profile-board-row-main">
-                  {imageSrc ? (
-                    <img className="profile-board-avatar" src={imageSrc} alt={item.nickname} />
-                  ) : (
-                    <div className="profile-board-avatar profile-board-avatar-fallback" aria-hidden="true">
-                      {getInitial(item.nickname)}
-                    </div>
-                  )}
+                  <img className="profile-board-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
                   <div className="profile-board-info">
                     <h2>{item.nickname}</h2>

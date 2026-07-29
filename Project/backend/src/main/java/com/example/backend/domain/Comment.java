@@ -43,4 +43,8 @@ public class Comment {
         this.parentCommentId = parentCommentId;
         this.content = content;
     }
+
+    public void editContent(String content) {
+        this.content = content;
+    }
 }

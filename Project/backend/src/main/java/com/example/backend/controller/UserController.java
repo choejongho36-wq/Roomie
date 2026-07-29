@@ -232,7 +232,8 @@ public class UserController {
                 user.getCreatedAt(),
                 user.getProfileImageUrl(),
                 tags,
-                user.getBio()
+                user.getBio(),
+                user.getProvider()
         );
     }
 }

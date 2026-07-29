@@ -10,13 +10,24 @@
   background: linear-gradient(135deg, #f16526 0%, #f4834f 45%, #ffc79b 100%);
 }
 
-.matching-loading-spinner {
-  width: 156px;
-  height: 156px;
+.matching-loading-dots {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.matching-loading-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px;
   border-radius: 50%;
-  border: 50px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
-  animation: matching-loading-spin 2s linear infinite;
+  background: #fff;
+  transform: rotate(calc(var(--i) * 45deg)) translateY(-54px);
+  animation: matching-loading-dot-pulse 1.2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.15s);
 }
 
 .matching-loading-overlay p {
@@ -33,9 +44,15 @@
   animation: matching-loading-bounce 0.6s ease-in-out infinite;
 }
 
-@keyframes matching-loading-spin {
-  to {
-    transform: rotate(360deg);
+@keyframes matching-loading-dot-pulse {
+  0%,
+  100% {
+    transform: rotate(calc(var(--i) * 45deg)) translateY(-54px) scale(0.5);
+    opacity: 0.4;
+  }
+  50% {
+    transform: rotate(calc(var(--i) * 45deg)) translateY(-54px) scale(1.15);
+    opacity: 1;
   }
 }
 
@@ -50,7 +67,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .matching-loading-spinner {
+  .matching-loading-dot {
     animation: none;
   }
 

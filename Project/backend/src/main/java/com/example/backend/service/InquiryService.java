@@ -25,20 +25,20 @@ public class InquiryService {
 
     public List<InquiryResponse> getInquiries() {
         List<Inquiry> inquiries = inquiryRepository.findAllByOrderByCreatedAtDesc();
-        Map<Long, String> nicknames = nicknamesOf(inquiries.stream().map(Inquiry::getUserId).toList());
-        return inquiries.stream().map(i -> toResponse(i, nicknames.get(i.getUserId()))).toList();
+        Map<Long, User> authors = authorsOf(inquiries.stream().map(Inquiry::getUserId).toList());
+        return inquiries.stream().map(i -> toResponse(i, authors.get(i.getUserId()))).toList();
     }
 
     public InquiryResponse getInquiry(Long inquiryId) {
         Inquiry inquiry = findInquiry(inquiryId);
-        return toResponse(inquiry, nicknameOf(inquiry.getUserId()));
+        return toResponse(inquiry, authorOf(inquiry.getUserId()));
     }
 
     public InquiryResponse create(Long userId, InquiryRequest request) {
         validate(request);
         Inquiry inquiry = inquiryRepository.save(
                 new Inquiry(userId, request.title(), request.category(), request.content()));
-        return toResponse(inquiry, nicknameOf(userId));
+        return toResponse(inquiry, authorOf(userId));
     }
 
     public InquiryResponse update(Long userId, Long inquiryId, InquiryRequest request) {
@@ -48,7 +48,7 @@ public class InquiryService {
             throw new IllegalArgumentException("본인이 작성한 문의만 수정할 수 있습니다.");
         }
         inquiry.update(request.title(), request.category(), request.content());
-        return toResponse(inquiry, nicknameOf(userId));
+        return toResponse(inquiry, authorOf(userId));
     }
 
     public void delete(Long userId, Long inquiryId) {
@@ -76,19 +76,21 @@ public class InquiryService {
         }
     }
 
-    private String nicknameOf(Long userId) {
-        return userRepository.findById(userId).map(User::getNickname).orElse("알 수 없음");
+    private User authorOf(Long userId) {
+        return userRepository.findById(userId).orElse(null);
     }
 
-    private Map<Long, String> nicknamesOf(List<Long> userIds) {
+    private Map<Long, User> authorsOf(List<Long> userIds) {
         return userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+                .collect(Collectors.toMap(User::getUserId, u -> u));
     }
 
-    private InquiryResponse toResponse(Inquiry i, String nickname) {
+    private InquiryResponse toResponse(Inquiry i, User author) {
+        String nickname = author != null ? author.getNickname() : "알 수 없음";
+        String profileImageUrl = author != null ? author.getProfileImageUrl() : null;
         return new InquiryResponse(
-                i.getInquiryId(), i.getUserId(), nickname, i.getTitle(), i.getCategory(), i.getContent(),
-                i.getStatus(), i.getAnswer(), i.getCreatedAt(), i.getAnsweredAt()
+                i.getInquiryId(), i.getUserId(), nickname, profileImageUrl, i.getTitle(), i.getCategory(),
+                i.getContent(), i.getStatus(), i.getAnswer(), i.getCreatedAt(), i.getAnsweredAt()
         );
     }
 }
