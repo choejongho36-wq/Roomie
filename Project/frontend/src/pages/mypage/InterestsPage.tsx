@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, getBookmarkedPosts } from "../../api";
 import type { Post } from "../../types";
 import "../board/BoardListPage.css";
+import "./MyPageContent.css";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
   if (!url) return null;
@@ -56,9 +57,6 @@ function InterestsPage() {
       {posts !== null && posts.length === 0 && (
         <div className="mypage-empty">
           <p>아직 찜한 게시글이 없어요.</p>
-          <Link to="/board" className="btn btn-primary">
-            게시판 둘러보기
-          </Link>
         </div>
       )}
 

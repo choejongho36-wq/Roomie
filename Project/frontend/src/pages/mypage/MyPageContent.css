@@ -450,6 +450,12 @@
   font-weight: 800;
 }
 
+.mypage-panel .board-table-wrap,
+.mypage-panel .mypage-empty {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
 .mypage-empty {
   background: #fff;
   border-radius: 16px;
