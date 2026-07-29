@@ -8,6 +8,7 @@ import SurveyHeader from "../components/survey/SurveyHeader";
 import ProgressBar from "../components/survey/ProgressBar";
 import QuestionCard from "../components/survey/QuestionCard";
 import Navigation from "../components/survey/Navigation";
+import { SurveyIntro } from "../components/survey/SurveyHelp";
 import "./SurveyPage.css";
 
 function SurveyPage() {
@@ -23,6 +24,7 @@ function SurveyPage() {
   const { token } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [showIntro, setShowIntro] = useState(true);
 
   const currentSurveyQuestion = surveyQuestions[currentQuestion];
   const totalQuestions = surveyQuestions.length;
@@ -42,6 +44,11 @@ function SurveyPage() {
   // 숫자키 1~5로 선택, 좌우 화살표로 이동
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // 도움말 화면에서는 숫자키가 1번 문항에 몰래 답하면 안 된다
+      if (showIntro) {
+        if (event.key === "Enter" || event.key === "ArrowRight") setShowIntro(false);
+        return;
+      }
       const index = Number(event.key) - 1;
       if (index >= 0 && index < currentSurveyQuestion.options.length) {
         handleSelect(currentSurveyQuestion.options[index].score);
@@ -83,27 +90,44 @@ function SurveyPage() {
     <div className="survey-page">
       <div className="survey-shell">
         <SurveyHeader />
-        <ProgressBar
-          currentQuestion={currentQuestion}
-          totalQuestions={totalQuestions}
-        />
-        <QuestionCard
-          key={currentQuestion}
-          question={currentSurveyQuestion}
-          currentQuestion={currentQuestion}
-          answers={answers}
-          selectAnswer={handleSelect}
-        />
-        {submitError && <p className="survey-error">{submitError}</p>}
-        <Navigation
-          currentQuestion={currentQuestion}
-          totalQuestions={totalQuestions}
-          answers={answers}
-          onPrevious={previousQuestion}
-          onNext={nextQuestion}
-          onComplete={handleComplete}
-          completing={submitting}
-        />
+        {showIntro ? (
+          <>
+            <SurveyIntro />
+            <div className="survey-navigation">
+              <button
+                type="button"
+                className="nav-button nav-button-primary"
+                onClick={() => setShowIntro(false)}
+              >
+                설문 시작하기
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <ProgressBar
+              currentQuestion={currentQuestion}
+              totalQuestions={totalQuestions}
+            />
+            <QuestionCard
+              key={currentQuestion}
+              question={currentSurveyQuestion}
+              currentQuestion={currentQuestion}
+              answers={answers}
+              selectAnswer={handleSelect}
+            />
+            {submitError && <p className="survey-error">{submitError}</p>}
+            <Navigation
+              currentQuestion={currentQuestion}
+              totalQuestions={totalQuestions}
+              answers={answers}
+              onPrevious={previousQuestion}
+              onNext={nextQuestion}
+              onComplete={handleComplete}
+              completing={submitting}
+            />
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import type { SurveyQuestion } from "../../types/survey";
 import { categoryEmoji } from "../../data/SurveyQuestions";
 import OptionButton from "./OptionButton";
+import { HelpTip } from "./SurveyHelp";
 
 interface QuestionCardProps {
   question: SurveyQuestion;
@@ -17,9 +18,12 @@ function QuestionCard({
 }: QuestionCardProps) {
   return (
     <section className="question-card">
-      <span className="question-category">
-        {categoryEmoji[question.category] ?? "✨"} {question.category}
-      </span>
+      <div className="question-card-top">
+        <span className="question-category">
+          {categoryEmoji[question.category] ?? "✨"} {question.category}
+        </span>
+        <HelpTip />
+      </div>
       <h2 className="question-text">{question.question}</h2>
       <div className="options-list">
         {question.options.map((option, index) => (
@@ -33,7 +37,6 @@ function QuestionCard({
           />
         ))}
       </div>
-      <p className="question-hint">키보드 1~5로 선택, ← → 로 이동할 수 있어요</p>
     </section>
   );
 }
