@@ -53,7 +53,7 @@ public class User {
     @Column(name = "profile_image_url", length = 255)
     private String profileImageUrl;
 
-    @Column(length = 255)
+    @Column(length = 500)
     private String tags;
 
     @Column(length = 150)
