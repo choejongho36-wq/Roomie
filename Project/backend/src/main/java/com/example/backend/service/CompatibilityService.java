@@ -66,7 +66,9 @@ public class CompatibilityService {
                 user.getBio(),
                 tags,
                 score,
-                calculateAge(user.getBirthDate())
+                calculateAge(user.getBirthDate()),
+                user.getJob(),
+                user.getRegion()
         );
     }
 

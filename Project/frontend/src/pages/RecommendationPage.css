@@ -151,7 +151,7 @@
 }
 
 .my-survey-summary {
-  border-top: 1px solid #f0ece8;
+  border-top: 1px solid rgba(62, 44, 35, 0.25);
   margin-top: auto;
   padding-top: 20px;
 }
@@ -205,6 +205,7 @@
 
 .recommendation-header h1 {
   margin: 0;
+  color: #3e2c23;
   font-size: 24px;
   font-weight: 800;
   letter-spacing: 0;
@@ -227,17 +228,16 @@
 
 .recommendation-card {
   position: relative;
-  min-height: 380px;
-  background: linear-gradient(160deg, rgba(245, 233, 216, 0.9) 0%, rgba(245, 233, 216, 0.58) 100%);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  min-height: 300px;
+  font-family: "Pretendard", var(--sans);
+  background: #ffffff;
   border: 2.5px solid rgba(245, 233, 216, 0.7);
   border-radius: 22px;
-  padding: 30px 24px 24px;
+  padding: 22px 22px 18px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: stretch;
+  text-align: left;
   box-shadow: 0 16px 24px -8px rgba(62, 44, 35, 0.4);
   box-sizing: border-box;
   cursor: pointer;
@@ -260,16 +260,22 @@
   box-shadow: 0 18px 28px -6px rgba(62, 44, 35, 0.45);
 }
 
+.profile-card-main {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .profile-card-avatar {
   display: block;
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   border: 2px solid #ff6600;
   object-fit: cover;
   background: #f5e9d8;
   flex-shrink: 0;
-  margin-bottom: 14px;
   box-shadow: 0 6px 16px rgba(62, 44, 35, 0.2);
 }
 
@@ -304,6 +310,7 @@
 }
 
 .profile-card-info {
+  flex: 1;
   min-width: 0;
 }
 
@@ -325,6 +332,10 @@
   letter-spacing: 0.01em;
 }
 
+.profile-card-info p + p {
+  margin-top: 3px;
+}
+
 .profile-card-info p span + span::before {
   content: "·";
   margin: 0 5px;
@@ -332,7 +343,7 @@
 }
 
 .profile-card-bio {
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   color: #3e2c23;
   font-size: 13.5px;
   line-height: 1.6;
@@ -347,11 +358,11 @@
 }
 
 .profile-card-tags {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   min-height: 20px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
 }
 
@@ -604,6 +615,19 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.comparison-modal-footer {
+  margin: 0 32px 32px;
+  padding-top: 20px;
+  border-top: 1px solid #f0ece8;
+  display: flex;
+  justify-content: center;
+}
+
+.comparison-start-chat-button {
+  width: 100%;
+  max-width: 360px;
 }
 
 .comparison-table-header {
@@ -919,7 +943,8 @@
   .comparison-modal-header,
   .comparison-modal-score,
   .comparison-highlight-grid,
-  .comparison-table-wrap {
+  .comparison-table-wrap,
+  .comparison-modal-footer {
     margin-left: 18px;
     margin-right: 18px;
   }

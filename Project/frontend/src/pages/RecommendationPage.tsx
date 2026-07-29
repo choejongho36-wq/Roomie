@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
@@ -57,6 +57,7 @@ const createSurveyInsight = (survey: SurveyResult | null) => {
 
 function RecommendationPage() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
   const [surveys, setSurveys] = useState<SurveyResult[] | null>(null);
   const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
@@ -231,13 +232,7 @@ function RecommendationPage() {
       )}
 
       <section className="recommendation-list">
-        <div className="recommendation-header">
-          <h1>점수 높은 순</h1>
-        </div>
-
-        {!selectedRecommendation && recommendations && recommendations.length > 0 && (
-          <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
-        )}
+        <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
 
         {error && <p className="survey-error">{error}</p>}
 
@@ -248,6 +243,9 @@ function RecommendationPage() {
         ) : (
           <>
             <div className="recommendation-stage">
+              <div className="recommendation-header">
+                <h1>점수 높은 순</h1>
+              </div>
               <div className="recommendation-cards">
                 {visibleRecommendations.map((item) => {
                   const imageSrc = getProfileImageSrc(item.profileImageUrl);
@@ -263,16 +261,18 @@ function RecommendationPage() {
                       aria-label={`${item.nickname} 추천 카드 선택`}
                       onClick={() => setSelectedUserId(item.userId)}
                       onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
-                    >              
-                      <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
+                    >
+                      <div className="profile-card-main">
+                        <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
-                      <div className="profile-card-info">
-                        <h2>{item.nickname}</h2>
-                        <p>
-                          <span>{item.age}세</span>
-                          <span>{item.job || "직업 정보 준비 중"}</span>
-                          <span>{item.region ?? "지역 정보 준비 중"}</span>
-                        </p>
+                        <div className="profile-card-info">
+                          <h2>{item.nickname}</h2>
+                          <p>{item.age}세</p>
+                          <p>
+                            <span>{item.job}</span>
+                            <span>{item.region}</span>
+                          </p>
+                        </div>
                       </div>
 
                       <p className="profile-card-bio">
@@ -380,10 +380,6 @@ function RecommendationPage() {
                 </div>
 
                 <div className="comparison-table-wrap">
-                  <div className="comparison-table-header">
-                    <h3>설문 답변 비교</h3>
-                    <span>나와 {comparison.nickname}</span>
-                  </div>
                   <div className="comparison-compare-grid">
                     {comparison.items.map((item) => (
                       <div
@@ -412,6 +408,20 @@ function RecommendationPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="comparison-modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-primary comparison-start-chat-button"
+                    onClick={() =>
+                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
+                        state: { nickname: comparison.nickname },
+                      })
+                    }
+                  >
+                    {comparison.nickname}님에게 첫 메시지 보내기
+                  </button>
                 </div>
               </>
             )}

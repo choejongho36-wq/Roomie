@@ -14,12 +14,6 @@ export interface Conversation {
   lastMessageAt: string;
 }
 
-export interface UserSearchResult {
-  userId: number;
-  nickname: string;
-  profileImageUrl: string | null;
-}
-
 export interface NotificationItem {
   notificationId: number;
   senderId: number;
