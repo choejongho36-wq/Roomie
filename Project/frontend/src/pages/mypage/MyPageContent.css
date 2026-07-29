@@ -299,7 +299,7 @@
   color: #f16526;
 }
 
-/* 저장된 태그: 두 줄 다 해시태그 폼 (윗줄 생활 / 아랫줄 취미) */
+/* 저장된 태그: 해시태그 폼 */
 .profile-tags-view {
   display: flex;
   flex-direction: column;
@@ -325,11 +325,6 @@
 .profile-tags-view .profile-tag::before {
   content: "#";
   opacity: 0.55;
-}
-
-/* 취미는 주황과 대비되는 회청색 */
-.profile-tags-interest > .profile-tag:not(.profile-tag-selectable) {
-  color: #64748b;
 }
 
 .profile-tags-edit {
@@ -375,7 +370,24 @@
   font-weight: 600;
 }
 
-/* 영역 → 그룹 → 태그 3단, 각 단은 가운데 정렬된 칩 줄 */
+.profile-tag-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #777;
+  margin-top: 4px;
+}
+
+/* MBTI 16개는 한 칸씩 균등하게 */
+.profile-tag-row-mbti {
+  gap: 4px;
+}
+
+.profile-tag-row-mbti > .profile-tag {
+  min-width: 58px;
+  padding: 5px 8px;
+}
+
+/* 그룹 → 태그 2단, 각 단은 가운데 정렬된 칩 줄 */
 .profile-tag-row {
   display: flex;
   flex-wrap: wrap;
@@ -383,17 +395,7 @@
   gap: 6px;
 }
 
-/* 1단(영역) 진한 주황 → 2단(그룹) 연한 주황 → 3단(태그) 기본 주황 → 선택 요약 아웃라인 */
-.profile-tag-section {
-  padding: 6px 18px;
-  font-size: 13px;
-}
-
-.profile-tag-section.profile-tag-selected {
-  background: #d94f14;
-  border-color: #d94f14;
-}
-
+/* 그룹은 연한 주황, 태그는 기본 주황, 선택 요약은 아웃라인 */
 .profile-tag-group-btn.profile-tag-selected {
   background: #ffe0d0;
   border-color: #ffc2a3;

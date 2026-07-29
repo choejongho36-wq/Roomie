@@ -1,39 +1,20 @@
 export type TagGroup = {
   label: string;
   tags: string[];
-  /** true면 그룹 안에서 하나만 선택 (다시 고르면 교체) */
-  exclusive?: boolean;
 };
 
-/** 생활 패턴 - 그룹당 1개. 순서는 설문 가중치(CompatibilityCalculator.WEIGHTS) 기준 */
-export const LIFESTYLE_TAG_GROUPS: TagGroup[] = [
-  { label: "흡연", exclusive: true, tags: ["비흡연", "흡연", "전자담배만"] },
-  { label: "청결", exclusive: true, tags: ["깔끔한 편", "적당히 치우는 편", "자유로운 편"] },
-  { label: "소음", exclusive: true, tags: ["소음에 무던한 편", "소음에 민감한 편"] },
-  { label: "취침", exclusive: true, tags: ["일찍 잠", "늦게 잠"] },
-  { label: "생활 패턴", exclusive: true, tags: ["아침형", "저녁형", "유동적"] },
-  { label: "음주", exclusive: true, tags: ["안 마심", "가끔 음주", "자주 음주"] },
-  { label: "손님 초대", exclusive: true, tags: ["초대 안 함", "가끔 초대", "자주 초대"] },
-  { label: "물건 공유", exclusive: true, tags: ["공유 괜찮음", "각자 사용"] },
-  { label: "요리", exclusive: true, tags: ["직접 요리", "배달/외식 위주"] },
-  { label: "온도", exclusive: true, tags: ["더위 많이 탐", "추위 많이 탐"] },
-  { label: "반려동물", exclusive: true, tags: ["반려동물 있음", "반려동물 없음", "동물 알레르기"] },
-  { label: "직업", exclusive: true, tags: ["학생", "직장인", "재택근무"] },
-  { label: "생활비", exclusive: true, tags: ["절약형", "적당히 쓰는 편", "여유로운 편"] },
-  {
-    label: "MBTI",
-    exclusive: true,
-    tags: [
-      "INTJ", "INTP", "ENTJ", "ENTP",
-      "INFJ", "INFP", "ENFJ", "ENFP",
-      "ISTJ", "ISFJ", "ESTJ", "ESFJ",
-      "ISTP", "ISFP", "ESTP", "ESFP",
-    ],
-  },
+/** MBTI는 필수 1개, 관심사 태그와 별개로 센다 */
+export const MBTI_TAGS = [
+  "INTJ", "INTP", "ENTJ", "ENTP",
+  "INFJ", "INFP", "ENFJ", "ENFP",
+  "ISTJ", "ISFJ", "ESTJ", "ESFJ",
+  "ISTP", "ISFP", "ESTP", "ESFP",
 ];
 
-/** 취미·관심사 - 전체 합쳐서 MAX_INTEREST_TAGS개까지 */
-export const INTEREST_TAG_GROUPS: TagGroup[] = [
+export const MBTI_TAG_SET = new Set(MBTI_TAGS);
+
+/** 취미·관심사 - 전체 합쳐서 MAX_PROFILE_TAGS개까지 */
+export const PROFILE_TAG_GROUPS: TagGroup[] = [
   {
     label: "운동",
     tags: [
@@ -90,30 +71,7 @@ export const INTEREST_TAG_GROUPS: TagGroup[] = [
   { label: "기타", tags: ["식물 키우기", "재테크", "봉사활동"] },
 ];
 
-export const TAG_SECTIONS = [
-  { label: "생활 패턴", groups: LIFESTYLE_TAG_GROUPS },
-  { label: "취미·관심사", groups: INTEREST_TAG_GROUPS },
-];
+export const PROFILE_TAGS = [...MBTI_TAGS, ...PROFILE_TAG_GROUPS.flatMap((g) => g.tags)];
 
-export type TagSection = (typeof TAG_SECTIONS)[number];
-
-export const PROFILE_TAG_GROUPS = [...LIFESTYLE_TAG_GROUPS, ...INTEREST_TAG_GROUPS];
-
-export const PROFILE_TAGS = PROFILE_TAG_GROUPS.flatMap((g) => g.tags);
-
-export const LIFESTYLE_TAGS = new Set(LIFESTYLE_TAG_GROUPS.flatMap((g) => g.tags));
-
-/** 태그 → 속한 그룹 라벨 ("비흡연" → "흡연") */
-export const TAG_GROUP_LABEL = new Map(
-  PROFILE_TAG_GROUPS.flatMap((g) => g.tags.map((t) => [t, g.label] as const)),
-);
-
-export const MAX_INTEREST_TAGS = 8;
-
-/** 배타 그룹은 1개, 다중 선택 그룹(소음)은 태그 수만큼 */
-export const MAX_LIFESTYLE_TAGS = LIFESTYLE_TAG_GROUPS.reduce(
-  (sum, g) => sum + (g.exclusive ? 1 : g.tags.length),
-  0,
-);
-
-export const MAX_PROFILE_TAGS = MAX_LIFESTYLE_TAGS + MAX_INTEREST_TAGS;
+/** MBTI를 뺀 관심사 태그 상한 */
+export const MAX_PROFILE_TAGS = 3;

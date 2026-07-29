@@ -40,24 +40,6 @@ public class UserController {
 
     // 프론트 src/data/ProfileTags.ts 와 같은 목록을 유지해야 한다.
     private static final Set<String> ALLOWED_TAGS = Set.of(
-            // 생활 패턴
-            "비흡연", "흡연", "전자담배만",
-            "안 마심", "가끔 음주", "자주 음주",
-            "아침형", "저녁형", "유동적",
-            "깔끔한 편", "적당히 치우는 편", "자유로운 편",
-            "반려동물 있음", "반려동물 없음", "동물 알레르기",
-            "소음에 무던한 편", "소음에 민감한 편",
-            "초대 안 함", "가끔 초대", "자주 초대",
-            "일찍 잠", "늦게 잠",
-            "직접 요리", "배달/외식 위주",
-            "공유 괜찮음", "각자 사용",
-            "더위 많이 탐", "추위 많이 탐",
-            "학생", "직장인", "재택근무",
-            "절약형", "적당히 쓰는 편", "여유로운 편",
-            "INTJ", "INTP", "ENTJ", "ENTP",
-            "INFJ", "INFP", "ENFJ", "ENFP",
-            "ISTJ", "ISFJ", "ESTJ", "ESFJ",
-            "ISTP", "ISFP", "ESTP", "ESFP",
             // 운동
             "헬스", "홈트", "러닝", "등산", "클라이밍", "축구", "농구", "야구",
             "배드민턴", "테니스", "탁구", "볼링", "당구", "요가/필라테스",
@@ -88,11 +70,15 @@ public class UserController {
             "인테리어/홈꾸미기", "정리/수납", "홈카페", "홈파티", "캔들/디퓨저",
             "아이돌", "굿즈 수집", "피규어/레고", "프라모델", "포토카드",
             "화장품", "향수", "옷 쇼핑", "헤어/그루밍",
-            "식물 키우기", "재테크", "봉사활동"
+            "식물 키우기", "재테크", "봉사활동",
+            // MBTI
+            "INTJ", "INTP", "ENTJ", "ENTP",
+            "INFJ", "INFP", "ENFJ", "ENFP",
+            "ISTJ", "ISFJ", "ESTJ", "ESFJ",
+            "ISTP", "ISFP", "ESTP", "ESFP"
     );
-    // 개수 상한은 프론트의 그룹 규칙(생활 그룹별 1개 + 취미 8개)이 정한다.
-    // 서버는 그룹이 늘어도 안 고쳐도 되도록 DB 컬럼 길이만 지킨다. (User.tags = 500)
-    private static final int MAX_TAGS_LENGTH = 500;
+    // MBTI 1개 + 관심사 3개
+    private static final int MAX_TAGS = 4;
     private static final int MAX_BIO_LENGTH = 150;
     private static final int MAX_NICKNAME_LENGTH = 30;
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
@@ -176,16 +162,15 @@ public class UserController {
     public UserResponse updateTags(Authentication authentication, @RequestBody TagsRequest request) {
         List<String> tags = request.tags() == null ? List.of() : request.tags();
         Set<String> unique = new LinkedHashSet<>(tags);
+        if (unique.size() > MAX_TAGS) {
+            throw new IllegalArgumentException("태그는 최대 " + MAX_TAGS + "개까지 선택할 수 있습니다.");
+        }
         if (!ALLOWED_TAGS.containsAll(unique)) {
             throw new IllegalArgumentException("허용되지 않은 태그가 포함되어 있습니다.");
         }
-        String joined = String.join(",", unique);
-        if (joined.length() > MAX_TAGS_LENGTH) {
-            throw new IllegalArgumentException("태그가 너무 많습니다.");
-        }
 
         User user = findUser(authentication);
-        user.updateTags(unique.isEmpty() ? null : joined);
+        user.updateTags(unique.isEmpty() ? null : String.join(",", unique));
         userRepository.save(user);
         return toResponse(user);
     }

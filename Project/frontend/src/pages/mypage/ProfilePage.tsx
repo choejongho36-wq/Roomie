@@ -4,14 +4,12 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { updateTags, updateBio, changePassword, getMySurveys, API_ORIGIN } from "../../api";
 import {
-  TAG_SECTIONS,
+  PROFILE_TAG_GROUPS,
   PROFILE_TAGS,
-  LIFESTYLE_TAGS,
-  TAG_GROUP_LABEL,
-  MAX_INTEREST_TAGS,
-  MAX_LIFESTYLE_TAGS,
+  MAX_PROFILE_TAGS,
+  MBTI_TAGS,
+  MBTI_TAG_SET,
   type TagGroup,
-  type TagSection,
 } from "../../data/ProfileTags";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import NicknameModal from "./NicknameModal";
@@ -40,7 +38,6 @@ function ProfilePage() {
   const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
   const [editingTags, setEditingTags] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>([]);
-  const [activeSection, setActiveSection] = useState<TagSection | null>(null);
   const [activeGroup, setActiveGroup] = useState<TagGroup | null>(null);
   const [tagsSaving, setTagsSaving] = useState(false);
   const [tagsError, setTagsError] = useState("");
@@ -67,27 +64,30 @@ function ProfilePage() {
 
 
   // 저장 순서 대신 그룹 정의 순서로 보여준다
-  const byGroupOrder = (tags: string[]) =>
-    [...tags].sort((a, b) => PROFILE_TAGS.indexOf(a) - PROFILE_TAGS.indexOf(b));
-  const savedLifestyleTags = byGroupOrder(user.tags.filter((t) => LIFESTYLE_TAGS.has(t)));
-  const savedInterestTags = byGroupOrder(user.tags.filter((t) => !LIFESTYLE_TAGS.has(t)));
+  const savedTags = [...user.tags].sort(
+    (a, b) => PROFILE_TAGS.indexOf(a) - PROFILE_TAGS.indexOf(b),
+  );
 
   const startEditTags = () => {
     setDraftTags(user.tags);
     setTagsError("");
-    setActiveSection(null);
     setActiveGroup(null);
     setEditingTags(true);
   };
 
-  const toggleDraftTag = (tag: string, group: TagGroup) => {
+  const draftMbti = draftTags.find((t) => MBTI_TAG_SET.has(t));
+  const draftInterests = draftTags.filter((t) => !MBTI_TAG_SET.has(t));
+
+  const pickMbti = (tag: string) => {
+    setDraftTags(tag === draftMbti ? draftInterests : [tag, ...draftInterests]);
+    setTagsError("");
+  };
+
+  const toggleDraftTag = (tag: string) => {
     if (draftTags.includes(tag)) {
       setDraftTags(draftTags.filter((t) => t !== tag));
-    } else if (group.exclusive) {
-      // 생활 패턴은 그룹당 1개 - 같은 그룹의 기존 선택을 교체
-      setDraftTags([...draftTags.filter((t) => !group.tags.includes(t)), tag]);
-    } else if (draftTags.filter((t) => !LIFESTYLE_TAGS.has(t)).length >= MAX_INTEREST_TAGS) {
-      setTagsError(`취미·관심사는 최대 ${MAX_INTEREST_TAGS}개까지 선택할 수 있어요.`);
+    } else if (draftInterests.length >= MAX_PROFILE_TAGS) {
+      setTagsError(`관심사 태그는 최대 ${MAX_PROFILE_TAGS}개까지 선택할 수 있어요.`);
       return;
     } else {
       setDraftTags([...draftTags, tag]);
@@ -260,18 +260,9 @@ function ProfilePage() {
 
             {!editingTags ? (
               <div className="profile-tags-view">
-                {savedLifestyleTags.length > 0 && (
-                  <div className="profile-tags profile-tags-lifestyle">
-                    {savedLifestyleTags.map((tag) => (
-                      <span key={tag} className="profile-tag">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {savedInterestTags.length > 0 && (
-                  <div className="profile-tags profile-tags-interest">
-                    {savedInterestTags.map((tag) => (
+                {savedTags.length > 0 && (
+                  <div className="profile-tags">
+                    {savedTags.map((tag) => (
                       <span key={tag} className="profile-tag">
                         {tag}
                       </span>
@@ -285,55 +276,47 @@ function ProfilePage() {
             ) : (
               <div className="profile-tags-editor">
                 <p className="profile-tag-hint">
-                  생활 패턴은 항목마다 1개(소음은 여러 개), 취미·관심사는 최대 {MAX_INTEREST_TAGS}개까지 선택할 수
-                  있어요.
+                  MBTI 1개와 관심사 태그 최대 {MAX_PROFILE_TAGS}개를 선택할 수 있어요.
                   <span className="profile-tag-hint-count">
-                    (생활 {draftTags.filter((t) => LIFESTYLE_TAGS.has(t)).length}/{MAX_LIFESTYLE_TAGS} · 취미{" "}
-                    {draftTags.filter((t) => !LIFESTYLE_TAGS.has(t)).length}/{MAX_INTEREST_TAGS})
+                    ({draftInterests.length}/{MAX_PROFILE_TAGS})
                   </span>
                 </p>
-                <div className="profile-tag-row">
-                  {TAG_SECTIONS.map((section) => (
+
+                <p className="profile-tag-group-title">MBTI</p>
+                <div className="profile-tag-row profile-tag-row-mbti">
+                  {MBTI_TAGS.map((tag) => (
                     <button
                       type="button"
-                      key={section.label}
-                      className={`profile-tag profile-tag-selectable profile-tag-section${
-                        activeSection === section ? " profile-tag-selected" : ""
+                      key={tag}
+                      className={`profile-tag profile-tag-selectable${
+                        draftMbti === tag ? " profile-tag-selected" : ""
                       }`}
-                      onClick={() => {
-                        setActiveSection(activeSection === section ? null : section);
-                        setActiveGroup(null);
-                      }}
+                      onClick={() => pickMbti(tag)}
                     >
-                      {section.label}
+                      {tag}
                     </button>
                   ))}
                 </div>
 
-                {activeSection && (
-                  <div className="profile-tag-row">
-                    {activeSection.groups.map((group) => {
-                      const picked = group.tags.filter((t) => draftTags.includes(t)).length;
-                      return (
-                        <button
-                          type="button"
-                          key={group.label}
-                          className={`profile-tag profile-tag-selectable profile-tag-group-btn${
-                            activeGroup === group ? " profile-tag-selected" : ""
-                          }`}
-                          onClick={() => setActiveGroup(activeGroup === group ? null : group)}
-                        >
-                          {group.label}
-                          {picked > 0 && (
-                            <span className="profile-tag-check">
-                              ✓{group.exclusive ? "" : ` ${picked}`}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                <p className="profile-tag-group-title">관심사</p>
+                <div className="profile-tag-row">
+                  {PROFILE_TAG_GROUPS.map((group) => {
+                    const picked = group.tags.filter((t) => draftTags.includes(t)).length;
+                    return (
+                      <button
+                        type="button"
+                        key={group.label}
+                        className={`profile-tag profile-tag-selectable profile-tag-group-btn${
+                          activeGroup === group ? " profile-tag-selected" : ""
+                        }`}
+                        onClick={() => setActiveGroup(activeGroup === group ? null : group)}
+                      >
+                        {group.label}
+                        {picked > 0 && <span className="profile-tag-check">✓ {picked}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
 
                 {activeGroup && (
                   <div className="profile-tag-row profile-tag-row-options">
@@ -344,7 +327,7 @@ function ProfilePage() {
                         className={`profile-tag profile-tag-selectable${
                           draftTags.includes(tag) ? " profile-tag-selected" : ""
                         }`}
-                        onClick={() => toggleDraftTag(tag, activeGroup)}
+                        onClick={() => toggleDraftTag(tag)}
                       >
                         {tag}
                       </button>
@@ -361,7 +344,7 @@ function ProfilePage() {
                         className="profile-tag profile-tag-selected"
                         onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
                       >
-                        {LIFESTYLE_TAGS.has(tag) ? `${TAG_GROUP_LABEL.get(tag)}: ${tag}` : tag} ×
+                        {tag} ×
                       </button>
                     ))}
                   </div>
