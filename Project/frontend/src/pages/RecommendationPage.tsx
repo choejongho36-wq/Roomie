@@ -11,6 +11,7 @@ import {
 } from "../api";
 import { surveyQuestions } from "../data/SurveyQuestions";
 import type { RecommendationResult, SurveyComparisonResult, SurveyResult } from "../types/survey";
+import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 
 const RECOMMENDATION_CARD_LIMIT = 3;
@@ -20,8 +21,6 @@ const getProfileImageSrc = (url: string | null) => {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
-
-const getInitial = (nickname: string) => nickname.trim().charAt(0) || "?";
 
 const getSurveyScore = (survey: SurveyResult, questionId: number) => {
   const questionIndex = surveyQuestions.findIndex((question) => question.id === questionId);
@@ -235,13 +234,7 @@ function RecommendationPage() {
                     onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
                   >
                     <div className="profile-card-main">
-                      {imageSrc ? (
-                        <img className="profile-card-avatar" src={imageSrc} alt={item.nickname} />
-                      ) : (
-                        <div className="profile-card-avatar profile-card-avatar-fallback" aria-hidden="true">
-                          {getInitial(item.nickname)}
-                        </div>
-                      )}
+                      <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
                       <div className="profile-card-info">
                         <h2>{item.nickname}</h2>

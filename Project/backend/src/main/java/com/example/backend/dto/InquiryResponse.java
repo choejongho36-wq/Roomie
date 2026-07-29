@@ -6,6 +6,7 @@ public record InquiryResponse(
         Long inquiryId,
         Long userId,
         String nickname,
+        String profileImageUrl,
         String title,
         String category,
         String content,

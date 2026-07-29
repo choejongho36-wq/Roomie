@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, getBookmarkedPosts } from "../../api";
 import type { Post } from "../../types";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../board/BoardListPage.css";
 import "./MyPageContent.css";
 
@@ -12,18 +13,8 @@ const getProfileImageSrc = (url: string | null | undefined) => {
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
-const getInitial = (nickname: string | null | undefined) => (nickname || "?").trim().charAt(0) || "?";
-
 function AuthorAvatar({ nickname, profileImageUrl }: { nickname: string; profileImageUrl: string | null }) {
-  const src = getProfileImageSrc(profileImageUrl);
-  if (src) {
-    return <img className="board-table-avatar" src={src} alt={nickname} />;
-  }
-  return (
-    <div className="board-table-avatar board-table-avatar-fallback" aria-hidden="true">
-      {getInitial(nickname)}
-    </div>
-  );
+  return <img className="board-table-avatar" src={getProfileImageSrc(profileImageUrl) ?? defaultAvatar} alt={nickname} />;
 }
 
 const formatShortDate = (dateString: string) => {

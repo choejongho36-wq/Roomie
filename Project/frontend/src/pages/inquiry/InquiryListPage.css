@@ -8,21 +8,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  display: block;
+  display: inline-block;
   max-width: 420px;
 }
 
 /* board-table.css는 2번째 컬럼(제목)을 기준으로 좌/우 정렬을 나눠두는데,
    문의 게시판은 그 앞에 "분류" 컬럼이 하나 더 있어서 제목이 3번째 컬럼이 된다.
    컬럼 위치 기준 정렬 규칙을 문의 표에 맞게 다시 지정한다. */
-.inquiry-table th:nth-child(2),
-.inquiry-table td:nth-child(2) {
+.board-table.inquiry-table th:nth-child(2),
+.board-table.inquiry-table td:nth-child(2) {
   text-align: center;
 }
 
-.inquiry-table th:nth-child(3),
-.inquiry-table td:nth-child(3) {
-  text-align: left;
+.board-table.inquiry-table th:nth-child(3),
+.board-table.inquiry-table td:nth-child(3) {
+  text-align: center;
 }
 
 .inquiry-category-badge {

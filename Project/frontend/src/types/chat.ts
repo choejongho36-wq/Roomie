@@ -26,6 +26,8 @@ export interface NotificationItem {
   senderNickname: string;
   senderProfileImageUrl: string | null;
   content: string;
+  type: string;
+  targetId: number | null;
   read: boolean;
   createdAt: string;
 }

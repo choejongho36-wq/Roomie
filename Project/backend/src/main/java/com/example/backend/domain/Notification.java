@@ -25,6 +25,12 @@ public class Notification {
     @Column(nullable = false, length = 200)
     private String content;
 
+    @Column(nullable = false, length = 20)
+    private String type;
+
+    @Column(name = "target_id")
+    private Long targetId;
+
     @Column(nullable = false)
     private boolean read = false;
 
@@ -36,10 +42,12 @@ public class Notification {
         this.createdAt = LocalDateTime.now();
     }
 
-    public Notification(Long recipientId, Long senderId, String content) {
+    public Notification(Long recipientId, Long senderId, String content, String type, Long targetId) {
         this.recipientId = recipientId;
         this.senderId = senderId;
         this.content = content;
+        this.type = type;
+        this.targetId = targetId;
     }
 
     public void markAsRead() {

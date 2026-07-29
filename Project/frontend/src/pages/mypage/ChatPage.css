@@ -120,18 +120,10 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  border: 1.5px solid #f16526;
   object-fit: cover;
   background: #f1f1f1;
   flex-shrink: 0;
-}
-
-.chat-avatar-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #f16526;
-  background: #fff1e8;
-  font-weight: 800;
 }
 
 .chat-thread {

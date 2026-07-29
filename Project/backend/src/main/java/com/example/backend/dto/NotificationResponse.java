@@ -8,6 +8,8 @@ public record NotificationResponse(
         String senderNickname,
         String senderProfileImageUrl,
         String content,
+        String type,
+        Long targetId,
         boolean read,
         LocalDateTime createdAt
 ) {}
