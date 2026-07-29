@@ -43,8 +43,114 @@
 
 .survey-complete-actions {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 20px;
+  width: 100%;
+  text-align: left;
+}
+
+.survey-complete-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid #f0ece8;
+  background: #ffffff;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.survey-complete-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(89, 55, 30, 0.1);
+  border-color: #ffcda6;
+}
+
+.survey-complete-banner-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fff1e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.survey-complete-banner-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #f16526;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.survey-complete-banner-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.survey-complete-banner-text strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1512;
+}
+
+.survey-complete-banner-text span {
+  font-size: 13px;
+  color: #8c7f74;
+  line-height: 1.4;
+}
+
+.survey-complete-banner-arrow {
+  flex-shrink: 0;
+  color: #ccc;
+  font-size: 22px;
+  font-weight: 700;
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.survey-complete-banner:hover .survey-complete-banner-arrow {
+  transform: translateX(3px);
+  color: #f16526;
+}
+
+.survey-complete-banner-primary {
+  background: linear-gradient(135deg, #f16526, #ff8a4c);
+  border-color: transparent;
+  box-shadow: 0 14px 32px rgba(241, 101, 38, 0.28);
+}
+
+.survey-complete-banner-primary:hover {
+  box-shadow: 0 18px 40px rgba(241, 101, 38, 0.38);
+  border-color: transparent;
+}
+
+.survey-complete-banner-primary .survey-complete-banner-icon {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.survey-complete-banner-primary .survey-complete-banner-icon svg {
+  stroke: #ffffff;
+}
+
+.survey-complete-banner-primary .survey-complete-banner-text strong {
+  color: #ffffff;
+}
+
+.survey-complete-banner-primary .survey-complete-banner-text span {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.survey-complete-banner-primary .survey-complete-banner-arrow {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .survey-header {
