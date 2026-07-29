@@ -38,11 +38,61 @@ public class UserController {
             Set.of(MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, "image/webp");
     private static final long MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
+    // 프론트 src/data/ProfileTags.ts 와 같은 목록을 유지해야 한다.
     private static final Set<String> ALLOWED_TAGS = Set.of(
-            "비흡연", "흡연", "안 마심", "가끔 음주", "자주 음주",
-            "아침형", "저녁형", "깔끔한 편", "자유로운 편", "반려동물 있음"
+            // 생활 패턴
+            "비흡연", "흡연", "전자담배만",
+            "안 마심", "가끔 음주", "자주 음주",
+            "아침형", "저녁형", "유동적",
+            "깔끔한 편", "적당히 치우는 편", "자유로운 편",
+            "반려동물 있음", "반려동물 없음", "동물 알레르기",
+            "소음에 무던한 편", "소음에 민감한 편",
+            "초대 안 함", "가끔 초대", "자주 초대",
+            "일찍 잠", "늦게 잠",
+            "직접 요리", "배달/외식 위주",
+            "공유 괜찮음", "각자 사용",
+            "더위 많이 탐", "추위 많이 탐",
+            "학생", "직장인", "재택근무",
+            "절약형", "적당히 쓰는 편", "여유로운 편",
+            "INTJ", "INTP", "ENTJ", "ENTP",
+            "INFJ", "INFP", "ENFJ", "ENFP",
+            "ISTJ", "ISFJ", "ESTJ", "ESFJ",
+            "ISTP", "ISFP", "ESTP", "ESFP",
+            // 운동
+            "헬스", "홈트", "러닝", "등산", "클라이밍", "축구", "농구", "야구",
+            "배드민턴", "테니스", "탁구", "볼링", "당구", "요가/필라테스",
+            "자전거", "수영", "골프", "복싱/격투기", "스키/보드", "서핑", "크로스핏",
+            // 게임
+            "FPS", "AOS", "RPG", "MMORPG", "RTS", "액션", "어드벤처", "시뮬레이션",
+            "스포츠게임", "레이싱", "리듬게임", "방치형", "인디게임", "콘솔게임",
+            "모바일게임", "보드게임",
+            // 음악
+            "K-POP", "발라드", "힙합/랩", "R&B", "록/메탈", "인디", "재즈", "클래식",
+            "EDM", "팝송", "시티팝", "OST", "트로트", "악기 연주", "공연/페스티벌",
+            // 음식
+            "한식", "일식", "중식", "양식", "분식", "고기/구이", "해산물", "매운음식",
+            "디저트/베이커리", "커피/카페", "채식", "술/안주", "맛집 탐방",
+            // 창작
+            "사진", "영상 편집", "그림/일러스트", "글쓰기", "개발/코딩", "DIY",
+            "뜨개질/자수", "도예", "캘리그라피", "작곡", "3D 모델링", "블로그", "브이로그",
+            // 미디어 / 문화 / 야외 / 기타
+            "영화", "드라마", "애니", "웹툰", "유튜브", "넷플릭스", "예능",
+            "독서", "전시/미술관", "공연/뮤지컬",
+            "여행", "캠핑", "드라이브", "산책", "낚시",
+            "야구 관람", "축구 관람", "농구 관람", "e스포츠 관람",
+            "공부/자격증", "외국어", "독서모임", "강연/세미나",
+            "역사", "철학", "심리학", "과학", "우주/천문", "경제/경영",
+            "정치/시사", "IT/기술", "문학", "수학", "의학/건강",
+            // 놀이 / 홈라이프 / 덕질·수집 / 뷰티·패션
+            "방탈출", "PC방", "클럽/파티", "노래방",
+            "인테리어/홈꾸미기", "정리/수납", "홈카페", "홈파티", "캔들/디퓨저",
+            "아이돌", "굿즈 수집", "피규어/레고", "프라모델", "포토카드",
+            "화장품", "향수", "옷 쇼핑", "헤어/그루밍",
+            "식물 키우기", "재테크", "봉사활동"
     );
-    private static final int MAX_TAGS = 5;
+    // 개수 상한은 프론트의 그룹 규칙(생활 그룹별 1개 + 취미 8개)이 정한다.
+    // 서버는 그룹이 늘어도 안 고쳐도 되도록 DB 컬럼 길이만 지킨다. (User.tags = 500)
+    private static final int MAX_TAGS_LENGTH = 500;
     private static final int MAX_BIO_LENGTH = 150;
     private static final int MAX_NICKNAME_LENGTH = 30;
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
@@ -126,15 +176,16 @@ public class UserController {
     public UserResponse updateTags(Authentication authentication, @RequestBody TagsRequest request) {
         List<String> tags = request.tags() == null ? List.of() : request.tags();
         Set<String> unique = new LinkedHashSet<>(tags);
-        if (unique.size() > MAX_TAGS) {
-            throw new IllegalArgumentException("태그는 최대 " + MAX_TAGS + "개까지 선택할 수 있습니다.");
-        }
         if (!ALLOWED_TAGS.containsAll(unique)) {
             throw new IllegalArgumentException("허용되지 않은 태그가 포함되어 있습니다.");
         }
+        String joined = String.join(",", unique);
+        if (joined.length() > MAX_TAGS_LENGTH) {
+            throw new IllegalArgumentException("태그가 너무 많습니다.");
+        }
 
         User user = findUser(authentication);
-        user.updateTags(unique.isEmpty() ? null : String.join(",", unique));
+        user.updateTags(unique.isEmpty() ? null : joined);
         userRepository.save(user);
         return toResponse(user);
     }
