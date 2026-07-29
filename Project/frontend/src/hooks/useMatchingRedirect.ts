@@ -10,19 +10,24 @@ export function useMatchingRedirect() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const goToMatching = async (token: string) => {
+    let surveys;
+    try {
+      surveys = await getMySurveys(token);
+    } catch {
+      navigate("/survey");
+      return;
+    }
+
+    if (surveys.length === 0) {
+      navigate("/survey");
+      return;
+    }
+
     setIsRedirecting(true);
     const delay = MIN_LOADING_MS + Math.random() * (MAX_LOADING_MS - MIN_LOADING_MS);
-    const wait = new Promise((resolve) => setTimeout(resolve, delay));
-
-    try {
-      const [surveys] = await Promise.all([getMySurveys(token), wait]);
-      navigate(surveys.length > 0 ? "/recommend" : "/survey");
-    } catch {
-      await wait;
-      navigate("/survey");
-    } finally {
-      setIsRedirecting(false);
-    }
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    navigate("/recommend");
+    setIsRedirecting(false);
   };
 
   return { isRedirecting, goToMatching };

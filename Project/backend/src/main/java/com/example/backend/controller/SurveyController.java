@@ -39,6 +39,7 @@ public class SurveyController {
                 .map(answer -> (answer - 1) / 4.0)
                 .toList();
         String vectorJson = toJson(vector);
+        surveyResultRepository.deleteByUserId(user.getUserId());
         SurveyResult saved = surveyResultRepository.save(new SurveyResult(user.getUserId(), answersJson, vectorJson));
         return toResponse(saved);
     }

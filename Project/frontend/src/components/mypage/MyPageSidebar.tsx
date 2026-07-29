@@ -43,6 +43,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M16 17l5-5-5-5M21 12H9" />
     </>
   ),
+  home: (
+    <>
+      <path d="M4 11l8-7 8 7" />
+      <path d="M6 10v9a1 1 0 001 1h4v-6h2v6h4a1 1 0 001-1v-9" />
+    </>
+  ),
 };
 
 export function Icon({ name }: { name: string }) {
