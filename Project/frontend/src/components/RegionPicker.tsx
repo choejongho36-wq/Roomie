@@ -36,7 +36,7 @@ export const parseRegionToken = (region: string | null | undefined): RegionToken
   if (!region) return null;
   const district = ALL_DISTRICT_OPTIONS.find((d) => region.includes(d));
   if (!district) return null;
-  const dong = getDongsForDistrict(district).find((d) => region.includes(d));
+  const dong = getNormalizedDongsForDistrict(district).find((d) => region.includes(d));
   return dong ? buildDongToken(district, dong) : buildDistrictToken(district);
 };
 
@@ -45,6 +45,30 @@ export const parseRegionToken = (region: string | null | undefined): RegionToken
 const getDistrictsForCity = (city: string): string[] => {
   if (city === "서울") return ALL_DISTRICT_OPTIONS;
   return [];
+};
+
+// "대치1동", "대치2동", "대치4동"처럼 같은 법정동(예: 대치동)을 행정 편의상
+// 여러 행정동으로 나눠놓은 경우를 하나로 합쳐서 보여줌
+// (실제 행정구역 데이터 자체는 건드리지 않고, 화면에 보여줄 때만 합쳐서 표시)
+//
+// ⚠️ 의도적으로 안 합쳐지는 예외 있음: "종로1·2·3·4가동", "금호2·3가동" 같은
+// "숫자+가+동" 패턴은 겉보기엔 비슷해 보여도 성격이 다름 — 종로1가/종로2가는
+// 관리상 나뉜 같은 동네가 아니라, 애초에 서로 다른 법정동(고유 지명)임.
+// 그래서 "종로동"으로 합치면 존재하지도 않는 지명을 만들어내는 셈이 되므로
+// 이 정규식은 일부러 이 패턴은 건드리지 않고 원본 그대로 남겨둠 (버그 아님)
+const normalizeDongName = (dong: string): string => dong.replace(/\d+(동|읍|면)$/, "$1");
+
+const getNormalizedDongsForDistrict = (district: string): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const dong of getDongsForDistrict(district)) {
+    const normalized = normalizeDongName(dong);
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      result.push(normalized);
+    }
+  }
+  return result;
 };
 
 interface RegionEntry {
@@ -56,7 +80,7 @@ interface RegionEntry {
 // 검색 대상 전체 목록: 구 단위(전체) + 모든 동을 한 번만 평탄화해서 만들어둠 (모듈 로드 시 1회만 계산)
 const ALL_ENTRIES: RegionEntry[] = ALL_DISTRICT_OPTIONS.flatMap((district) => {
   const districtEntry: RegionEntry = { token: buildDistrictToken(district), district, dong: null };
-  const dongEntries: RegionEntry[] = getDongsForDistrict(district).map((dong) => ({
+  const dongEntries: RegionEntry[] = getNormalizedDongsForDistrict(district).map((dong) => ({
     token: buildDongToken(district, dong),
     district,
     dong,
@@ -252,7 +276,7 @@ function RegionPicker({
                 { token: buildDistrictToken(activeDistrict), district: activeDistrict, dong: null },
                 `${activeDistrict} 전체`
               )}
-              {getDongsForDistrict(activeDistrict).map((dong) =>
+              {getNormalizedDongsForDistrict(activeDistrict).map((dong) =>
                 renderEntryButton(
                   { token: buildDongToken(activeDistrict, dong), district: activeDistrict, dong },
                   dong

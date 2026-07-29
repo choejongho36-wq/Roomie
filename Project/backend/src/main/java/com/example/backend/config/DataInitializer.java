@@ -29,89 +29,103 @@ public class DataInitializer {
     public CommandLineRunner seedDummyData() {
         return args -> {
             var dummyUsers = List.of(
-                    Map.of(
-                            "loginId", "dummy1",
-                            "email", "dummy1@roomie.test",
-                            "password", "DummyPass1!",
-                            "nickname", "한결",
-                            "gender", "M",
-                            "birthDate", LocalDate.of(1996, 3, 12),
-                            "phone", "01000000001",
-                            "tags", "책읽기,요리,야외활동",
-                            "bio", "조용하고 깔끔한 룸메이트를 찾고 있어요.",
-                            "answers", List.of(5, 4, 4, 3, 2, 5, 3, 4, 2, 1, 3, 4, 5, 4, 3, 2, 4, 3, 4, 2)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy1"),
+                            Map.entry("email", "dummy1@roomie.test"),
+                            Map.entry("password", "DummyPass1!"),
+                            Map.entry("nickname", "한결"),
+                            Map.entry("gender", "M"),
+                            Map.entry("birthDate", LocalDate.of(1996, 3, 12)),
+                            Map.entry("phone", "01000000001"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "책읽기,요리,야외활동"),
+                            Map.entry("bio", "조용하고 깔끔한 룸메이트를 찾고 있어요."),
+                            Map.entry("answers", List.of(5, 4, 4, 3, 2, 5, 3, 4, 2, 1, 3, 4, 5, 4, 3, 2, 4, 3, 4, 2))
                     ),
-                    Map.of(
-                            "loginId", "dummy2",
-                            "email", "dummy2@roomie.test",
-                            "password", "DummyPass2!",
-                            "nickname", "지은",
-                            "gender", "F",
-                            "birthDate", LocalDate.of(1998, 7, 20),
-                            "phone", "01000000002",
-                            "tags", "카페,영화,반려동물",
-                            "bio", "활동적이고 밝은 성격이에요.",
-                            "answers", List.of(3, 2, 5, 4, 5, 2, 4, 3, 5, 4, 3, 4, 2, 5, 4, 3, 5, 4, 5, 3)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy2"),
+                            Map.entry("email", "dummy2@roomie.test"),
+                            Map.entry("password", "DummyPass2!"),
+                            Map.entry("nickname", "지은"),
+                            Map.entry("gender", "F"),
+                            Map.entry("birthDate", LocalDate.of(1998, 7, 20)),
+                            Map.entry("phone", "01000000002"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "카페,영화,반려동물"),
+                            Map.entry("bio", "활동적이고 밝은 성격이에요."),
+                            Map.entry("answers", List.of(3, 2, 5, 4, 5, 2, 4, 3, 5, 4, 3, 4, 2, 5, 4, 3, 5, 4, 5, 3))
                     ),
-                    Map.of(
-                            "loginId", "dummy3",
-                            "email", "dummy3@roomie.test",
-                            "password", "DummyPass3!",
-                            "nickname", "민수",
-                            "gender", "M",
-                            "birthDate", LocalDate.of(1994, 11, 5),
-                            "phone", "01000000003",
-                            "tags", "운동,게임,음악",
-                            "bio", "규칙적이고 책임감 있는 룸메이트입니다.",
-                            "answers", List.of(2, 2, 3, 3, 4, 1, 2, 3, 4, 2, 2, 3, 2, 4, 3, 2, 2, 3, 3, 2)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy3"),
+                            Map.entry("email", "dummy3@roomie.test"),
+                            Map.entry("password", "DummyPass3!"),
+                            Map.entry("nickname", "민수"),
+                            Map.entry("gender", "M"),
+                            Map.entry("birthDate", LocalDate.of(1994, 11, 5)),
+                            Map.entry("phone", "01000000003"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "운동,게임,음악"),
+                            Map.entry("bio", "규칙적이고 책임감 있는 룸메이트입니다."),
+                            Map.entry("answers", List.of(2, 2, 3, 3, 4, 1, 2, 3, 4, 2, 2, 3, 2, 4, 3, 2, 2, 3, 3, 2))
                     ),
-                    Map.of(
-                            "loginId", "dummy4",
-                            "email", "dummy4@roomie.test",
-                            "password", "DummyPass4!",
-                            "nickname", "수빈",
-                            "gender", "F",
-                            "birthDate", LocalDate.of(2000, 1, 28),
-                            "phone", "01000000004",
-                            "tags", "여행,요가,디저트",
-                            "bio", "여유롭고 배려심 많은 사람을 좋아해요.",
-                            "answers", List.of(4, 5, 3, 4, 4, 3, 5, 4, 3, 5, 4, 5, 3, 4, 4, 5, 4, 4, 3, 5)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy4"),
+                            Map.entry("email", "dummy4@roomie.test"),
+                            Map.entry("password", "DummyPass4!"),
+                            Map.entry("nickname", "수빈"),
+                            Map.entry("gender", "F"),
+                            Map.entry("birthDate", LocalDate.of(2000, 1, 28)),
+                            Map.entry("phone", "01000000004"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "여행,요가,디저트"),
+                            Map.entry("bio", "여유롭고 배려심 많은 사람을 좋아해요."),
+                            Map.entry("answers", List.of(4, 5, 3, 4, 4, 3, 5, 4, 3, 5, 4, 5, 3, 4, 4, 5, 4, 4, 3, 5))
                     ),
-                    Map.of(
-                            "loginId", "dummy5",
-                            "email", "dummy5@roomie.test",
-                            "password", "DummyPass5!",
-                            "nickname", "다현",
-                            "gender", "F",
-                            "birthDate", LocalDate.of(1999, 5, 16),
-                            "phone", "01000000005",
-                            "tags", "영화감상,산책,요리",
-                            "bio", "평온한 환경에서 함께 지내는 걸 선호해요.",
-                            "answers", List.of(1, 1, 2, 2, 3, 1, 2, 1, 2, 1, 1, 2, 1, 2, 3, 1, 2, 1, 2, 1)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy5"),
+                            Map.entry("email", "dummy5@roomie.test"),
+                            Map.entry("password", "DummyPass5!"),
+                            Map.entry("nickname", "다현"),
+                            Map.entry("gender", "F"),
+                            Map.entry("birthDate", LocalDate.of(1999, 5, 16)),
+                            Map.entry("phone", "01000000005"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "영화감상,산책,요리"),
+                            Map.entry("bio", "평온한 환경에서 함께 지내는 걸 선호해요."),
+                            Map.entry("answers", List.of(1, 1, 2, 2, 3, 1, 2, 1, 2, 1, 1, 2, 1, 2, 3, 1, 2, 1, 2, 1))
                     ),
-                    Map.of(
-                            "loginId", "dummy6",
-                            "email", "dummy6@roomie.test",
-                            "password", "DummyPass6!",
-                            "nickname", "서윤",
-                            "gender", "F",
-                            "birthDate", LocalDate.of(1997, 9, 8),
-                            "phone", "01000000006",
-                            "tags", "독서,카페,요리",
-                            "bio", "차분한 분위기에서 서로를 배려하는 룸메이트를 원해요.",
-                            "answers", List.of(4, 4, 4, 3, 3, 4, 4, 3, 4, 3, 4, 4, 3, 4, 3, 4, 3, 4, 3, 4)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy6"),
+                            Map.entry("email", "dummy6@roomie.test"),
+                            Map.entry("password", "DummyPass6!"),
+                            Map.entry("nickname", "서윤"),
+                            Map.entry("gender", "F"),
+                            Map.entry("birthDate", LocalDate.of(1997, 9, 8)),
+                            Map.entry("phone", "01000000006"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "독서,카페,요리"),
+                            Map.entry("bio", "차분한 분위기에서 서로를 배려하는 룸메이트를 원해요."),
+                            Map.entry("answers", List.of(4, 4, 4, 3, 3, 4, 4, 3, 4, 3, 4, 4, 3, 4, 3, 4, 3, 4, 3, 4))
                     ),
-                    Map.of(
-                            "loginId", "dummy7",
-                            "email", "dummy7@roomie.test",
-                            "password", "DummyPass7!",
-                            "nickname", "민지",
-                            "gender", "F",
-                            "birthDate", LocalDate.of(1995, 12, 2),
-                            "phone", "01000000007",
-                            "tags", "산책,체험,반려동물",
-                            "bio", "편안하고 서로 배려하는 룸메이트를 찾고 있어요.",
-                            "answers", List.of(5, 4, 4, 4, 4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 5, 3, 4, 4, 3, 5)
+                    Map.ofEntries(
+                            Map.entry("loginId", "dummy7"),
+                            Map.entry("email", "dummy7@roomie.test"),
+                            Map.entry("password", "DummyPass7!"),
+                            Map.entry("nickname", "민지"),
+                            Map.entry("gender", "F"),
+                            Map.entry("birthDate", LocalDate.of(1995, 12, 2)),
+                            Map.entry("phone", "01000000007"),
+                            Map.entry("job", "직장인"),
+                            Map.entry("region", "대치동"),
+                            Map.entry("tags", "산책,체험,반려동물"),
+                            Map.entry("bio", "편안하고 서로 배려하는 룸메이트를 찾고 있어요."),
+                            Map.entry("answers", List.of(5, 4, 4, 4, 4, 5, 3, 4, 4, 5, 4, 3, 4, 4, 5, 3, 4, 4, 3, 5))
                     )
             );
 
@@ -121,6 +135,8 @@ public class DataInitializer {
                 List<Integer> answers = (List<Integer>) dummy.get("answers");
                 if (userRepository.existsByEmail(email)) {
                     User existingUser = userRepository.findByEmail(email).orElseThrow();
+                    existingUser.updateRegionAndJob((String) dummy.get("region"), (String) dummy.get("job"));
+                    userRepository.save(existingUser);
                     normalizeExistingUserSurveyResults(existingUser.getUserId(), answers);
                     continue;
                 }
@@ -133,8 +149,8 @@ public class DataInitializer {
                         (String) dummy.get("gender"),
                         (LocalDate) dummy.get("birthDate"),
                         (String) dummy.get("phone"),
-                        (String) dummy.get("job"),
-                        (String) dummy.get("region")
+                        (String) dummy.get("region"),
+                        (String) dummy.get("job")
                 );
                 user.updateTags((String) dummy.get("tags"));
                 user.updateBio((String) dummy.get("bio"));
