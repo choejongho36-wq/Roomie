@@ -43,6 +43,7 @@ export interface Inquiry {
   userId: number;
   nickname: string;
   title: string;
+  category: string;
   content: string;
   status: string;
   answer: string | null;
@@ -52,6 +53,7 @@ export interface Inquiry {
 
 export interface InquiryRequest {
   title: string;
+  category: string;
   content: string;
 }
 

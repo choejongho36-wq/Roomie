@@ -2,6 +2,7 @@ package com.example.backend.config;
 
 import com.example.backend.security.JwtAuthenticationFilter;
 import com.example.backend.security.oauth.CustomOAuth2UserService;
+import com.example.backend.security.oauth.CustomAuthorizationRequestResolver;
 import com.example.backend.security.oauth.OAuth2LoginFailureHandler;
 import com.example.backend.security.oauth.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +27,7 @@ public class SecurityConfig {
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final CustomOAuth2UserService customOAuth2UserService;
+        private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
         private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
         private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
@@ -44,9 +46,9 @@ public class SecurityConfig {
                                 .exceptionHandling(e -> e.authenticationEntryPoint(
                                                 (request, response, authException) -> response
                                                                 .sendError(HttpServletResponse.SC_UNAUTHORIZED)))
-                                .oauth2Login(oauth2 -> oauth2
-                                                .userInfoEndpoint(userInfo -> userInfo
-                                                                .userService(customOAuth2UserService))
+                               .oauth2Login(oauth2 -> oauth2
+                                                .authorizationEndpoint(auth -> auth
+                                                                .authorizationRequestResolver(customAuthorizationRequestResolver))
                                                 .successHandler(oAuth2LoginSuccessHandler)
                                                 .failureHandler(oAuth2LoginFailureHandler))
                                 .authorizeHttpRequests(auth -> auth

@@ -269,13 +269,13 @@ function RecommendationPage() {
                     </div>
 
                     <div className="profile-card-footer">
-                      <strong>{item.compatibilityScore}%</strong>
+                      <strong>{item.compatibilityScore}점</strong>
                       <button
                         type="button"
                         className="profile-compare-button"
                         onClick={(event) => openComparison(event, item)}
                       >
-                        호환성 점수 <span aria-hidden="true">&gt;</span>
+                        궁합 <span aria-hidden="true">&gt;</span>
                       </button>
                     </div>
                   </article>
@@ -309,7 +309,14 @@ function RecommendationPage() {
               <div>
                 <p className="comparison-modal-eyebrow">설문 비교</p>
                 <h2 id="comparison-title">
-                  {comparison ? `${comparison.nickname}님과의 호환성` : "호환성 비교"}
+                  {comparison ? (
+                    <>
+                      {comparison.nickname}님과의 궁합
+                      <span className="comparison-modal-score-inline">{comparison.compatibilityScore}점</span>
+                    </>
+                  ) : (
+                    "궁합 비교"
+                  )}
                 </h2>
               </div>
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
@@ -325,11 +332,6 @@ function RecommendationPage() {
 
             {comparison && (
               <>
-                <div className="comparison-modal-score">
-                  <strong>{comparison.compatibilityScore}%</strong>
-                  <span>{comparison.nickname}님과 나의 설문 기반 호환성 점수</span>
-                </div>
-
                 <div className="comparison-highlight-grid">
                   <div className="comparison-highlight-panel comparison-highlight-panel-compact">
                     <h3>맞는 포인트 TOP3</h3>
@@ -369,29 +371,31 @@ function RecommendationPage() {
                     <h3>설문 답변 비교</h3>
                     <span>나와 {comparison.nickname}</span>
                   </div>
-                  <div className="comparison-table">
-                    <div className="comparison-table-row comparison-table-head">
-                      <span>항목</span>
-                      <span>나</span>
-                      <span>{comparison.nickname}</span>
-                      <span>차이</span>
-                    </div>
+                  <div className="comparison-compare-grid">
                     {comparison.items.map((item) => (
                       <div
                         key={item.questionId}
                         ref={(el) => {
                           comparisonItemRefs.current[item.category] = el;
                         }}
-                        className={`comparison-table-row${
+                        className={`comparison-compare-card${
                           item.category === highlightedCategory ? " is-target" : ""
                         }`}
                       >
-                        <span className="comparison-category">{item.category}</span>
-                        <span>{item.myAnswer}</span>
-                        <span>{item.otherAnswer}</span>
-                        <span className={`comparison-level level-${item.difference}`}>
-                          {item.matchLevel}
-                        </span>
+                        <div className="comparison-compare-card-header">
+                          <span className="comparison-compare-category">{item.category}</span>
+                          <span className={`comparison-level level-${item.difference}`}>
+                            {item.matchLevel}
+                          </span>
+                        </div>
+                        <div className="comparison-compare-answer">
+                          <span className="comparison-compare-answer-label">나</span>
+                          <span className="comparison-compare-answer-value">{item.myAnswer}</span>
+                        </div>
+                        <div className="comparison-compare-answer">
+                          <span className="comparison-compare-answer-label">{comparison.nickname}</span>
+                          <span className="comparison-compare-answer-value">{item.otherAnswer}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
