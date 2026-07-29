@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/recommendations")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5174")
 public class RecommendationController {
 
     private final CompatibilityService compatibilityService;

@@ -19,7 +19,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/surveys")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5174")
 public class SurveyController {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
