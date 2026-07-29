@@ -9,19 +9,25 @@
   font-size: 14px;
 }
 
-.mypage-notice {
-  background: #fff4ee;
-  border: 1px solid #ffd8bf;
-  color: #d9480f;
-  border-radius: 12px;
-  padding: 14px 20px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  font-weight: 600;
+.mypage-survey-alert {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  max-width: 220px;
+  background: #ffe3e3;
+  border: 1px solid #ffc9c9;
+  color: #e03131;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+  z-index: 2;
+}
+
+.mypage-survey-alert:hover {
+  background: #ffc9c9;
 }
 
 .profile-card {

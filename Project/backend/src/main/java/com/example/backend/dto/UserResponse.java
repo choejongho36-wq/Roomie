@@ -15,5 +15,6 @@ public record UserResponse(
         LocalDateTime createdAt,
         String profileImageUrl,
         List<String> tags,
-        String bio
+        String bio,
+        String provider
 ) {}

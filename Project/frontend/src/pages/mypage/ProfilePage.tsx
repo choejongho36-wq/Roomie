@@ -139,16 +139,14 @@ function ProfilePage() {
 
   return (
     <div className="mypage-panel">
-      {hasSurvey === false && (
-        <div className="mypage-notice">
-          <span>설문조사를 안했어요!!</span>
-          <Link to="/survey" className="btn btn-primary">
-            설문 시작하기
-          </Link>
-        </div>
-      )}
-
       <div className="profile-card profile-card-vertical">
+        {hasSurvey === false && (
+          <Link to="/survey" className="mypage-survey-alert">
+            설문조사를 아직 안 하셨어요!
+            <br />
+            완료하면 매칭이 시작돼요.
+          </Link>
+        )}
         <img
           className="mypage-avatar-img mypage-avatar-img-lg"
           src={user.profileImageUrl ? `${API_ORIGIN}${user.profileImageUrl}` : defaultAvatar}
@@ -342,6 +340,10 @@ function ProfilePage() {
           <div className="profile-card-info-row">
             <span>이메일</span>
             <span>{user.email}</span>
+          </div>
+          <div className="profile-card-info-row">
+            <span>소셜 로그인</span>
+            <span>{!user.provider || user.provider === "LOCAL" ? "소셜 비연동" : user.provider}</span>
           </div>
         </div>
 
