@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
+import type { NotificationItem } from "../types/chat";
 import { API_ORIGIN } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
@@ -42,9 +43,13 @@ function Navbar() {
     goToMatching(token);
   };
 
-  const handleNotificationClick = (notificationId: number, senderId: number) => {
-    markAsRead(notificationId);
-    navigate(`/mypage/chat?userId=${senderId}`);
+  const handleNotificationClick = (notification: NotificationItem) => {
+    markAsRead(notification.notificationId);
+    if (notification.type === "COMMENT_REPLY" && notification.targetId) {
+      navigate(`/board/${notification.targetId}`);
+    } else {
+      navigate(`/mypage/chat?userId=${notification.senderId}`);
+    }
   };
 
   return (
@@ -99,7 +104,7 @@ function Navbar() {
                       key={notification.notificationId}
                       type="button"
                       className={`navbar-notify-item${notification.read ? "" : " navbar-notify-item-unread"}`}
-                      onClick={() => handleNotificationClick(notification.notificationId, notification.senderId)}
+                      onClick={() => handleNotificationClick(notification)}
                     >
                       <span className="navbar-notify-item-title">{notification.senderNickname}</span>
                       <span className="navbar-notify-item-content">{notification.content}</span>

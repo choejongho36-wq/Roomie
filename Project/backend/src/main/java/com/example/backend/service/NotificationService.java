@@ -22,10 +22,15 @@ public class NotificationService {
     private final UserRepository userRepository;
 
     public void createChatNotification(Long recipientId, Long senderId, String content) {
-        String preview = content.length() > PREVIEW_LENGTH
-                ? content.substring(0, PREVIEW_LENGTH) + "..."
-                : content;
-        notificationRepository.save(new Notification(recipientId, senderId, preview));
+        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "CHAT", null));
+    }
+
+    public void createCommentReplyNotification(Long recipientId, Long senderId, String content, Long postId) {
+        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "COMMENT_REPLY", postId));
+    }
+
+    private String preview(String content) {
+        return content.length() > PREVIEW_LENGTH ? content.substring(0, PREVIEW_LENGTH) + "..." : content;
     }
 
     public List<NotificationResponse> getNotifications(Long userId) {
@@ -45,6 +50,8 @@ public class NotificationService {
                             sender.getNickname(),
                             sender.getProfileImageUrl(),
                             notification.getContent(),
+                            notification.getType(),
+                            notification.getTargetId(),
                             notification.isRead(),
                             notification.getCreatedAt());
                 })

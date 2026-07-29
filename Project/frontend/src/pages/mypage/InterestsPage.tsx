@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, getBookmarkedPosts } from "../../api";
 import type { Post } from "../../types";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../board/BoardListPage.css";
+import "./MyPageContent.css";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
   if (!url) return null;
@@ -11,18 +13,8 @@ const getProfileImageSrc = (url: string | null | undefined) => {
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
-const getInitial = (nickname: string | null | undefined) => (nickname || "?").trim().charAt(0) || "?";
-
 function AuthorAvatar({ nickname, profileImageUrl }: { nickname: string; profileImageUrl: string | null }) {
-  const src = getProfileImageSrc(profileImageUrl);
-  if (src) {
-    return <img className="board-table-avatar" src={src} alt={nickname} />;
-  }
-  return (
-    <div className="board-table-avatar board-table-avatar-fallback" aria-hidden="true">
-      {getInitial(nickname)}
-    </div>
-  );
+  return <img className="board-table-avatar" src={getProfileImageSrc(profileImageUrl) ?? defaultAvatar} alt={nickname} />;
 }
 
 const formatShortDate = (dateString: string) => {
@@ -56,9 +48,6 @@ function InterestsPage() {
       {posts !== null && posts.length === 0 && (
         <div className="mypage-empty">
           <p>아직 찜한 게시글이 없어요.</p>
-          <Link to="/board" className="btn btn-primary">
-            게시판 둘러보기
-          </Link>
         </div>
       )}
 

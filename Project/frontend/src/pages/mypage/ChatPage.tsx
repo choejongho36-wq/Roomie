@@ -5,10 +5,11 @@ import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
 import { API_ORIGIN, getChatMessages, getConversations, searchUsers } from "../../api";
 import type { ChatMessage, Conversation, UserSearchResult } from "../../types/chat";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
 import "./ChatPage.css";
 
-const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : null);
+const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : defaultAvatar);
 
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
@@ -146,13 +147,7 @@ function ChatPage() {
                       })
                     }
                   >
-                    {getAvatarSrc(result.profileImageUrl) ? (
-                      <img src={getAvatarSrc(result.profileImageUrl)!} alt="" className="chat-avatar" />
-                    ) : (
-                      <span className="chat-avatar chat-avatar-fallback">
-                        {result.nickname.charAt(0)}
-                      </span>
-                    )}
+                    <img src={getAvatarSrc(result.profileImageUrl)} alt="" className="chat-avatar" />
                     <span>{result.nickname}</span>
                   </button>
                 ))}
@@ -180,17 +175,11 @@ function ChatPage() {
                   })
                 }
               >
-                {getAvatarSrc(conversation.partnerProfileImageUrl) ? (
-                  <img
-                    src={getAvatarSrc(conversation.partnerProfileImageUrl)!}
-                    alt=""
-                    className="chat-avatar"
-                  />
-                ) : (
-                  <span className="chat-avatar chat-avatar-fallback">
-                    {conversation.partnerNickname.charAt(0)}
-                  </span>
-                )}
+                <img
+                  src={getAvatarSrc(conversation.partnerProfileImageUrl)}
+                  alt=""
+                  className="chat-avatar"
+                />
                 <span className="chat-conversation-info">
                   <span className="chat-conversation-name">{conversation.partnerNickname}</span>
                   <span className="chat-conversation-preview">{conversation.lastMessage}</span>
@@ -208,13 +197,7 @@ function ChatPage() {
           ) : (
             <>
               <div className="chat-thread-header">
-                {getAvatarSrc(activePartner.profileImageUrl) ? (
-                  <img src={getAvatarSrc(activePartner.profileImageUrl)!} alt="" className="chat-avatar" />
-                ) : (
-                  <span className="chat-avatar chat-avatar-fallback">
-                    {activePartner.nickname.charAt(0)}
-                  </span>
-                )}
+                <img src={getAvatarSrc(activePartner.profileImageUrl)} alt="" className="chat-avatar" />
                 <strong>{activePartner.nickname}</strong>
               </div>
 

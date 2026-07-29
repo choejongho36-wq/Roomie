@@ -21,6 +21,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public List<CommentResponse> getComments(Long postId) {
         List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtAsc(postId);
@@ -36,14 +37,33 @@ public class CommentService {
         if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("게시글을 찾을 수 없습니다.");
         }
+        Comment parent = null;
         if (request.parentCommentId() != null) {
-            Comment parent = commentRepository.findById(request.parentCommentId())
+            parent = commentRepository.findById(request.parentCommentId())
                     .orElseThrow(() -> new IllegalArgumentException("답글 대상 댓글을 찾을 수 없습니다."));
             if (!parent.getPostId().equals(postId)) {
                 throw new IllegalArgumentException("답글 대상 댓글이 해당 게시글에 속하지 않습니다.");
             }
         }
         Comment comment = commentRepository.save(new Comment(postId, userId, request.parentCommentId(), request.content()));
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        if (parent != null && !parent.getUserId().equals(userId)) {
+            notificationService.createCommentReplyNotification(parent.getUserId(), userId, request.content(), postId);
+        }
+        return toResponse(comment, user);
+    }
+
+    public CommentResponse update(Long userId, Long commentId, String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("댓글 내용을 입력해주세요.");
+        }
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+        if (!comment.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("본인이 작성한 댓글만 수정할 수 있습니다.");
+        }
+        comment.editContent(content);
+        commentRepository.save(comment);
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         return toResponse(comment, user);
     }

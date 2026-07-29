@@ -253,6 +253,7 @@
   width: 104px;
   height: 104px;
   border-radius: 50%;
+  border: 1.5px solid #f16526;
   object-fit: cover;
   background: #f1f1f1;
   display: flex;
@@ -264,18 +265,6 @@
 .recommendation-card.is-selected .profile-card-avatar {
   background: rgba(255, 255, 255, 0.22);
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
-}
-
-.profile-card-avatar-fallback {
-  color: #ff6600;
-  background: #fff1e8;
-  font-size: 32px;
-  font-weight: 800;
-}
-
-.recommendation-card.is-selected .profile-card-avatar-fallback {
-  color: #ff6600;
-  background: #ffffff;
 }
 
 .profile-card-info {

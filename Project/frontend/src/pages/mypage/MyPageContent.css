@@ -171,7 +171,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  border: 2px solid #f16526;
+  border: 1.5px solid #f16526;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -448,6 +448,12 @@
   color: #f16526;
   font-size: 13px;
   font-weight: 800;
+}
+
+.mypage-panel .board-table-wrap,
+.mypage-panel .mypage-empty {
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .mypage-empty {
