@@ -24,7 +24,8 @@ function SurveyPage() {
   const { token } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [showIntro, setShowIntro] = useState(true);
+  // 모바일은 화면이 좁아 도움말 카드를 건너뛴다 (도움말은 ? 버튼으로)
+  const [showIntro, setShowIntro] = useState(window.innerWidth > 768);
 
   const currentSurveyQuestion = surveyQuestions[currentQuestion];
   const totalQuestions = surveyQuestions.length;
