@@ -21,6 +21,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final EmailVerificationService emailVerificationService;
 
     public void signup(SignupRequest request) {
         if (userRepository.existsByLoginId(request.loginId())) {
@@ -31,6 +32,10 @@ public class AuthService {
         }
         if (userRepository.existsByNickname(request.nickname())) {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
+        // 프론트에서 "인증완료" 상태로 보여도, 직접 API를 호출하는 우회를 막기 위해 서버에서 한 번 더 확인
+        if (!emailVerificationService.isVerified(request.email())) {
+            throw new IllegalArgumentException("이메일 인증을 완료해주세요.");
         }
         User user = new User(
                 request.loginId(),
