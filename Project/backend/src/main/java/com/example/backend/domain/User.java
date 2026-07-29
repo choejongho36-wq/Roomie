@@ -44,6 +44,12 @@ public class User {
     @Column(length = 20)
     private String phone;
 
+    @Column(length = 100)
+    private String region;
+
+    @Column(length = 100)
+    private String job;
+
     @Column(name = "profile_image_url", length = 255)
     private String profileImageUrl;
 
@@ -112,6 +118,11 @@ public class User {
         }
     }
 
+    public void updateRegionAndJob(String region, String job) {
+        this.region = region;
+        this.job = job;
+    }
+
     // 회원가입용 생성자
     public User(String email, String password, String nickname, String gender, LocalDate birthDate) {
         this.email = email;
@@ -125,10 +136,12 @@ public class User {
     }
 
     public User(String loginId, String email, String password, String nickname, String gender,
-            LocalDate birthDate, String phone) {
+            LocalDate birthDate, String phone, String region, String job) {
         this(email, password, nickname, gender, birthDate);
         this.loginId = loginId;
         this.phone = phone;
+        this.region = region;
+        this.job = job;
     }
 
     public User(String provider, String providerId, String loginId, String email,

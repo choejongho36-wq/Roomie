@@ -39,8 +39,9 @@ public class AuthService {
                 request.nickname(),
                 request.gender(),
                 request.birthDate(),
-                request.phone()
-
+                request.phone(),
+                request.region(),
+                request.job()
         );
         userRepository.save(user);
     }
