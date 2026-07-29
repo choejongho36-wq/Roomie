@@ -119,7 +119,39 @@ function RecommendationPage() {
   const selectedRecommendation =
     visibleRecommendations.find((item) => item.userId === selectedUserId) ?? visibleRecommendations[0] ?? null;
   const selectedScore = selectedRecommendation?.compatibilityScore ?? 0;
-  const gaugePercent = Math.max(0, Math.min(selectedScore, 100));
+
+  const [displayedScore, setDisplayedScore] = useState(selectedScore);
+  const displayedScoreRef = useRef(selectedScore);
+
+  useEffect(() => {
+    const start = displayedScoreRef.current;
+    const end = selectedScore;
+    if (start === end) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      displayedScoreRef.current = end;
+      setDisplayedScore(end);
+      return;
+    }
+
+    const duration = 600;
+    const startTime = performance.now();
+    let frame: number;
+
+    const tick = (now: number) => {
+      const t = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const value = Math.round(start + (end - start) * eased);
+      displayedScoreRef.current = value;
+      setDisplayedScore(value);
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [selectedScore]);
+
+  const gaugePercent = Math.max(0, Math.min(displayedScore, 100));
   const latestSurvey = surveys?.[0] ?? null;
   const localSurveyInsight = useMemo(() => createSurveyInsight(latestSurvey), [latestSurvey]);
   const surveyInsight = aiSurveyInsight ?? localSurveyInsight;
@@ -167,24 +199,17 @@ function RecommendationPage() {
   return (
     <div className="recommendation-page">
       <section className="recommendation-summary">
-        <div className="summary-title">나와 가장 잘 맞는 상대</div>
+        <div className="summary-title">매칭 요약</div>
         <div className="compatibility-gauge" style={{ "--gauge-percent": `${gaugePercent}%` } as CSSProperties}>
           <div className="gauge-ring">
             <div className="gauge-center">
               <div className="compatibility-score">
-                <span className="compatibility-score-value">{selectedScore}</span>
+                <span className="compatibility-score-value">{displayedScore}</span>
                 <span className="compatibility-score-unit">점</span>
               </div>
-              <div className="compatibility-label">궁합도</div>
             </div>
           </div>
         </div>
-        <div className="summary-note">
-          {selectedRecommendation
-            ? `${selectedRecommendation.nickname}님과의 궁합도는 ${selectedScore}점 입니다.`
-            : "추천 데이터를 불러오는 중이거나 설문이 필요합니다."}
-        </div>
-
         <div className="my-survey-summary">
           <div className="my-survey-header">
             <h3>AI 설문 요약</h3>
@@ -204,9 +229,7 @@ function RecommendationPage() {
       <section className="recommendation-list">
         <div className="recommendation-header">
           <h1>점수 높은 순</h1>
-          <Link to="/survey" className="btn btn-outline">
-            설문 다시 하기
-          </Link>
+          
         </div>
 
         {error && <p className="survey-error">{error}</p>}
@@ -217,63 +240,68 @@ function RecommendationPage() {
           <p className="recommendation-empty">추천 결과가 없습니다.</p>
         ) : (
           <>
-            <div className="recommendation-cards">
-              {visibleRecommendations.map((item) => {
-                const imageSrc = getProfileImageSrc(item.profileImageUrl);
-                const isSelected = selectedRecommendation?.userId === item.userId;
+            <div className="recommendation-stage">
+              <div className="recommendation-cards">
+                {visibleRecommendations.map((item) => {
+                  const imageSrc = getProfileImageSrc(item.profileImageUrl);
+                  const isSelected = selectedRecommendation?.userId === item.userId;
 
-                return (
-                  <article
-                    key={item.userId}
-                    className={`recommendation-card${isSelected ? " is-selected" : ""}`}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={isSelected}
-                    aria-label={`${item.nickname} 추천 카드 선택`}
-                    onClick={() => setSelectedUserId(item.userId)}
-                    onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
-                  >
-                    <div className="profile-card-main">
+                  return (
+                    <article
+                      key={item.userId}
+                      className={`recommendation-card${isSelected ? " is-selected" : ""}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      aria-label={`${item.nickname} 추천 카드 선택`}
+                      onClick={() => setSelectedUserId(item.userId)}
+                      onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
+                    >
+                      <span className="profile-card-score-badge">
+                        <strong>{item.compatibilityScore}</strong>
+                        <em>점</em>
+                      </span>
+
                       <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
                       <div className="profile-card-info">
                         <h2>{item.nickname}</h2>
                         <p>
-                          {item.age}세{item.job ? ` | ${item.job}` : " | 직업 정보 준비 중"}
+                          <span>{item.age}세</span>
+                          <span>{item.job || "직업 정보 준비 중"}</span>
+                          <span>{item.region ?? "지역 정보 준비 중"}</span>
                         </p>
-                        <p>{item.region ?? "지역 정보 준비 중"}</p>
                       </div>
-                    </div>
 
-                    <p className="profile-card-bio">
-                      {item.bio && item.bio.trim() ? item.bio : "없음"}
-                    </p>
+                      <p className="profile-card-bio">
+                        {item.bio && item.bio.trim() ? item.bio : "아직 소개글이 없어요."}
+                      </p>
 
-                    <div className="profile-card-tags">
-                      {item.tags.length > 0 ? (
-                        item.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="profile-card-tag">
-                            #{tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="profile-card-tag is-empty">태그 준비 중</span>
-                      )}
-                    </div>
+                      <div className="profile-card-tags">
+                        {item.tags.length > 0 ? (
+                          item.tags.slice(0, 3).map((tag) => (
+                            <span key={tag} className="profile-card-tag">
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="profile-card-tag is-empty">태그 준비 중</span>
+                        )}
+                      </div>
 
-                    <div className="profile-card-footer">
-                      <strong>{item.compatibilityScore}점</strong>
-                      <button
-                        type="button"
-                        className="profile-compare-button"
-                        onClick={(event) => openComparison(event, item)}
-                      >
-                        궁합 <span aria-hidden="true">&gt;</span>
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
+                      <div className="profile-card-footer">
+                        <button
+                          type="button"
+                          className="profile-compare-button"
+                          onClick={(event) => openComparison(event, item)}
+                        >
+                          자세히 비교
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="recommendation-more-cta">
