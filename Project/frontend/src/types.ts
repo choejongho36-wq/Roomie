@@ -80,6 +80,8 @@ export interface User {
   nickname: string;
   gender: string;
   birthDate: string;
+  region: string | null;
+  job: string | null;
   createdAt: string;
   profileImageUrl: string | null;
   tags: string[];

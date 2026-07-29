@@ -227,6 +227,8 @@ public class UserController {
                 user.getGender(),
                 user.getBirthDate(),
                 user.getPhone(),
+                user.getRegion(),
+                user.getJob(),
                 user.getCreatedAt(),
                 user.getProfileImageUrl(),
                 tags,

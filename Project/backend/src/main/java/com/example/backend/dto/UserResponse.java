@@ -12,6 +12,8 @@ public record UserResponse(
         String gender,
         LocalDate birthDate,
         String phone,
+        String region,
+        String job,
         LocalDateTime createdAt,
         String profileImageUrl,
         List<String> tags,

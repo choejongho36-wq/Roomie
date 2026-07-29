@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { signup, checkEmailAvailability, checkLoginIdAvailability, checkNicknameAvailability } from "../api";
+import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import "./SignupPage.css";
 
 function EyeIcon() {
@@ -75,6 +76,8 @@ const PASSWORD_RULES: PasswordRule[] = [
 
 type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
+const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
+
 function SignupPage() {
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState("");
@@ -96,6 +99,8 @@ function SignupPage() {
   const [birthYear, setBirthYear] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay] = useState("");
+  const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
+  const [job, setJob] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -224,6 +229,14 @@ function SignupPage() {
       setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
       return;
     }
+    if (regionTokens.length === 0) {
+      setError("거주(희망) 지역을 선택해주세요.");
+      return;
+    }
+    if (!job) {
+      setError("직업을 선택해주세요.");
+      return;
+    }
     if (!agreeTerms || !agreePrivacy) {
       setError("이용약관과 개인정보처리방침에 모두 동의해주세요.");
       return;
@@ -234,7 +247,7 @@ function SignupPage() {
     const birthDate = `${birthYear}-${paddedMonth}-${paddedDay}`;
 
     try {
-      await signup(loginId, email, password, nickname, gender, birthDate, phone);
+      await signup(loginId, email, password, nickname, gender, birthDate, phone, regionTokens[0].label, job);
       setSuccess(true);
     } catch (err) {
       const message =
@@ -520,6 +533,31 @@ function SignupPage() {
               ))}
             </select>
           </div>
+        </label>
+        <label>
+          거주(희망) 지역
+          <RegionPicker
+            selected={regionTokens}
+            onChange={setRegionTokens}
+            multiple={false}
+            variant="inline"
+            triggerLabel="지역 선택"
+            placeholder="지역명 검색 예) 강남, 역삼동"
+            emptyHint="지역을 선택해주세요."
+          />
+        </label>
+        <label>
+          직업
+          <select value={job} onChange={(e) => setJob(e.target.value)} required>
+            <option value="" disabled>
+              선택해주세요
+            </option>
+            {JOB_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </label>
         <div className="signup-terms">
           <label className="signup-terms-all">

@@ -132,7 +132,9 @@ public class DataInitializer {
                         (String) dummy.get("nickname"),
                         (String) dummy.get("gender"),
                         (LocalDate) dummy.get("birthDate"),
-                        (String) dummy.get("phone")
+                        (String) dummy.get("phone"),
+                        (String) dummy.get("job"),
+                        (String) dummy.get("region")
                 );
                 user.updateTags((String) dummy.get("tags"));
                 user.updateBio((String) dummy.get("bio"));

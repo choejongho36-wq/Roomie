@@ -36,5 +36,7 @@ public record SignupRequest(
                     regexp = "^[0-9]{10,11}$",
                     message = "휴대폰 번호는 숫자만 10~11자리로 입력해주세요."
                 )
-                String phone) {
+                String phone,
+                @NotBlank(message = "지역을 선택해주세요.") String region,
+                @NotBlank(message = "직업을 선택해주세요.") String job) {
 }
