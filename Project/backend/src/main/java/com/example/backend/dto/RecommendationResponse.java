@@ -9,5 +9,7 @@ public record RecommendationResponse(
         String bio,
         List<String> tags,
         Integer compatibilityScore,
-        Integer age
+        Integer age,
+        String job,
+        String region
 ) {}

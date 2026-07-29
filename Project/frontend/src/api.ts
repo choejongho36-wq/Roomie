@@ -6,7 +6,7 @@ import type {
   SurveyResult,
   SurveySummaryResult,
 } from "./types/survey";
-import type { ChatMessage, Conversation, NotificationItem, UserSearchResult } from "./types/chat";
+import type { ChatMessage, Conversation, NotificationItem } from "./types/chat";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
@@ -300,14 +300,6 @@ export const getConversations = async (token: string): Promise<Conversation[]> =
 
 export const getChatMessages = async (token: string, otherUserId: number): Promise<ChatMessage[]> => {
   const response = await axios.get<ChatMessage[]>(`${API_BASE_URL}/chat/${otherUserId}/messages`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
-export const searchUsers = async (token: string, nickname: string): Promise<UserSearchResult[]> => {
-  const response = await axios.get<UserSearchResult[]>(`${API_BASE_URL}/users/search`, {
-    params: { nickname },
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;

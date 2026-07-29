@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
@@ -57,6 +57,7 @@ const createSurveyInsight = (survey: SurveyResult | null) => {
 
 function RecommendationPage() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
   const [surveys, setSurveys] = useState<SurveyResult[] | null>(null);
   const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
@@ -85,10 +86,7 @@ function RecommendationPage() {
 
     getRecommendations(token)
       .then((result) => {
-        if (isMounted) {
-          setRecommendations(result);
-          setSelectedUserId(result[0]?.userId ?? null);
-        }
+        if (isMounted) setRecommendations(result);
       })
       .catch(() => {
         if (isMounted) setError("추천 데이터를 불러오지 못했습니다.");
@@ -116,8 +114,7 @@ function RecommendationPage() {
   }, [token]);
 
   const visibleRecommendations = recommendations?.slice(0, RECOMMENDATION_CARD_LIMIT) ?? [];
-  const selectedRecommendation =
-    visibleRecommendations.find((item) => item.userId === selectedUserId) ?? visibleRecommendations[0] ?? null;
+  const selectedRecommendation = visibleRecommendations.find((item) => item.userId === selectedUserId) ?? null;
   const selectedScore = selectedRecommendation?.compatibilityScore ?? 0;
 
   const [displayedScore, setDisplayedScore] = useState(selectedScore);
@@ -197,40 +194,45 @@ function RecommendationPage() {
   };
 
   return (
-    <div className="recommendation-page">
-      <section className="recommendation-summary">
-        <div className="summary-title">매칭 요약</div>
-        <div className="compatibility-gauge" style={{ "--gauge-percent": `${gaugePercent}%` } as CSSProperties}>
-          <div className="gauge-ring">
-            <div className="gauge-center">
-              <div className="compatibility-score">
-                <span className="compatibility-score-value">{displayedScore}</span>
-                <span className="compatibility-score-unit">점</span>
+    <div className={`recommendation-page${selectedRecommendation ? "" : " recommendation-page-solo"}`}>
+      {selectedRecommendation && (
+        <section className="recommendation-summary">
+          <div className="summary-title">매칭 요약</div>
+          <div className="compatibility-gauge" style={{ "--gauge-percent": `${gaugePercent}%` } as CSSProperties}>
+            <div className="gauge-ring">
+              <div className="gauge-center">
+                <div className="compatibility-score">
+                  <span className="compatibility-score-value">{displayedScore}</span>
+                  <span className="compatibility-score-unit">점</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="my-survey-summary">
-          <div className="my-survey-header">
-            <h3>AI 설문 요약</h3>
-            <Link to="/mypage/activity" className="survey-summary-link">
-              자세히 보기
-            </Link>
-          </div>
 
-          {surveys === null && aiSurveyInsight === null ? (
-            <p className="survey-summary-empty">설문 답변을 불러오는 중...</p>
-          ) : (
-            <p className="survey-insight">{surveyInsight}</p>
-          )}
-        </div>
-      </section>
+          <button
+            type="button"
+            className="summary-compare-button"
+            onClick={(event) => openComparison(event, selectedRecommendation)}
+          >
+            {selectedRecommendation.nickname}님과 자세히 비교
+          </button>
+
+          <div className="my-survey-summary">
+            <div className="my-survey-header">
+              <h3>AI 설문 요약</h3>
+            </div>
+
+            {surveys === null && aiSurveyInsight === null ? (
+              <p className="survey-summary-empty">설문 답변을 불러오는 중...</p>
+            ) : (
+              <p className="survey-insight">{surveyInsight}</p>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="recommendation-list">
-        <div className="recommendation-header">
-          <h1>점수 높은 순</h1>
-          
-        </div>
+        <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
 
         {error && <p className="survey-error">{error}</p>}
 
@@ -241,6 +243,9 @@ function RecommendationPage() {
         ) : (
           <>
             <div className="recommendation-stage">
+              <div className="recommendation-header">
+                <h1>점수 높은 순</h1>
+              </div>
               <div className="recommendation-cards">
                 {visibleRecommendations.map((item) => {
                   const imageSrc = getProfileImageSrc(item.profileImageUrl);
@@ -257,20 +262,17 @@ function RecommendationPage() {
                       onClick={() => setSelectedUserId(item.userId)}
                       onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
                     >
-                      <span className="profile-card-score-badge">
-                        <strong>{item.compatibilityScore}</strong>
-                        <em>점</em>
-                      </span>
+                      <div className="profile-card-main">
+                        <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
-                      <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
-
-                      <div className="profile-card-info">
-                        <h2>{item.nickname}</h2>
-                        <p>
-                          <span>{item.age}세</span>
-                          <span>{item.job || "직업 정보 준비 중"}</span>
-                          <span>{item.region ?? "지역 정보 준비 중"}</span>
-                        </p>
+                        <div className="profile-card-info">
+                          <h2>{item.nickname}</h2>
+                          <p>{item.age}세</p>
+                          <p>
+                            <span>{item.job}</span>
+                            <span>{item.region}</span>
+                          </p>
+                        </div>
                       </div>
 
                       <p className="profile-card-bio">
@@ -287,16 +289,6 @@ function RecommendationPage() {
                         ) : (
                           <span className="profile-card-tag is-empty">태그 준비 중</span>
                         )}
-                      </div>
-
-                      <div className="profile-card-footer">
-                        <button
-                          type="button"
-                          className="profile-compare-button"
-                          onClick={(event) => openComparison(event, item)}
-                        >
-                          자세히 비교
-                        </button>
                       </div>
                     </article>
                   );
@@ -388,10 +380,6 @@ function RecommendationPage() {
                 </div>
 
                 <div className="comparison-table-wrap">
-                  <div className="comparison-table-header">
-                    <h3>설문 답변 비교</h3>
-                    <span>나와 {comparison.nickname}</span>
-                  </div>
                   <div className="comparison-compare-grid">
                     {comparison.items.map((item) => (
                       <div
@@ -420,6 +408,20 @@ function RecommendationPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="comparison-modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-primary comparison-start-chat-button"
+                    onClick={() =>
+                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
+                        state: { nickname: comparison.nickname },
+                      })
+                    }
+                  >
+                    {comparison.nickname}님에게 첫 메시지 보내기
+                  </button>
                 </div>
               </>
             )}

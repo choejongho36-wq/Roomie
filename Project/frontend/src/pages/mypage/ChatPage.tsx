@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
-import { API_ORIGIN, getChatMessages, getConversations, searchUsers } from "../../api";
-import type { ChatMessage, Conversation, UserSearchResult } from "../../types/chat";
+import { API_ORIGIN, getChatMessages, getConversations } from "../../api";
+import type { ChatMessage, Conversation } from "../../types/chat";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
 import "./ChatPage.css";
@@ -14,6 +14,24 @@ const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : defa
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 
+const CHAT_NOTICE_STORAGE_KEY = "roomie_chat_notice_seen_partners";
+
+const loadAcknowledgedPartners = (): Set<number> => {
+  try {
+    const raw = localStorage.getItem(CHAT_NOTICE_STORAGE_KEY);
+    return new Set(raw ? (JSON.parse(raw) as number[]) : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const CHAT_NOTICE_ITEMS = [
+  "상대방을 존중하는 매너 있는 대화를 부탁드려요.",
+  "계좌번호, 주민등록번호 같은 민감한 개인정보는 채팅으로 주고받지 않는 게 안전해요.",
+  "직접 만나기 전에는 화상통화나 전화로 먼저 확인해보는 걸 추천해요.",
+  "불쾌한 언행이나 사기가 의심되면 즉시 신고해주세요.",
+];
+
 interface ActivePartner {
   userId: number;
   nickname: string;
@@ -22,6 +40,7 @@ interface ActivePartner {
 
 function ChatPage() {
   const { token, user } = useAuth();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { lastMessage, sendMessage } = useChat();
 
@@ -29,9 +48,8 @@ function ChatPage() {
   const [activePartner, setActivePartner] = useState<ActivePartner | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const [error, setError] = useState("");
+  const [acknowledgedPartners, setAcknowledgedPartners] = useState<Set<number>>(loadAcknowledgedPartners);
   const messageListRef = useRef<HTMLDivElement>(null);
 
   const myUserId = user?.userId ?? null;
@@ -48,13 +66,22 @@ function ChatPage() {
   useEffect(() => {
     const userIdParam = searchParams.get("userId");
     if (!userIdParam || !conversations) return;
-    const target = conversations.find((c) => c.partnerId === Number(userIdParam));
+    const partnerId = Number(userIdParam);
+    const target = conversations.find((c) => c.partnerId === partnerId);
     if (target) {
       setActivePartner({
         userId: target.partnerId,
         nickname: target.partnerNickname,
         profileImageUrl: target.partnerProfileImageUrl,
       });
+      return;
+    }
+
+    // 아직 대화한 적 없는 상대(예: 추천 페이지의 "첫 메시지 보내기")는
+    // 대화 목록에 없으므로, 이동할 때 넘겨준 닉네임으로 새 대화를 시작한다.
+    const newContactNickname = (location.state as { nickname?: string } | null)?.nickname;
+    if (newContactNickname) {
+      setActivePartner({ userId: partnerId, nickname: newContactNickname, profileImageUrl: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversations]);
@@ -83,25 +110,19 @@ function ChatPage() {
     messageListRef.current?.scrollTo({ top: messageListRef.current.scrollHeight });
   }, [messages]);
 
-  useEffect(() => {
-    if (!token || searchQuery.trim().length === 0) {
-      setSearchResults([]);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      searchUsers(token, searchQuery.trim())
-        .then(setSearchResults)
-        .catch(() => setSearchResults([]));
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [token, searchQuery]);
-
   const openConversation = (partner: ActivePartner) => {
     setActivePartner(partner);
-    setSearchQuery("");
-    setSearchResults([]);
     setSearchParams({ userId: String(partner.userId) });
   };
+
+  const acknowledgeNotice = () => {
+    if (!activePartner) return;
+    const next = new Set(acknowledgedPartners).add(activePartner.userId);
+    setAcknowledgedPartners(next);
+    localStorage.setItem(CHAT_NOTICE_STORAGE_KEY, JSON.stringify([...next]));
+  };
+
+  const needsNotice = Boolean(activePartner) && !acknowledgedPartners.has(activePartner?.userId ?? -1);
 
   const handleSend = (event: FormEvent) => {
     event.preventDefault();
@@ -118,43 +139,11 @@ function ChatPage() {
 
   return (
     <div className="mypage-panel">
-      <h1 className="mypage-panel-title">채팅</h1>
-      <p className="mypage-panel-desc">닉네임으로 상대를 찾아 대화를 시작해보세요.</p>
-
+      
       {error && <p className="mypage-error">{error}</p>}
 
       <div className="chat-layout">
         <aside className="chat-sidebar">
-          <div className="chat-search">
-            <input
-              type="text"
-              placeholder="닉네임으로 새 대화 시작"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-            />
-            {searchResults.length > 0 && (
-              <div className="chat-search-results">
-                {searchResults.map((result) => (
-                  <button
-                    key={result.userId}
-                    type="button"
-                    className="chat-search-result"
-                    onClick={() =>
-                      openConversation({
-                        userId: result.userId,
-                        nickname: result.nickname,
-                        profileImageUrl: result.profileImageUrl,
-                      })
-                    }
-                  >
-                    <img src={getAvatarSrc(result.profileImageUrl)} alt="" className="chat-avatar" />
-                    <span>{result.nickname}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           <div className="chat-conversation-list">
             {conversations === null && <p className="chat-empty-hint">불러오는 중...</p>}
             {conversations !== null && sortedConversations.length === 0 && (
@@ -192,7 +181,19 @@ function ChatPage() {
         <section className="chat-thread">
           {!activePartner ? (
             <div className="chat-empty-hint chat-thread-empty">
-              왼쪽에서 대화를 선택하거나 닉네임으로 새 대화를 시작해보세요.
+              왼쪽에서 대화를 선택해보세요.
+            </div>
+          ) : needsNotice ? (
+            <div className="chat-notice">
+              <h2>채팅을 시작하기 전에 확인해주세요</h2>
+              <ul>
+                {CHAT_NOTICE_ITEMS.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <button type="button" className="btn btn-primary" onClick={acknowledgeNotice}>
+                확인했습니다
+              </button>
             </div>
           ) : (
             <>
