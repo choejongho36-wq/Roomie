@@ -247,7 +247,17 @@ function SignupPage() {
     const birthDate = `${birthYear}-${paddedMonth}-${paddedDay}`;
 
     try {
-      await signup(loginId, email, password, nickname, gender, birthDate, phone, regionTokens[0].label, job);
+      await signup(
+        loginId,
+        email,
+        password,
+        nickname,
+        gender,
+        birthDate,
+        phone,
+        regionTokens.map((token) => token.label).join(", "),
+        job
+      );
       setSuccess(true);
     } catch (err) {
       const message =
@@ -539,11 +549,12 @@ function SignupPage() {
           <RegionPicker
             selected={regionTokens}
             onChange={setRegionTokens}
-            multiple={false}
+            multiple={true}
+            maxSelect={3}
             variant="inline"
             triggerLabel="지역 선택"
-            placeholder="지역명 검색 예) 강남, 역삼동"
-            emptyHint="지역을 선택해주세요."
+            placeholder="지역명 검색 예) 강남, 역삼동, 강남구 역삼동"
+            emptyHint="희망 지역을 최대 3개까지 선택해주세요."
           />
         </label>
         <label>
