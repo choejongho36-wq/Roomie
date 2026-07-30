@@ -19,7 +19,6 @@ function MatchedPairPage() {
   const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
   const [depositMax, setDepositMax] = useState("");
   const [monthlyRentMax, setMonthlyRentMax] = useState("");
-  const [moveInDate, setMoveInDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -32,7 +31,6 @@ function MatchedPairPage() {
         setRegionTokens(parsed ? [parsed] : []);
         setDepositMax(data.depositMax != null ? String(data.depositMax) : "");
         setMonthlyRentMax(data.monthlyRentMax != null ? String(data.monthlyRentMax) : "");
-        setMoveInDate(data.moveInDate ?? "");
       })
       .catch(() => setLoadError("정보를 불러오지 못했어요. 접근 권한이 없거나 존재하지 않는 페이지예요."));
   }, [token, id]);
@@ -46,7 +44,6 @@ function MatchedPairPage() {
         region: regionTokens[0]?.label ?? null,
         depositMax: depositMax ? Number(depositMax) : null,
         monthlyRentMax: monthlyRentMax ? Number(monthlyRentMax) : null,
-        moveInDate: moveInDate || null,
       });
       setPair(updated);
       setSaveMessage("조건이 저장됐어요. 아래 검색 링크도 새 조건으로 갱신됐어요.");
@@ -137,10 +134,6 @@ function MatchedPairPage() {
               />
             </label>
           </div>
-          <label>
-            입주 희망일
-            <input type="date" value={moveInDate} onChange={(e) => setMoveInDate(e.target.value)} />
-          </label>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? "저장 중..." : "조건 저장"}
           </button>
@@ -150,21 +143,20 @@ function MatchedPairPage() {
 
       <section className="matched-pair-section">
         <h2>이 조건으로 방 찾아보기</h2>
-        <p className="matched-pair-hint">
-          네이버부동산/직방은 공식 검색 링크를 지원하지 않아서, 대신 아래 링크로 안내해드려요.
-          다방은 지도에서 실제 매물까지 바로 볼 수 있어요.
-        </p>
+        <p className="matched-pair-hint">다방 지도에서 실제 매물을 바로 확인할 수 있어요.</p>
         <div className="matched-pair-links">
-          <a href={pair.externalLinks.dabangMapUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+          <a href={pair.dabangMapUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
             다방 지도에서 매물 보기
           </a>
-          <a href={pair.externalLinks.naverSearchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-            네이버 검색
-          </a>
-          <a href={pair.externalLinks.googleSearchUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-            구글 검색
-          </a>
         </div>
+      </section>
+
+      <section className="matched-pair-section">
+        <h2>방을 구하셨나요?</h2>
+        <p className="matched-pair-hint">함께 살 방이 정해졌다면, 하우스 공간으로 넘어가서 정산/청소 관리를 시작해보세요.</p>
+        <button className="btn btn-primary" onClick={() => navigate(`/house/${id}`)}>
+          하우스로 이동
+        </button>
       </section>
     </div>
   );
