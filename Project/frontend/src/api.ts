@@ -263,6 +263,14 @@ export const checkEmailAvailability = async (email: string): Promise<boolean> =>
   return response.data.available;
 };
 
+export const requestEmailVerification = async (email: string): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/auth/email/verify-request`, { email });
+};
+
+export const confirmEmailVerification = async (email: string, code: string): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/auth/email/verify-confirm`, { email, code });
+};
+
 export const checkLoginIdAvailability = async (loginId: string): Promise<boolean> => {
   const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-login-id`, {
     params: { loginId },

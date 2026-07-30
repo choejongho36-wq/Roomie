@@ -162,8 +162,18 @@
 .question-card-top {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  /* 왼쪽 카테고리 칩, 오른쪽 도움말 버튼 */
+  justify-content: space-between;
   gap: 12px;
+}
+
+.question-category {
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: #fff1e8;
+  color: #f16526;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .help-tip {

@@ -18,6 +18,7 @@ function QuestionCard({
   return (
     <section className="question-card">
       <div className="question-card-top">
+        <span className="question-category">{question.category}</span>
         <HelpTip />
       </div>
       <h2 className="question-text">{question.question}</h2>
