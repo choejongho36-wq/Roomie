@@ -19,6 +19,5 @@ public record MatchedPairResponse(
     public record PartnerInfo(Long userId, String nickname, String profileImageUrl, String region) {}
 
     // 공통조건(지역/예산) 기반으로 매번 새로 만들어지는 외부 검색 딥링크
-    // (네이버부동산/다방/직방은 공식 검색 URL이 없어서 대신 이 3개로 안내함)
-    public record ExternalLinks(String naverMapUrl, String naverSearchUrl, String googleSearchUrl) {}
+    public record ExternalLinks(String dabangMapUrl, String naverSearchUrl, String googleSearchUrl) {}
 }

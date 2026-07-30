@@ -25,6 +25,7 @@ import BoardDetailPage from "./pages/board/BoardDetailPage";
 import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
+import MatchedPairPage from "./pages/MatchedPairPage";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
             <Route path="/inquiry" element={<InquiryListPage />} />
             <Route path="/inquiry/write" element={<InquiryWritePage />} />
             <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
+            <Route path="/matched/:id" element={<MatchedPairPage />} />
             <Route path="/mypage" element={<MyPage />}>
               <Route index element={<ProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />

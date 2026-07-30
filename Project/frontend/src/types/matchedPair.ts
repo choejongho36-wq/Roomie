@@ -6,7 +6,7 @@ export interface MatchedPairPartnerInfo {
 }
 
 export interface MatchedPairExternalLinks {
-  naverMapUrl: string;
+  dabangMapUrl: string;
   naverSearchUrl: string;
   googleSearchUrl: string;
 }
