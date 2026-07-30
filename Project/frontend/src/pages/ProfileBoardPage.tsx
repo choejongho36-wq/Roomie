@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties, MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API_ORIGIN, getRecommendations, getSurveyComparison } from "../api";
+import {
+  API_ORIGIN,
+  getRecommendations,
+  getSurveyComparison,
+  getSurveyComparisonAiExplanation,
+} from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
 import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
@@ -17,18 +23,21 @@ const getProfileImageSrc = (url: string | null) => {
 
 function ProfileBoardPage() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<RecommendationResult[] | null>(null);
   const [error, setError] = useState("");
 
   const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
+  const [selectedBoardUserId, setSelectedBoardUserId] = useState<number | null>(null);
 
+  const [selectedProfile, setSelectedProfile] = useState<RecommendationResult | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
-  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
-  const comparisonItemRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
+  const [aiExplanationError, setAiExplanationError] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -65,17 +74,41 @@ function ProfileBoardPage() {
 
   const isFiltered = selectedRegions.length > 0;
 
+  useEffect(() => {
+    if (filteredProfiles.length === 0) {
+      setSelectedBoardUserId(null);
+      return;
+    }
+    if (!filteredProfiles.some((item) => item.userId === selectedBoardUserId)) {
+      setSelectedBoardUserId(filteredProfiles[0].userId);
+    }
+  }, [filteredProfiles, selectedBoardUserId]);
+
+  const selectedBoardProfile =
+    filteredProfiles.find((item) => item.userId === selectedBoardUserId) ?? null;
+
   const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
     event.stopPropagation();
     if (!token) return;
 
+    setSelectedProfile(item);
     setIsComparisonOpen(true);
     setComparison(null);
     setComparisonError("");
     setComparisonLoadingUserId(item.userId);
+    setAiExplanation(null);
+    setAiExplanationError("");
+    setAiExplanationLoading(false);
 
     getSurveyComparison(token, item.userId)
-      .then(setComparison)
+      .then((result) => {
+        setComparison(result);
+        setAiExplanationLoading(true);
+        getSurveyComparisonAiExplanation(token, item.userId)
+          .then((res) => setAiExplanation(res.explanation))
+          .catch(() => setAiExplanationError("AI 설명을 불러오지 못했어요."))
+          .finally(() => setAiExplanationLoading(false));
+      })
       .catch(() => setComparisonError("설문 비교 데이터를 불러오지 못했습니다."))
       .finally(() => setComparisonLoadingUserId(null));
   };
@@ -84,31 +117,22 @@ function ProfileBoardPage() {
     setIsComparisonOpen(false);
     setComparisonError("");
     setComparisonLoadingUserId(null);
-    setHighlightedCategory(null);
-  };
-
-  const scrollToCategory = (category: string) => {
-    const target = comparisonItemRefs.current[category];
-    if (!target) return;
-
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-    setHighlightedCategory(category);
-
-    if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
-    highlightTimeoutRef.current = setTimeout(() => setHighlightedCategory(null), 1800);
+    setAiExplanation(null);
+    setAiExplanationError("");
+    setAiExplanationLoading(false);
   };
 
   return (
     <div className="profile-board-page">
       <div className="profile-board-header">
         <div>
-          <h1>호환성 높은 프로필</h1>
-          <p className="profile-board-subtitle">설문 기반 호환성 점수가 높은 순서대로 모든 프로필을 볼 수 있어요.</p>
+          <h1>점수 높은 프로필</h1>
+          <p className="profile-board-subtitle">설문 기반 점수가 높은 순서대로 모든 프로필을 볼 수 있어요.</p>
         </div>
-      </div>
 
-      <div className="profile-board-region-field">
-        <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} />
+        <div className="profile-board-region-field">
+          <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} />
+        </div>
       </div>
 
       {error && <p className="profile-board-error">{error}</p>}
@@ -120,50 +144,84 @@ function ProfileBoardPage() {
           {isFiltered ? "해당 지역의 프로필이 없습니다." : "추천 프로필이 없습니다."}
         </p>
       ) : (
-        <ul className="profile-board-list">
-          {filteredProfiles.map((item) => {
-            const imageSrc = getProfileImageSrc(item.profileImageUrl);
+        <div className="profile-board-layout">
+          <ul className="profile-board-list">
+            {filteredProfiles.map((item) => {
+              const imageSrc = getProfileImageSrc(item.profileImageUrl);
+              const isSelected = item.userId === selectedBoardUserId;
 
-            return (
-              <li key={item.userId} className="profile-board-row">
-                <div className="profile-board-row-main">
-                  <img className="profile-board-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
-
-                  <div className="profile-board-info">
-                    <h2>{item.nickname}</h2>
-                    <p>
-                      {item.age}세{item.job ? ` | ${item.job}` : " | 직업 정보 준비 중"}
-                      {" · "}
-                      {item.region ?? "지역 정보 준비 중"}
-                    </p>
-                    <div className="profile-board-tags">
-                      {item.tags.length > 0 ? (
-                        item.tags.slice(0, 4).map((tag) => (
-                          <span key={tag} className="profile-board-tag">
-                            #{tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="profile-board-tag is-empty">태그 준비 중</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="profile-board-score">
-                  <strong>{item.compatibilityScore}%</strong>
+              return (
+                <li key={item.userId}>
                   <button
                     type="button"
-                    className="profile-compare-button"
-                    onClick={(event) => openComparison(event, item)}
+                    className={`profile-board-list-item${isSelected ? " is-selected" : ""}`}
+                    onClick={() => setSelectedBoardUserId(item.userId)}
                   >
-                    점수 <span aria-hidden="true">&gt;</span>
+                    <img
+                      className="profile-board-list-avatar"
+                      src={imageSrc ?? defaultAvatar}
+                      alt={item.nickname}
+                    />
+                    <span className="profile-board-list-info">
+                      <strong>{item.nickname}</strong>
+                      <span className="profile-board-list-age-region">
+                        {item.age}세 · {item.region ?? "지역 정보 준비 중"}
+                      </span>
+                    </span>
+                    <span className="profile-board-list-score">{item.compatibilityScore}점</span>
                   </button>
+                </li>
+              );
+            })}
+          </ul>
+
+          {selectedBoardProfile && (
+            <div className="profile-board-detail">
+              <div className="profile-board-detail-header">
+                <img
+                  className="profile-board-detail-avatar"
+                  src={getProfileImageSrc(selectedBoardProfile.profileImageUrl) ?? defaultAvatar}
+                  alt={selectedBoardProfile.nickname}
+                />
+                <div className="profile-board-detail-name-block">
+                  <p className="profile-board-detail-name">{selectedBoardProfile.nickname}</p>
+                  <p className="profile-board-detail-meta">
+                    {selectedBoardProfile.age}세
+                    {selectedBoardProfile.job ? ` · ${selectedBoardProfile.job}` : " · 직업 정보 준비 중"}
+                    {" · "}
+                    {selectedBoardProfile.region ?? "지역 정보 준비 중"}
+                  </p>
                 </div>
-              </li>
-            );
-          })}
-        </ul>
+              </div>
+
+              <p className="profile-board-detail-bio">
+                {selectedBoardProfile.bio && selectedBoardProfile.bio.trim()
+                  ? selectedBoardProfile.bio
+                  : "아직 소개글이 없어요."}
+              </p>
+
+              <div className="profile-board-detail-tags">
+                {selectedBoardProfile.tags.length > 0 ? (
+                  selectedBoardProfile.tags.slice(0, 6).map((tag) => (
+                    <span key={tag} className="profile-board-tag">
+                      #{tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="profile-board-tag is-empty">태그 준비 중</span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-primary profile-board-detail-compare-button"
+                onClick={(event) => openComparison(event, selectedBoardProfile)}
+              >
+                자세히 비교
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {isComparisonOpen && (
@@ -176,12 +234,6 @@ function ProfileBoardPage() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="comparison-modal-header">
-              <div>
-                <p className="comparison-modal-eyebrow">설문 비교</p>
-                <h2 id="board-comparison-title">
-                  {comparison ? `${comparison.nickname}님과의 호환성` : "호환성 비교"}
-                </h2>
-              </div>
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
                 닫기
               </button>
@@ -194,79 +246,111 @@ function ProfileBoardPage() {
             {comparisonError && <p className="comparison-modal-error">{comparisonError}</p>}
 
             {comparison && (
-              <>
-                <div className="comparison-modal-score">
-                  <strong>{comparison.compatibilityScore}%</strong>
-                  <span>{comparison.nickname}님과 나의 설문 기반 호환성 점수</span>
-                </div>
-
-                <div className="comparison-highlight-grid">
-                  <div className="comparison-highlight-panel comparison-highlight-panel-compact">
-                    <h3>맞는 포인트 TOP3</h3>
-                    <div className="comparison-highlight-chips">
-                      {comparison.topReasons.map((item) => (
-                        <button
-                          key={`reason-${item.category}`}
-                          type="button"
-                          className="comparison-highlight-chip"
-                          onClick={() => scrollToCategory(item.category)}
-                        >
-                          {item.category}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="comparison-highlight-panel comparison-highlight-panel-compact">
-                    <h3>다른 포인트 TOP3</h3>
-                    <div className="comparison-highlight-chips">
-                      {comparison.differences.map((item) => (
-                        <button
-                          key={`difference-${item.category}`}
-                          type="button"
-                          className="comparison-highlight-chip comparison-highlight-chip-diff"
-                          onClick={() => scrollToCategory(item.category)}
-                        >
-                          {item.category}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="comparison-table-wrap">
-                  <div className="comparison-table-header">
-                    <h3>설문 답변 비교</h3>
-                    <span>나와 {comparison.nickname}</span>
-                  </div>
-                  <div className="comparison-table">
-                    <div className="comparison-table-row comparison-table-head">
-                      <span>항목</span>
-                      <span>나</span>
-                      <span>{comparison.nickname}</span>
-                      <span>차이</span>
-                    </div>
-                    {comparison.items.map((item) => (
+              <div className="comparison-modal-body">
+                <div className="comparison-modal-grid">
+                  <div className="comparison-panel comparison-panel-compare">
+                    <div className="comparison-panel-header">
+                      <p className="comparison-panel-title" id="board-comparison-title">
+                        {comparison.nickname}님과의 궁합
+                      </p>
                       <div
-                        key={item.questionId}
-                        ref={(el) => {
-                          comparisonItemRefs.current[item.category] = el;
-                        }}
-                        className={`comparison-table-row${
-                          item.category === highlightedCategory ? " is-target" : ""
-                        }`}
+                        className="compatibility-gauge comparison-gauge"
+                        style={
+                          {
+                            "--gauge-percent": `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%`,
+                          } as CSSProperties
+                        }
                       >
-                        <span className="comparison-category">{item.category}</span>
-                        <span>{item.myAnswer}</span>
-                        <span>{item.otherAnswer}</span>
-                        <span className={`comparison-level level-${item.difference}`}>
-                          {item.matchLevel}
-                        </span>
+                        <div className="gauge-ring">
+                          <div className="gauge-center">
+                            <div className="compatibility-score">
+                              <span className="compatibility-score-value">{comparison.compatibilityScore}</span>
+                              <span className="compatibility-score-unit">점</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    ))}
+                    </div>
+
+                    <div className="comparison-points-grid">
+                      <div>
+                        <p className="comparison-points-label">맞는 포인트</p>
+                        <div className="comparison-points-list">
+                          {comparison.topReasons.map((item) => (
+                            <span key={`reason-${item.category}`} className="comparison-point-chip">
+                              {item.category}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="comparison-points-label">다른 포인트</p>
+                        <div className="comparison-points-list">
+                          {comparison.differences.map((item) => (
+                            <span
+                              key={`difference-${item.category}`}
+                              className="comparison-point-chip comparison-point-chip-diff"
+                            >
+                              {item.category}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="comparison-panel comparison-panel-profile">
+                    <img
+                      className="comparison-profile-avatar"
+                      src={getProfileImageSrc(selectedProfile?.profileImageUrl ?? null) ?? defaultAvatar}
+                      alt={comparison.nickname}
+                    />
+                    <p className="comparison-profile-name">{comparison.nickname}</p>
+                    <p className="comparison-profile-meta">
+                      {selectedProfile?.age}세 · {selectedProfile?.job} · {selectedProfile?.region}
+                    </p>
+                    <p className="comparison-profile-bio">
+                      {selectedProfile?.bio && selectedProfile.bio.trim()
+                        ? selectedProfile.bio
+                        : "아직 소개글이 없어요."}
+                    </p>
+                    {selectedProfile && selectedProfile.tags.length > 0 && (
+                      <div className="comparison-profile-tags">
+                        {selectedProfile.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="comparison-profile-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </>
+
+                <div className="comparison-ai-explanation">
+                  <p className="comparison-ai-label">AI 궁합 설명</p>
+                  {aiExplanationLoading ? (
+                    <p className="comparison-ai-loading">AI가 설명을 작성하고 있어요...</p>
+                  ) : aiExplanationError ? (
+                    <p className="comparison-ai-error">{aiExplanationError}</p>
+                  ) : (
+                    <p className="comparison-ai-text">{aiExplanation}</p>
+                  )}
+                </div>
+
+                <div className="comparison-modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-primary comparison-start-chat-button"
+                    onClick={() =>
+                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
+                        state: { nickname: comparison.nickname },
+                      })
+                    }
+                  >
+                    {comparison.nickname}님에게 첫 메시지 보내기
+                  </button>
+                </div>
+              </div>
             )}
           </section>
         </div>

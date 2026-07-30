@@ -340,7 +340,6 @@ function RecommendationPage() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="comparison-modal-header">
-              <p className="comparison-modal-eyebrow">설문 비교</p>
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
                 닫기
               </button>
@@ -354,26 +353,82 @@ function RecommendationPage() {
 
             {comparison && (
               <div className="comparison-modal-body">
-                <div className="comparison-hero">
-                  <p className="comparison-hero-title" id="comparison-title">
-                    {comparison.nickname}님과의 궁합
-                  </p>
-                  <div
-                    className="compatibility-gauge comparison-gauge"
-                    style={
-                      {
-                        "--gauge-percent": `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%`,
-                      } as CSSProperties
-                    }
-                  >
-                    <div className="gauge-ring">
-                      <div className="gauge-center">
-                        <div className="compatibility-score">
-                          <span className="compatibility-score-value">{comparison.compatibilityScore}</span>
-                          <span className="compatibility-score-unit">점</span>
+                <div className="comparison-modal-grid">
+                  <div className="comparison-panel comparison-panel-compare">
+                    <div className="comparison-panel-header">
+                      <p className="comparison-panel-title" id="comparison-title">
+                        {comparison.nickname}님과의 궁합
+                      </p>
+                      <div
+                        className="compatibility-gauge comparison-gauge"
+                        style={
+                          {
+                            "--gauge-percent": `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%`,
+                          } as CSSProperties
+                        }
+                      >
+                        <div className="gauge-ring">
+                          <div className="gauge-center">
+                            <div className="compatibility-score">
+                              <span className="compatibility-score-value">{comparison.compatibilityScore}</span>
+                              <span className="compatibility-score-unit">점</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    <div className="comparison-points-grid">
+                      <div>
+                        <p className="comparison-points-label">맞는 포인트</p>
+                        <div className="comparison-points-list">
+                          {comparison.topReasons.map((item) => (
+                            <span key={`reason-${item.category}`} className="comparison-point-chip">
+                              {item.category}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="comparison-points-label">다른 포인트</p>
+                        <div className="comparison-points-list">
+                          {comparison.differences.map((item) => (
+                            <span
+                              key={`difference-${item.category}`}
+                              className="comparison-point-chip comparison-point-chip-diff"
+                            >
+                              {item.category}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="comparison-panel comparison-panel-profile">
+                    <img
+                      className="comparison-profile-avatar"
+                      src={getProfileImageSrc(selectedRecommendation?.profileImageUrl ?? null) ?? defaultAvatar}
+                      alt={comparison.nickname}
+                    />
+                    <p className="comparison-profile-name">{comparison.nickname}</p>
+                    <p className="comparison-profile-meta">
+                      {selectedRecommendation?.age}세 · {selectedRecommendation?.job} · {selectedRecommendation?.region}
+                    </p>
+                    <p className="comparison-profile-bio">
+                      {selectedRecommendation?.bio && selectedRecommendation.bio.trim()
+                        ? selectedRecommendation.bio
+                        : "아직 소개글이 없어요."}
+                    </p>
+                    {selectedRecommendation && selectedRecommendation.tags.length > 0 && (
+                      <div className="comparison-profile-tags">
+                        {selectedRecommendation.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="comparison-profile-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
