@@ -48,7 +48,11 @@ public class CommentService {
         Comment comment = commentRepository.save(new Comment(postId, userId, request.parentCommentId(), request.content()));
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         if (parent != null && !parent.getUserId().equals(userId)) {
-            notificationService.createCommentReplyNotification(parent.getUserId(), userId, request.content(), postId);
+            // 알림 생성은 부가 기능이라, 여기서 실패해도 댓글 등록 자체에는 영향을 주면 안 된다.
+            try {
+                notificationService.createCommentReplyNotification(parent.getUserId(), userId, request.content(), postId);
+            } catch (Exception ignored) {
+            }
         }
         return toResponse(comment, user);
     }
