@@ -131,7 +131,7 @@ function ProfileBoardPage() {
         </div>
 
         <div className="profile-board-region-field">
-          <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} />
+          <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} hideBadge />
         </div>
       </div>
 

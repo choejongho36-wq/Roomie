@@ -25,8 +25,10 @@ import BoardDetailPage from "./pages/board/BoardDetailPage";
 import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
+import NotFoundPage from "./pages/NotFoundPage";
 import MatchedPairPage from "./pages/MatchedPairPage";
 import HousePage from "./pages/HousePage";
+
 
 function App() {
   return (
@@ -63,6 +65,7 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
             </Route>
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Footer />
         </ChatProvider>

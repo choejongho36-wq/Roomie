@@ -24,9 +24,37 @@ export const ALL_DISTRICTS = "전체";
 export const getDistrictsForZone = (zone: string): string[] =>
   SEOUL_ZONES.find((item) => item.zone === zone)?.districts ?? [];
 
+// "대치1동", "대치2동", "대치4동"처럼 같은 법정동(예: 대치동)을 행정 편의상
+// 여러 행정동으로 나눠놓은 경우를 하나로 합쳐서 비교할 때 사용
+// (사용자가 저장한 지역값이 "대치동"처럼 정규화된 이름일 수 있기 때문)
+//
+// ⚠️ 의도적으로 안 합쳐지는 예외 있음: "종로1·2·3·4가동", "금호2·3가동" 같은
+// "숫자+가+동" 패턴은 겉보기엔 비슷해 보여도 성격이 다름 — 종로1가/종로2가는
+// 관리상 나뉜 같은 동네가 아니라, 애초에 서로 다른 법정동(고유 지명)임.
+// 그래서 "종로동"으로 합치면 존재하지도 않는 지명을 만들어내는 셈이 되므로
+// 이 정규식은 일부러 이 패턴은 건드리지 않고 원본 그대로 남겨둠 (버그 아님)
+export const normalizeDongName = (dong: string): string => dong.replace(/\d+(동|읍|면)$/, "$1");
+
+export const getNormalizedDongsForDistrict = (district: string): string[] => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const dong of getDongsForDistrict(district)) {
+    const normalized = normalizeDongName(dong);
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      result.push(normalized);
+    }
+  }
+  return result;
+};
+
 // 지역 문자열(예: "서울 종로구", "종로구")에 특정 구가 포함되는지 느슨하게 매칭
-export const regionMatchesDistrict = (region: string | null | undefined, district: string): boolean =>
-  Boolean(region && region.includes(district));
+// 지역값에 "구" 이름 없이 동 이름만 저장된 경우("대치동")에도 그 동이 해당 구 소속이면 매칭되도록 함
+export const regionMatchesDistrict = (region: string | null | undefined, district: string): boolean => {
+  if (!region) return false;
+  if (region.includes(district)) return true;
+  return getNormalizedDongsForDistrict(district).some((dong) => region.includes(dong));
+};
 
 export const regionMatchesZone = (region: string | null | undefined, zone: string): boolean =>
   getDistrictsForZone(zone).some((district) => regionMatchesDistrict(region, district));

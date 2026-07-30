@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SEOUL_ZONES, getDongsForDistrict } from "../data/SeoulDistricts";
+import { SEOUL_ZONES, getNormalizedDongsForDistrict } from "../data/SeoulDistricts";
 import "./RegionPicker.css";
 
 export interface RegionToken {
@@ -32,12 +32,24 @@ export const ALL_DISTRICT_OPTIONS = SEOUL_ZONES.flatMap((zone) => zone.districts
 );
 
 // "강동구 천호동", "강동구" 같은 저장된 지역 문자열을 다시 RegionToken으로 복원할 때 사용
+// 구 이름 없이 "천호동"처럼 동 이름만 저장된 경우에도, 그 동이 속한 구를 역으로 찾아 복원함
 export const parseRegionToken = (region: string | null | undefined): RegionToken | null => {
   if (!region) return null;
+
   const district = ALL_DISTRICT_OPTIONS.find((d) => region.includes(d));
-  if (!district) return null;
-  const dong = getNormalizedDongsForDistrict(district).find((d) => region.includes(d));
-  return dong ? buildDongToken(district, dong) : buildDistrictToken(district);
+  if (district) {
+    const dong = getNormalizedDongsForDistrict(district).find((d) => region.includes(d));
+    return dong ? buildDongToken(district, dong) : buildDistrictToken(district);
+  }
+
+  for (const candidateDistrict of ALL_DISTRICT_OPTIONS) {
+    const dong = getNormalizedDongsForDistrict(candidateDistrict).find((d) => region.includes(d));
+    if (dong) {
+      return buildDongToken(candidateDistrict, dong);
+    }
+  }
+
+  return null;
 };
 
 // 시/도를 넣으면 그 지역의 구/군 목록을 반환. 지금은 서울만 데이터가 있지만,
@@ -45,30 +57,6 @@ export const parseRegionToken = (region: string | null | undefined): RegionToken
 const getDistrictsForCity = (city: string): string[] => {
   if (city === "서울") return ALL_DISTRICT_OPTIONS;
   return [];
-};
-
-// "대치1동", "대치2동", "대치4동"처럼 같은 법정동(예: 대치동)을 행정 편의상
-// 여러 행정동으로 나눠놓은 경우를 하나로 합쳐서 보여줌
-// (실제 행정구역 데이터 자체는 건드리지 않고, 화면에 보여줄 때만 합쳐서 표시)
-//
-// ⚠️ 의도적으로 안 합쳐지는 예외 있음: "종로1·2·3·4가동", "금호2·3가동" 같은
-// "숫자+가+동" 패턴은 겉보기엔 비슷해 보여도 성격이 다름 — 종로1가/종로2가는
-// 관리상 나뉜 같은 동네가 아니라, 애초에 서로 다른 법정동(고유 지명)임.
-// 그래서 "종로동"으로 합치면 존재하지도 않는 지명을 만들어내는 셈이 되므로
-// 이 정규식은 일부러 이 패턴은 건드리지 않고 원본 그대로 남겨둠 (버그 아님)
-const normalizeDongName = (dong: string): string => dong.replace(/\d+(동|읍|면)$/, "$1");
-
-const getNormalizedDongsForDistrict = (district: string): string[] => {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const dong of getDongsForDistrict(district)) {
-    const normalized = normalizeDongName(dong);
-    if (!seen.has(normalized)) {
-      seen.add(normalized);
-      result.push(normalized);
-    }
-  }
-  return result;
 };
 
 interface RegionEntry {
@@ -109,6 +97,7 @@ interface RegionPickerProps {
   emptyHint?: string;
   variant?: "dropdown" | "inline";
   maxSelect?: number;
+  hideBadge?: boolean;
 }
 
 function RegionPicker({
@@ -120,6 +109,7 @@ function RegionPicker({
   emptyHint = "지역을 선택해주세요.",
   variant = "dropdown",
   maxSelect,
+  hideBadge = false,
 }: RegionPickerProps) {
   const isInline = variant === "inline";
   const [isOpen, setIsOpen] = useState(isInline);
@@ -327,7 +317,9 @@ function RegionPicker({
         onClick={() => setIsOpen((prev) => !prev)}
       >
         {triggerLabel}
-        {selected.length > 0 && <span className="region-picker-badge">{selected.length}</span>}
+        {!hideBadge && selected.length > 0 && (
+          <span className="region-picker-badge">{selected.length}</span>
+        )}
         <span aria-hidden="true">{isOpen ? "▲" : "▼"}</span>
       </button>
 

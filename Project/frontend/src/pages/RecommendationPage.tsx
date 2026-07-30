@@ -288,10 +288,12 @@ function RecommendationPage() {
                               </span>
                             )}
                           </h2>
-                          <p>{item.age}세</p>
-                          <p>
-                            <span>{item.job}</span>
-                            <span>{item.region}</span>
+                          <p className="profile-card-meta">
+                            {item.age}세
+                            {" · "}
+                            {item.job ?? "직업 정보 준비 중"}
+                            {" · "}
+                            {item.region ?? "지역 정보 준비 중"}
                           </p>
                         </div>
                       </div>
