@@ -3,9 +3,15 @@ import "./MatchingLoadingOverlay.css";
 function MatchingLoadingOverlay() {
   return (
     <div className="matching-loading-overlay">
-      <div className="matching-loading-dots">
-        {Array.from({ length: 8 }, (_, i) => (
-          <span key={i} className="matching-loading-dot" style={{ "--i": i } as React.CSSProperties} />
+      <div className="matching-loading-stack">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="matching-loading-card" style={{ "--i": i } as React.CSSProperties}>
+            <span className="matching-loading-card-avatar" />
+            <span className="matching-loading-card-lines">
+              <span className="matching-loading-card-line matching-loading-card-line-short" />
+              <span className="matching-loading-card-line matching-loading-card-line-long" />
+            </span>
+          </div>
         ))}
       </div>
       <p>

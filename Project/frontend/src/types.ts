@@ -65,6 +65,7 @@ export interface Comment {
   profileImageUrl: string | null;
   parentCommentId: number | null;
   content: string;
+  deleted: boolean;
   createdAt: string;
 }
 

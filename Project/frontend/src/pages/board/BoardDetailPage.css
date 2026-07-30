@@ -408,6 +408,11 @@
   word-break: break-word;
 }
 
+.comment-content-deleted {
+  color: #999;
+  font-style: italic;
+}
+
 .comment-actions {
   display: flex;
   gap: 10px;
