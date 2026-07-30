@@ -527,30 +527,28 @@
 .comparison-hero-title {
   margin: 0;
   color: #222;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.comparison-hero-score {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  background: #ff6600;
-  color: #fff;
-  border-radius: 999px;
-  padding: 16px 44px;
-  box-shadow: 0 12px 24px rgba(255, 102, 0, 0.28);
-}
-
-.comparison-hero-score-value {
-  font-size: 40px;
+  font-size: 26px;
   font-weight: 900;
-  line-height: 1;
+  letter-spacing: -0.01em;
 }
 
-.comparison-hero-score-unit {
-  font-size: 16px;
-  font-weight: 800;
+.comparison-gauge.compatibility-gauge {
+  width: 160px;
+  height: 160px;
+  margin: 8px auto 0;
+}
+
+.comparison-gauge .gauge-center {
+  width: 116px;
+  height: 116px;
+}
+
+.comparison-gauge .compatibility-score-value {
+  font-size: 38px;
+}
+
+.comparison-gauge .compatibility-score-unit {
+  font-size: 20px;
 }
 
 .comparison-ai-explanation {
@@ -609,7 +607,15 @@
 }
 
 .comparison-start-chat-button {
-  width: 100%;
+  width: auto;
+  padding: 13px 28px;
+  box-shadow: 0 10px 20px rgba(255, 102, 0, 0.35);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.comparison-start-chat-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px rgba(255, 102, 0, 0.4);
 }
 
 .btn-outline {
@@ -693,8 +699,14 @@
     padding: 24px 20px 20px;
   }
 
-  .comparison-hero-score {
-    padding: 14px 32px;
+  .comparison-gauge.compatibility-gauge {
+    width: 136px;
+    height: 136px;
+  }
+
+  .comparison-gauge .gauge-center {
+    width: 98px;
+    height: 98px;
   }
 
   .recommendation-stage {

@@ -358,9 +358,22 @@ function RecommendationPage() {
                   <p className="comparison-hero-title" id="comparison-title">
                     {comparison.nickname}님과의 궁합
                   </p>
-                  <div className="comparison-hero-score">
-                    <span className="comparison-hero-score-value">{comparison.compatibilityScore}</span>
-                    <span className="comparison-hero-score-unit">점</span>
+                  <div
+                    className="compatibility-gauge comparison-gauge"
+                    style={
+                      {
+                        "--gauge-percent": `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%`,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="gauge-ring">
+                      <div className="gauge-center">
+                        <div className="compatibility-score">
+                          <span className="compatibility-score-value">{comparison.compatibilityScore}</span>
+                          <span className="compatibility-score-unit">점</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
