@@ -84,6 +84,67 @@
   font-size: 13px;
 }
 
+.email-autocomplete-wrapper {
+  position: relative;
+}
+
+.email-autocomplete-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 66px;
+  z-index: 20;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.email-autocomplete-list li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.email-autocomplete-list li button:hover {
+  background: #f7f7f7;
+  color: #ff6600;
+}
+
+.email-verify-code-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.email-verify-code-group input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.email-verify-code-group .btn {
+  white-space: nowrap;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
 .signup-hint {
   font-size: 12px;
   font-weight: 400;
