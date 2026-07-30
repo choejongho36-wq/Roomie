@@ -299,7 +299,7 @@
   color: #f16526;
 }
 
-/* 저장된 태그: 해시태그 폼 */
+/* 저장된 태그: 채워진 칩 폼 */
 .profile-tags-view {
   display: flex;
   flex-direction: column;
@@ -311,20 +311,15 @@
 .profile-tags-view .profile-tags {
   justify-content: center;
   margin-top: 0;
-  max-width: 520px;
-  gap: 2px 4px;
+  /* 520px면 태그 7개가 두 줄로 접혀 읽기 불편했다. 카드 폭까지 써서 한 줄로 둔다 */
+  max-width: 100%;
+  gap: 6px;
 }
 
 .profile-tags-view .profile-tag:not(.profile-tag-selectable) {
-  background: none;
-  border-color: transparent;
-  color: #f16526;
-  padding: 0;
-}
-
-.profile-tags-view .profile-tag::before {
-  content: "#";
-  opacity: 0.55;
+  background: #f16526;
+  border-color: #f16526;
+  color: #fff;
 }
 
 .profile-tags-edit {
@@ -415,13 +410,47 @@
 
 .profile-tag-row-picked .profile-tag {
   cursor: pointer;
-  background: #fff;
-  border-color: #f9c0a5;
-  color: #f16526;
 }
 
 .profile-tag-row-picked .profile-tag:hover {
-  background: #fff4ee;
+  background: #d9531e;
+  border-color: #d9531e;
+}
+
+/* 직접 입력 태그 */
+.profile-tag-custom {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.profile-tag-custom-input {
+  flex: 1;
+  min-width: 0;
+  max-width: 220px;
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #eee;
+  border-radius: 999px;
+  background: #f7f7f7;
+  /* 배경만 밝게 덮으면 브라우저 다크모드에서 UA 기본 글자색(흰색)이 남아 안 보인다 */
+  color: #333;
+}
+
+.profile-tag-custom-input::placeholder {
+  color: #bbb;
+}
+
+.profile-tag-custom-input:focus {
+  outline: none;
+  border-color: #f9c0a5;
+  background: #fff;
+}
+
+.profile-tag-custom .profile-tag:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .profile-tag-check {
@@ -479,6 +508,11 @@
 .profile-tags-actions {
   display: flex;
   gap: 6px;
+}
+
+/* 저장 버튼만 초록. 같은 클래스를 쓰는 '사진 변경'은 .mypage-avatar-actions 안이라 안 걸린다 */
+.profile-tags-actions .mypage-avatar-btn-change {
+  background: #16a34a;
 }
 
 .profile-card-info {

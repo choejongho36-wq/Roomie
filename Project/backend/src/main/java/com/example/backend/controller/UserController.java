@@ -76,8 +76,11 @@ public class UserController {
             "ISTJ", "ISFJ", "ESTJ", "ESFJ",
             "ISTP", "ISFP", "ESTP", "ESFP"
     );
-    // MBTI 1개 + 관심사 3개
-    private static final int MAX_TAGS = 4;
+    // MBTI 1개 + 목록 관심사 5개 + 직접 입력 1개
+    private static final int MAX_TAGS = 7;
+    // 직접 입력 태그는 목록 밖이라 길이만 검사한다.
+    // 프론트 src/data/ProfileTags.ts 의 MAX_CUSTOM_TAG_LENGTH 와 맞춰야 한다.
+    private static final int MAX_CUSTOM_TAG_LENGTH = 12;
     private static final int MAX_BIO_LENGTH = 150;
     private static final int MAX_NICKNAME_LENGTH = 30;
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
@@ -164,8 +167,17 @@ public class UserController {
         if (unique.size() > MAX_TAGS) {
             throw new IllegalArgumentException("태그는 최대 " + MAX_TAGS + "개까지 선택할 수 있습니다.");
         }
-        if (!ALLOWED_TAGS.containsAll(unique)) {
-            throw new IllegalArgumentException("허용되지 않은 태그가 포함되어 있습니다.");
+        // 목록 밖 태그는 직접 입력분 1개까지만 허용한다.
+        // 태그는 콤마로 이어 한 컬럼에 저장하므로 콤마가 들어오면 저장값이 깨진다.
+        List<String> custom = unique.stream().filter(tag -> !ALLOWED_TAGS.contains(tag)).toList();
+        if (custom.size() > 1) {
+            throw new IllegalArgumentException("직접 입력한 태그는 1개까지만 추가할 수 있습니다.");
+        }
+        for (String tag : custom) {
+            if (tag.isBlank() || tag.length() > MAX_CUSTOM_TAG_LENGTH || tag.contains(",")) {
+                throw new IllegalArgumentException(
+                        "직접 입력한 태그는 콤마 없이 " + MAX_CUSTOM_TAG_LENGTH + "자까지 입력할 수 있습니다.");
+            }
         }
 
         User user = findUser(authentication);

@@ -6,7 +6,9 @@ import { updateTags, updateBio, changePassword, getMySurveys, API_ORIGIN } from 
 import {
   PROFILE_TAG_GROUPS,
   PROFILE_TAGS,
+  PROFILE_TAG_SET,
   MAX_PROFILE_TAGS,
+  MAX_CUSTOM_TAG_LENGTH,
   MBTI_TAGS,
   MBTI_TAG_SET,
   type TagGroup,
@@ -39,6 +41,7 @@ function ProfilePage() {
   const [editingTags, setEditingTags] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>([]);
   const [activeGroup, setActiveGroup] = useState<TagGroup | null>(null);
+  const [customTagInput, setCustomTagInput] = useState("");
   const [tagsSaving, setTagsSaving] = useState(false);
   const [tagsError, setTagsError] = useState("");
   const [editingBio, setEditingBio] = useState(false);
@@ -63,20 +66,24 @@ function ProfilePage() {
   if (!user) return null;
 
 
-  // 저장 순서 대신 그룹 정의 순서로 보여준다
-  const savedTags = [...user.tags].sort(
-    (a, b) => PROFILE_TAGS.indexOf(a) - PROFILE_TAGS.indexOf(b),
-  );
+  // 저장 순서 대신 그룹 정의 순서로 보여준다. 목록에 없는 직접 입력 태그는 맨 뒤로 보낸다
+  const tagOrder = (tag: string) =>
+    PROFILE_TAG_SET.has(tag) ? PROFILE_TAGS.indexOf(tag) : PROFILE_TAGS.length;
+  const savedTags = [...user.tags].sort((a, b) => tagOrder(a) - tagOrder(b));
 
   const startEditTags = () => {
     setDraftTags(user.tags);
     setTagsError("");
     setActiveGroup(null);
+    setCustomTagInput("");
     setEditingTags(true);
   };
 
   const draftMbti = draftTags.find((t) => MBTI_TAG_SET.has(t));
   const draftInterests = draftTags.filter((t) => !MBTI_TAG_SET.has(t));
+  // 목록에서 고른 태그와 직접 입력 태그는 상한을 따로 센다
+  const draftPicked = draftInterests.filter((t) => PROFILE_TAG_SET.has(t));
+  const draftCustom = draftInterests.find((t) => !PROFILE_TAG_SET.has(t));
 
   const pickMbti = (tag: string) => {
     setDraftTags(tag === draftMbti ? draftInterests : [tag, ...draftInterests]);
@@ -86,12 +93,34 @@ function ProfilePage() {
   const toggleDraftTag = (tag: string) => {
     if (draftTags.includes(tag)) {
       setDraftTags(draftTags.filter((t) => t !== tag));
-    } else if (draftInterests.length >= MAX_PROFILE_TAGS) {
+    } else if (draftPicked.length >= MAX_PROFILE_TAGS) {
       setTagsError(`관심사 태그는 최대 ${MAX_PROFILE_TAGS}개까지 선택할 수 있어요.`);
       return;
     } else {
       setDraftTags([...draftTags, tag]);
     }
+    setTagsError("");
+  };
+
+  const addCustomTag = () => {
+    const tag = customTagInput.trim();
+    if (!tag) return;
+    // 태그는 서버에서 콤마로 이어 저장하므로 콤마가 들어가면 안 된다
+    if (tag.includes(",")) {
+      setTagsError("직접 입력 태그에는 콤마(,)를 쓸 수 없어요.");
+      return;
+    }
+    if (PROFILE_TAG_SET.has(tag)) {
+      setTagsError("이미 목록에 있는 태그예요. 위에서 골라주세요.");
+      return;
+    }
+    if (MBTI_TAG_SET.has(tag.toUpperCase())) {
+      setTagsError("MBTI는 위에서 골라주세요.");
+      return;
+    }
+    // 직접 입력 태그는 1개뿐이라 기존 것을 갈아끼운다
+    setDraftTags([...draftTags.filter((t) => t !== draftCustom), tag]);
+    setCustomTagInput("");
     setTagsError("");
   };
 
@@ -276,9 +305,9 @@ function ProfilePage() {
             ) : (
               <div className="profile-tags-editor">
                 <p className="profile-tag-hint">
-                  MBTI 1개와 관심사 태그 최대 {MAX_PROFILE_TAGS}개를 선택할 수 있어요.
+                  MBTI 1개와 관심사 태그 최대 {MAX_PROFILE_TAGS}개, 직접 입력 태그 1개를 넣을 수 있어요.
                   <span className="profile-tag-hint-count">
-                    ({draftInterests.length}/{MAX_PROFILE_TAGS})
+                    ({draftPicked.length}/{MAX_PROFILE_TAGS})
                   </span>
                 </p>
 
@@ -334,6 +363,31 @@ function ProfilePage() {
                     ))}
                   </div>
                 )}
+
+                <p className="profile-tag-group-title">직접 입력</p>
+                <div className="profile-tag-custom">
+                  <input
+                    className="profile-tag-custom-input"
+                    value={customTagInput}
+                    onChange={(e) => setCustomTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addCustomTag();
+                      }
+                    }}
+                    maxLength={MAX_CUSTOM_TAG_LENGTH}
+                    placeholder={draftCustom ?? `나만의 태그 (${MAX_CUSTOM_TAG_LENGTH}자 이내)`}
+                  />
+                  <button
+                    type="button"
+                    className="profile-tag profile-tag-selectable"
+                    onClick={addCustomTag}
+                    disabled={!customTagInput.trim()}
+                  >
+                    {draftCustom ? "변경" : "추가"}
+                  </button>
+                </div>
 
                 {draftTags.length > 0 && (
                   <div className="profile-tag-row profile-tag-row-picked">
