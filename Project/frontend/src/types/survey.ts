@@ -30,6 +30,7 @@ export interface RecommendationResult {
   age: number;
   job?: string | null;
   region?: string | null;
+  emailVerified: boolean;
 }
 
 export interface SurveyComparisonHighlight {

@@ -18,6 +18,7 @@ public record UserResponse(
         String profileImageUrl,
         List<String> tags,
         String bio,
-        String provider
+        String provider,
+        Boolean emailVerified
 ) {}
 

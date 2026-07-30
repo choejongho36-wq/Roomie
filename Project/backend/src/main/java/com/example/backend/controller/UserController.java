@@ -280,7 +280,8 @@ public class UserController {
                 user.getProfileImageUrl(),
                 tags,
                 user.getBio(),
-                user.getProvider()
+                user.getProvider(),
+                user.getEmailVerified()
         );
     }
 }

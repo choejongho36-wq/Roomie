@@ -315,6 +315,9 @@
 }
 
 .profile-card-info h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   color: #3e2c23;
   font-size: 22px;
@@ -322,6 +325,13 @@
   letter-spacing: -0.01em;
   line-height: 1.2;
   overflow-wrap: anywhere;
+}
+
+.profile-card-info .verified-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #ff6600;
 }
 
 .profile-card-info p {
