@@ -59,3 +59,7 @@ export interface SurveyComparisonResult {
   differences: SurveyComparisonHighlight[];
   items: SurveyComparisonItem[];
 }
+
+export interface SurveyComparisonExplanationResult {
+  explanation: string;
+}
