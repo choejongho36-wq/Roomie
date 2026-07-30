@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useChat } from "../../context/ChatContext";
-import { API_ORIGIN, getChatMessages, getConversations } from "../../api";
+import { API_ORIGIN, getChatMessages, getConversations, createOrGetMatchedPair } from "../../api";
 import type { ChatMessage, Conversation } from "../../types/chat";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
@@ -41,6 +41,7 @@ interface ActivePartner {
 function ChatPage() {
   const { token, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { lastMessage, sendMessage } = useChat();
 
@@ -49,6 +50,7 @@ function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState(false);
   const [acknowledgedPartners, setAcknowledgedPartners] = useState<Set<number>>(loadAcknowledgedPartners);
   const messageListRef = useRef<HTMLDivElement>(null);
 
@@ -132,6 +134,20 @@ function ChatPage() {
     else setError("연결이 끊겨 메시지를 보낼 수 없어요. 잠시 후 다시 시도해주세요.");
   };
 
+  const handleConfirmRoommate = async () => {
+    if (!token || !activePartner) return;
+    setConfirming(true);
+    setError("");
+    try {
+      const pair = await createOrGetMatchedPair(token, activePartner.userId);
+      navigate(`/matched/${pair.id}`);
+    } catch {
+      setError("룸메이트 확정에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
   const sortedConversations = useMemo(
     () => conversations ?? [],
     [conversations]
@@ -200,6 +216,14 @@ function ChatPage() {
               <div className="chat-thread-header">
                 <img src={getAvatarSrc(activePartner.profileImageUrl)} alt="" className="chat-avatar" />
                 <strong>{activePartner.nickname}</strong>
+                <button
+                  type="button"
+                  className="btn btn-outline chat-confirm-roommate-btn"
+                  onClick={handleConfirmRoommate}
+                  disabled={confirming}
+                >
+                  {confirming ? "처리 중..." : "룸메이트 확정"}
+                </button>
               </div>
 
               <div className="chat-message-list" ref={messageListRef}>

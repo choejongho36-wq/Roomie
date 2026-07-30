@@ -1,0 +1,22 @@
+.house-page {
+  max-width: 640px;
+  margin: 60px auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.house-page h1 {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.house-page p {
+  color: #666;
+  font-size: 14px;
+}
+
+.house-page-pair-id {
+  margin-top: 8px;
+  color: #aaa;
+  font-size: 12px;
+}

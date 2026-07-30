@@ -107,7 +107,11 @@ function Navbar() {
                       onClick={() => handleNotificationClick(notification)}
                     >
                       <span className="navbar-notify-item-title">{notification.senderNickname}</span>
-                      <span className="navbar-notify-item-content">{notification.content}</span>
+                      <span className="navbar-notify-item-content">
+                        {notification.type === "CHAT"
+                          ? `${notification.senderNickname}님이 메시지를 보냈습니다.`
+                          : notification.content}
+                      </span>
                     </button>
                   ))
                 )}

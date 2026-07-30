@@ -26,6 +26,8 @@ import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import MatchedPairPage from "./pages/MatchedPairPage";
+import HousePage from "./pages/HousePage";
 
 function App() {
   return (
@@ -51,6 +53,8 @@ function App() {
             <Route path="/inquiry" element={<InquiryListPage />} />
             <Route path="/inquiry/write" element={<InquiryWritePage />} />
             <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
+            <Route path="/matched/:id" element={<MatchedPairPage />} />
+            <Route path="/house/:id" element={<HousePage />} />
             <Route path="/mypage" element={<MyPage />}>
               <Route index element={<ProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />
