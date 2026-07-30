@@ -1,7 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { signup, checkEmailAvailability, checkLoginIdAvailability, checkNicknameAvailability } from "../api";
+import {
+  signup,
+  checkLoginIdAvailability,
+  checkNicknameAvailability,
+  requestEmailVerification,
+  confirmEmailVerification,
+} from "../api";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import "./SignupPage.css";
 
@@ -78,14 +84,30 @@ type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
 const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
 
+const EMAIL_DOMAIN_OPTIONS = [
+  "gmail.com",
+  "naver.com",
+  "daum.net",
+  "kakao.com",
+  "nate.com",
+  "hanmail.net",
+  "icloud.com",
+];
+
+// 이메일 상태를 좀 더 세분화해서, "중복확인"과 "인증"이 한 흐름으로 이어지게 관리
+type EmailStatus = "idle" | "sending" | "sent" | "confirming" | "verified" | "taken" | "error";
+
 function SignupPage() {
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState("");
   const [loginIdCheckStatus, setLoginIdCheckStatus] = useState<CheckStatus>("idle");
   const [checkedLoginId, setCheckedLoginId] = useState(""); // 마지막으로 중복확인에 통과한 아이디 값
   const [email, setEmail] = useState("");
-  const [emailCheckStatus, setEmailCheckStatus] = useState<CheckStatus>("idle");
-  const [checkedEmail, setCheckedEmail] = useState(""); // 마지막으로 중복확인에 통과한 이메일 값
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
+  const [verifiedEmail, setVerifiedEmail] = useState(""); // 인증까지 완료된 이메일 값
+  const [emailSuggestionsOpen, setEmailSuggestionsOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [codeError, setCodeError] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -146,27 +168,74 @@ function SignupPage() {
     }
   };
 
+  const emailSuggestions = (() => {
+    const atIndex = email.indexOf("@");
+    if (atIndex === -1) return [];
+    const local = email.slice(0, atIndex);
+    const domainPart = email.slice(atIndex + 1);
+    if (!local) return [];
+    if (EMAIL_DOMAIN_OPTIONS.includes(domainPart)) return [];
+    return EMAIL_DOMAIN_OPTIONS.filter((domain) => domain.startsWith(domainPart)).map(
+      (domain) => `${local}@${domain}`
+    );
+  })();
+
   const handleEmailChange = (value: string) => {
     setEmail(value);
-
-    if (value !== checkedEmail) {
-      setEmailCheckStatus("idle");
+    setEmailSuggestionsOpen(true);
+    if (value !== verifiedEmail) {
+      setEmailStatus("idle");
+      setVerificationCode("");
+      setCodeError("");
     }
   };
 
-  const handleCheckEmail = async () => {
+  const selectEmailSuggestion = (value: string) => {
+    handleEmailChange(value);
+    setEmailSuggestionsOpen(false);
+  };
+
+  const handleSendVerification = async () => {
     setError("");
     if (!email) {
       setError("이메일을 먼저 입력해주세요.");
       return;
     }
-    setEmailCheckStatus("checking");
+    setEmailStatus("sending");
     try {
-      const available = await checkEmailAvailability(email);
-      setCheckedEmail(email);
-      setEmailCheckStatus(available ? "available" : "taken");
-    } catch {
-      setEmailCheckStatus("error");
+      await requestEmailVerification(email);
+      setEmailStatus("sent");
+      setVerificationCode("");
+      setCodeError("");
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && typeof err.response?.data === "string" ? err.response.data : "";
+      if (message.includes("이미 가입된")) {
+        setEmailStatus("taken");
+      } else {
+        setEmailStatus("error");
+      }
+    }
+  };
+
+  const handleConfirmVerification = async () => {
+    setCodeError("");
+    if (!verificationCode) {
+      setCodeError("인증번호를 입력해주세요.");
+      return;
+    }
+    setEmailStatus("confirming");
+    try {
+      await confirmEmailVerification(email, verificationCode);
+      setVerifiedEmail(email);
+      setEmailStatus("verified");
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && typeof err.response?.data === "string"
+          ? err.response.data
+          : "인증번호 확인에 실패했습니다.";
+      setCodeError(message);
+      setEmailStatus("sent");
     }
   };
 
@@ -205,8 +274,8 @@ function SignupPage() {
       setError("아이디 중복확인을 완료해주세요.");
       return;
     }
-    if (emailCheckStatus !== "available" || email !== checkedEmail) {
-      setError("이메일 중복확인을 완료해주세요.");
+    if (emailStatus !== "verified" || email !== verifiedEmail) {
+      setError("이메일 인증을 완료해주세요.");
       return;
     }
     if (nicknameCheckStatus !== "available" || nickname !== checkedNickname) {
@@ -318,33 +387,89 @@ function SignupPage() {
         </label>
         <label>
           이메일
-          <div className="email-check-group">
+          <div className="email-check-group email-autocomplete-wrapper">
             <input
               type="email"
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
+              onFocus={() => setEmailSuggestionsOpen(true)}
+              onBlur={() => {
+                setTimeout(() => setEmailSuggestionsOpen(false), 120);
+              }}
+              autoComplete="off"
+              disabled={emailStatus === "verified"}
               required
             />
             <button
               type="button"
               className="btn btn-outline"
-              onClick={handleCheckEmail}
-              disabled={emailCheckStatus === "checking"}
+              onClick={handleSendVerification}
+              disabled={
+                emailStatus === "sending" || emailStatus === "confirming" || emailStatus === "verified"
+              }
             >
-              {emailCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+              {emailStatus === "verified"
+                ? "인증완료"
+                : emailStatus === "sending"
+                ? "발송 중..."
+                : emailStatus === "sent"
+                ? "재발송"
+                : "인증"}
             </button>
+
+            {emailSuggestionsOpen && emailSuggestions.length > 0 && (
+              <ul className="email-autocomplete-list">
+                {emailSuggestions.map((suggestion) => (
+                  <li key={suggestion}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => selectEmailSuggestion(suggestion)}
+                    >
+                      {suggestion}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          {emailCheckStatus === "available" && email === checkedEmail && (
-            <small className="signup-hint signup-hint-success">사용 가능한 이메일이에요.</small>
-          )}
-          {emailCheckStatus === "taken" && (
+
+          {emailStatus === "taken" && (
             <small className="signup-hint signup-hint-error">이미 가입된 이메일이에요.</small>
           )}
-          {emailCheckStatus === "error" && (
+          {emailStatus === "error" && (
             <small className="signup-hint signup-hint-error">
               형식을 확인해주세요 (예: name@example.com)
             </small>
           )}
+          {emailStatus === "verified" && (
+            <small className="signup-hint signup-hint-success">이메일 인증이 완료됐어요.</small>
+          )}
+
+          {(emailStatus === "sent" || emailStatus === "confirming") && (
+            <div className="email-verify-code-group">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="인증번호 6자리"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/[^0-9]/g, ""))}
+              />
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={handleConfirmVerification}
+                disabled={emailStatus === "confirming"}
+              >
+                {emailStatus === "confirming" ? "확인 중..." : "확인"}
+              </button>
+            </div>
+          )}
+          {emailStatus === "sent" && !codeError && (
+            <small className="signup-hint">메일함(스팸함 포함)에서 인증번호를 확인해주세요.</small>
+          )}
+          {codeError && <small className="signup-hint signup-hint-error">{codeError}</small>}
         </label>
         <label>
           닉네임
