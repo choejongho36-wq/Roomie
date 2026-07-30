@@ -70,7 +70,7 @@ function buildThreads(comments: Comment[]): CommentThread[] {
     const parent = byId.get(c.parentCommentId);
     thread.replies.push({
       ...c,
-      replyToNickname: parent && parent.commentId !== thread.root.commentId ? parent.nickname : null,
+      replyToNickname: parent ? parent.nickname : null,
     });
   }
 
@@ -84,6 +84,7 @@ function CommentActions({
   targetId,
   userId,
   content,
+  deleted,
   replyingTo,
   setReplyingTo,
   onEdit,
@@ -93,6 +94,7 @@ function CommentActions({
   targetId: number;
   userId: number;
   content: string;
+  deleted: boolean;
   replyingTo: number | null;
   setReplyingTo: (id: number | null) => void;
   onEdit: (id: number, content: string) => void;
@@ -102,7 +104,7 @@ function CommentActions({
   return (
     <div className="comment-actions">
       <button onClick={() => setReplyingTo(replyingTo === targetId ? null : targetId)}>답글</button>
-      {canManage(userId) && (
+      {!deleted && canManage(userId) && (
         <>
           <button onClick={() => onEdit(targetId, content)}>수정</button>
           <button onClick={() => onDelete(targetId)}>삭제</button>
@@ -161,7 +163,7 @@ function CommentThreadItem({
       </div>
     );
 
-  const content = (id: number, text: string, mention?: string | null) =>
+  const content = (id: number, text: string, deleted: boolean, mention?: string | null) =>
     editingId === id ? (
       <div className="comment-reply-form">
         <input value={editText} onChange={(e) => setEditText(e.target.value)} />
@@ -169,8 +171,8 @@ function CommentThreadItem({
         <button onClick={() => setEditingId(null)}>취소</button>
       </div>
     ) : (
-      <p className="comment-content">
-        {mention && <span className="comment-mention">@{mention}</span>}
+      <p className={`comment-content${deleted ? " comment-content-deleted" : ""}`}>
+        {!deleted && mention && <span className="comment-mention">@{mention}</span>}
         {text}
       </p>
     );
@@ -184,11 +186,12 @@ function CommentThreadItem({
             <span className="comment-nickname">{thread.root.nickname}</span>
             <span className="comment-date">{new Date(thread.root.createdAt).toLocaleString("ko-KR")}</span>
           </div>
-          {content(thread.root.commentId, thread.root.content)}
+          {content(thread.root.commentId, thread.root.content, thread.root.deleted)}
           <CommentActions
             targetId={thread.root.commentId}
             userId={thread.root.userId}
             content={thread.root.content}
+            deleted={thread.root.deleted}
             replyingTo={replyingTo}
             setReplyingTo={setReplyingTo}
             onEdit={startEdit}
@@ -209,11 +212,12 @@ function CommentThreadItem({
                   <span className="comment-nickname">{reply.nickname}</span>
                   <span className="comment-date">{new Date(reply.createdAt).toLocaleString("ko-KR")}</span>
                 </div>
-                {content(reply.commentId, reply.content, reply.replyToNickname)}
+                {content(reply.commentId, reply.content, reply.deleted, reply.replyToNickname)}
                 <CommentActions
                   targetId={reply.commentId}
                   userId={reply.userId}
                   content={reply.content}
+                  deleted={reply.deleted}
                   replyingTo={replyingTo}
                   setReplyingTo={setReplyingTo}
                   onEdit={startEdit}

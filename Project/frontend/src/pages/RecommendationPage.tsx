@@ -199,13 +199,13 @@ function RecommendationPage() {
     <div className={`recommendation-page${selectedRecommendation ? "" : " recommendation-page-solo"}`}>
       {selectedRecommendation && (
         <section className="recommendation-summary">
-          <div className="summary-title">매칭 요약</div>
-          <div className="compatibility-gauge" style={{ "--gauge-percent": `${gaugePercent}%` } as CSSProperties}>
-            <div className="gauge-ring">
-              <div className="gauge-center">
-                <div className="compatibility-score">
-                  <span className="compatibility-score-value">{displayedScore}</span>
-                  <span className="compatibility-score-unit">점</span>
+          <div className="recommendation-summary-title">매칭 요약</div>
+          <div className="recommendation-compatibility-gauge" style={{ "--gauge-percent": `${gaugePercent}%` } as CSSProperties}>
+            <div className="recommendation-gauge-ring">
+              <div className="recommendation-gauge-center">
+                <div className="recommendation-compatibility-score">
+                  <span className="recommendation-compatibility-score-value">{displayedScore}</span>
+                  <span className="recommendation-compatibility-score-unit">점</span>
                 </div>
               </div>
             </div>
@@ -213,21 +213,21 @@ function RecommendationPage() {
 
           <button
             type="button"
-            className="summary-compare-button"
+            className="recommendation-summary-compare-button"
             onClick={(event) => openComparison(event, selectedRecommendation)}
           >
             {selectedRecommendation.nickname}님과 자세히 비교
           </button>
 
-          <div className="my-survey-summary">
-            <div className="my-survey-header">
+          <div className="recommendation-my-survey-summary">
+            <div className="recommendation-my-survey-header">
               <h3>AI 설문 요약</h3>
             </div>
 
             {surveys === null && aiSurveyInsight === null ? (
-              <p className="survey-summary-empty">설문 답변을 불러오는 중...</p>
+              <p className="recommendation-survey-summary-empty">설문 답변을 불러오는 중...</p>
             ) : (
-              <p className="survey-insight">{surveyInsight}</p>
+              <p className="recommendation-survey-insight">{surveyInsight}</p>
             )}
           </div>
         </section>
@@ -264,10 +264,10 @@ function RecommendationPage() {
                       onClick={() => setSelectedUserId(item.userId)}
                       onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
                     >
-                      <div className="profile-card-main">
-                        <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
+                      <div className="recommendation-card-main">
+                        <img className="recommendation-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
-                        <div className="profile-card-info">
+                        <div className="recommendation-card-info">
                           <h2>
                             {item.nickname}
                             {item.emailVerified && (
@@ -298,19 +298,19 @@ function RecommendationPage() {
                         </div>
                       </div>
 
-                      <p className="profile-card-bio">
+                      <p className="recommendation-card-bio">
                         {item.bio && item.bio.trim() ? item.bio : "아직 소개글이 없어요."}
                       </p>
 
-                      <div className="profile-card-tags">
+                      <div className="recommendation-card-tags">
                         {item.tags.length > 0 ? (
                           item.tags.slice(0, 3).map((tag) => (
-                            <span key={tag} className="profile-card-tag">
+                            <span key={tag} className="recommendation-card-tag">
                               {tag}
                             </span>
                           ))
                         ) : (
-                          <span className="profile-card-tag is-empty">태그 준비 중</span>
+                          <span className="recommendation-card-tag is-empty">태그 준비 중</span>
                         )}
                       </div>
                     </article>

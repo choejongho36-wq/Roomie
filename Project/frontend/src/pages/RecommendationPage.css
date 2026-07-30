@@ -49,7 +49,7 @@
   font-size: 13.5px;
 }
 
-.summary-title {
+.recommendation-summary-title {
   color: #6d6575;
   font-size: 18px;
   font-weight: 700;
@@ -57,14 +57,14 @@
   text-align: center;
 }
 
-.compatibility-gauge {
+.recommendation-compatibility-gauge {
   position: relative;
   width: 220px;
   height: 220px;
   margin: 24px auto 16px;
 }
 
-.gauge-ring {
+.recommendation-gauge-ring {
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -75,7 +75,7 @@
   box-shadow: inset 0 0 0 12px #ffe8d6;
 }
 
-.gauge-center {
+.recommendation-gauge-center {
   width: 160px;
   height: 160px;
   border-radius: 50%;
@@ -88,7 +88,7 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
-.compatibility-score {
+.recommendation-compatibility-score {
   display: inline-flex;
   align-items: flex-end;
   justify-content: center;
@@ -97,23 +97,23 @@
   color: #ff6600;
 }
 
-.compatibility-score-value {
+.recommendation-compatibility-score-value {
   font-size: 56px;
   line-height: 1;
 }
 
-.compatibility-score-unit {
+.recommendation-compatibility-score-unit {
   font-size: 28px;
   line-height: 1;
 }
 
-.compatibility-label {
+.recommendation-compatibility-label {
   margin-top: 8px;
   font-size: 14px;
   color: #666;
 }
 
-.summary-note {
+.recommendation-summary-note {
   background: #fff4e6;
   border: 1px solid #ffd5a6;
   border-radius: 8px;
@@ -125,7 +125,7 @@
   text-align: center;
 }
 
-.summary-compare-button {
+.recommendation-summary-compare-button {
   align-self: center;
   width: 70%;
   display: flex;
@@ -145,18 +145,18 @@
   transition: background 180ms ease, color 180ms ease;
 }
 
-.summary-compare-button:hover {
+.recommendation-summary-compare-button:hover {
   background: #ff6600;
   color: #ffffff;
 }
 
-.my-survey-summary {
+.recommendation-my-survey-summary {
   border-top: 1px solid rgba(62, 44, 35, 0.25);
   margin-top: auto;
   padding-top: 20px;
 }
 
-.my-survey-header {
+.recommendation-my-survey-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -164,20 +164,20 @@
   margin-bottom: 14px;
 }
 
-.my-survey-header h3 {
+.recommendation-my-survey-header h3 {
   margin: 0;
   color: #6d6575;
   font-size: 18px;
   font-weight: 800;
 }
 
-.survey-summary-empty {
+.recommendation-survey-summary-empty {
   color: #888;
   font-size: 14px;
   line-height: 1.45;
 }
 
-.survey-insight {
+.recommendation-survey-insight {
   background: #fffaf6;
   border: 1px solid #f7eadf;
   border-radius: 8px;
@@ -260,7 +260,7 @@
   box-shadow: 0 18px 28px -6px rgba(62, 44, 35, 0.45);
 }
 
-.profile-card-main {
+.recommendation-card-main {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -269,7 +269,7 @@
   gap: 12px;
 }
 
-.profile-card-avatar {
+.recommendation-card-avatar {
   display: block;
   width: 96px;
   height: 96px;
@@ -280,7 +280,7 @@
   flex-shrink: 0;
 }
 
-.profile-card-score-badge {
+.recommendation-card-score-badge {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -296,28 +296,30 @@
   padding: 6px 13px;
 }
 
-.profile-card-score-badge strong {
+.recommendation-card-score-badge strong {
   font-variant-numeric: tabular-nums;
   font-size: 16px;
   font-weight: 800;
   color: #ff6600;
 }
 
-.profile-card-score-badge em {
+.recommendation-card-score-badge em {
   font-style: normal;
   font-size: 11px;
   font-weight: 700;
   color: rgba(62, 44, 35, 0.7);
 }
 
-.profile-card-info {
+
+.recommendation-card-info {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.profile-card-info h2 {
+.recommendation-card-info h2 {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -331,14 +333,15 @@
   overflow-wrap: anywhere;
 }
 
-.profile-card-info .verified-badge {
+.recommendation-card-info .verified-badge {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
   color: #ff6600;
 }
 
-.profile-card-meta {
+
+.recommendation-card-meta {
   margin: 8px 0 0;
   color: #777;
   font-size: 15px;
@@ -346,8 +349,28 @@
   overflow-wrap: anywhere;
 }
 
-.profile-card-bio {
+.recommendation-card-bio {
   width: 100%;
+
+.recommendation-card-info p {
+  margin: 6px 0 0;
+  color: rgba(62, 44, 35, 0.75);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.recommendation-card-info p + p {
+  margin-top: 3px;
+}
+
+.recommendation-card-info p span + span::before {
+  content: "·";
+  margin: 0 5px;
+  opacity: 0.5;
+}
+
+.recommendation-card-bio {
   margin: 12px 0 0;
   color: #555;
   font-size: 15px;
@@ -363,8 +386,7 @@
   overflow-wrap: anywhere;
   box-sizing: border-box;
 }
-
-.profile-card-tags {
+.recommendation-card-tags {
   width: 100%;
   margin: 10px 0 0;
   min-height: 20px;
@@ -374,7 +396,7 @@
   gap: 8px;
 }
 
-.profile-card-tag {
+.recommendation-card-tag {
   border-radius: 8px;
   background: #f6f6f6;
   color: #555;
@@ -384,7 +406,7 @@
   overflow-wrap: anywhere;
 }
 
-.profile-card-tag.is-empty {
+.recommendation-card-tag.is-empty {
   color: #999;
 }
 
@@ -840,8 +862,9 @@
     min-height: 340px;
     padding: 26px 20px 20px;
   }
+  
+  .recommendation-card-info p {
+    font-size: 12.5px;
 
-  .profile-card-meta {
-    font-size: 13px;
   }
 }
