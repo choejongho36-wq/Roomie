@@ -196,7 +196,7 @@ function ProfilePage() {
     <div className="mypage-panel">
       <div className="profile-card profile-card-vertical">
         {hasSurvey === false && (
-          <Link to="/survey" className="mypage-survey-alert">
+          <Link to="/survey" className="profile-survey-alert">
             설문조사를 아직 안 하셨어요!
             <br />
             완료하면 매칭이 시작돼요.

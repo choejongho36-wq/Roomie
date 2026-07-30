@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createInquiry, getInquiry, updateInquiry } from "../../api";
 import "../board/BoardWritePage.css";
@@ -17,12 +17,14 @@ const FORMAT_BUTTONS = [
 function InquiryWritePage() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { inquiryId } = useParams();
   const isEdit = Boolean(inquiryId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const presetCategory = (location.state as { category?: string } | null)?.category ?? null;
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(presetCategory);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
