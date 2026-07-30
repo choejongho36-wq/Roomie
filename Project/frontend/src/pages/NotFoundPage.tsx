@@ -8,6 +8,12 @@ function NotFoundPage() {
   return (
     <div className="not-found-page">
       <div className="not-found-icon">
+        <span className="not-found-question not-found-question-1" aria-hidden="true">
+          ?
+        </span>
+        <span className="not-found-question not-found-question-2" aria-hidden="true">
+          ?
+        </span>
         <img src={roomieLogo} alt="Roomie" />
       </div>
 

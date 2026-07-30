@@ -11,11 +11,10 @@
 }
 
 .not-found-icon {
+  position: relative;
   width: 140px;
   height: 140px;
   margin-bottom: 28px;
-  border-radius: 50%;
-  background: #fff1e8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,6 +24,28 @@
   width: 120px;
   height: 120px;
   object-fit: contain;
+}
+
+.not-found-question {
+  position: absolute;
+  color: #ff6600;
+  font-weight: 800;
+  line-height: 1;
+  user-select: none;
+}
+
+.not-found-question-1 {
+  top: -14px;
+  right: -14px;
+  font-size: 52px;
+  transform: rotate(14deg);
+}
+
+.not-found-question-2 {
+  bottom: 8px;
+  left: -16px;
+  font-size: 30px;
+  transform: rotate(-10deg);
 }
 
 .not-found-title {
