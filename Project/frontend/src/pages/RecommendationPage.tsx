@@ -8,6 +8,7 @@ import {
   getMySurveys,
   getRecommendations,
   getSurveyComparison,
+  getSurveyComparisonAiExplanation,
 } from "../api";
 import { surveyQuestions } from "../data/SurveyQuestions";
 import type { RecommendationResult, SurveyComparisonResult, SurveyResult } from "../types/survey";
@@ -66,10 +67,10 @@ function RecommendationPage() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
-  const [highlightedCategory, setHighlightedCategory] = useState<string | null>(null);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
+  const [aiExplanationError, setAiExplanationError] = useState("");
   const [error, setError] = useState("");
-  const comparisonItemRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setAiSurveyInsight(null);
@@ -168,9 +169,19 @@ function RecommendationPage() {
     setComparison(null);
     setComparisonError("");
     setComparisonLoadingUserId(item.userId);
+    setAiExplanation(null);
+    setAiExplanationError("");
+    setAiExplanationLoading(false);
 
     getSurveyComparison(token, item.userId)
-      .then(setComparison)
+      .then((result) => {
+        setComparison(result);
+        setAiExplanationLoading(true);
+        getSurveyComparisonAiExplanation(token, item.userId)
+          .then((res) => setAiExplanation(res.explanation))
+          .catch(() => setAiExplanationError("AI 설명을 불러오지 못했어요."))
+          .finally(() => setAiExplanationLoading(false));
+      })
       .catch(() => setComparisonError("설문 비교 데이터를 불러오지 못했습니다."))
       .finally(() => setComparisonLoadingUserId(null));
   };
@@ -179,18 +190,9 @@ function RecommendationPage() {
     setIsComparisonOpen(false);
     setComparisonError("");
     setComparisonLoadingUserId(null);
-    setHighlightedCategory(null);
-  };
-
-  const scrollToCategory = (category: string) => {
-    const target = comparisonItemRefs.current[category];
-    if (!target) return;
-
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-    setHighlightedCategory(category);
-
-    if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current);
-    highlightTimeoutRef.current = setTimeout(() => setHighlightedCategory(null), 1800);
+    setAiExplanation(null);
+    setAiExplanationError("");
+    setAiExplanationLoading(false);
   };
 
   return (
@@ -338,19 +340,7 @@ function RecommendationPage() {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="comparison-modal-header">
-              <div>
-                <p className="comparison-modal-eyebrow">설문 비교</p>
-                <h2 id="comparison-title">
-                  {comparison ? (
-                    <>
-                      {comparison.nickname}님과의 궁합
-                      <span className="comparison-modal-score-inline">{comparison.compatibilityScore}점</span>
-                    </>
-                  ) : (
-                    "궁합 비교"
-                  )}
-                </h2>
-              </div>
+              <p className="comparison-modal-eyebrow">설문 비교</p>
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
                 닫기
               </button>
@@ -363,70 +353,26 @@ function RecommendationPage() {
             {comparisonError && <p className="comparison-modal-error">{comparisonError}</p>}
 
             {comparison && (
-              <>
-                <div className="comparison-highlight-grid">
-                  <div className="comparison-highlight-panel comparison-highlight-panel-compact">
-                    <h3>맞는 포인트 TOP3</h3>
-                    <div className="comparison-highlight-chips">
-                      {comparison.topReasons.map((item) => (
-                        <button
-                          key={`reason-${item.category}`}
-                          type="button"
-                          className="comparison-highlight-chip"
-                          onClick={() => scrollToCategory(item.category)}
-                        >
-                          {item.category}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="comparison-highlight-panel comparison-highlight-panel-compact">
-                    <h3>다른 포인트 TOP3</h3>
-                    <div className="comparison-highlight-chips">
-                      {comparison.differences.map((item) => (
-                        <button
-                          key={`difference-${item.category}`}
-                          type="button"
-                          className="comparison-highlight-chip comparison-highlight-chip-diff"
-                          onClick={() => scrollToCategory(item.category)}
-                        >
-                          {item.category}
-                        </button>
-                      ))}
-                    </div>
+              <div className="comparison-modal-body">
+                <div className="comparison-hero">
+                  <p className="comparison-hero-title" id="comparison-title">
+                    {comparison.nickname}님과의 궁합
+                  </p>
+                  <div className="comparison-hero-score">
+                    <span className="comparison-hero-score-value">{comparison.compatibilityScore}</span>
+                    <span className="comparison-hero-score-unit">점</span>
                   </div>
                 </div>
 
-                <div className="comparison-table-wrap">
-                  <div className="comparison-compare-grid">
-                    {comparison.items.map((item) => (
-                      <div
-                        key={item.questionId}
-                        ref={(el) => {
-                          comparisonItemRefs.current[item.category] = el;
-                        }}
-                        className={`comparison-compare-card${
-                          item.category === highlightedCategory ? " is-target" : ""
-                        }`}
-                      >
-                        <div className="comparison-compare-card-header">
-                          <span className="comparison-compare-category">{item.category}</span>
-                          <span className={`comparison-level level-${item.difference}`}>
-                            {item.matchLevel}
-                          </span>
-                        </div>
-                        <div className="comparison-compare-answer">
-                          <span className="comparison-compare-answer-label">나</span>
-                          <span className="comparison-compare-answer-value">{item.myAnswer}</span>
-                        </div>
-                        <div className="comparison-compare-answer">
-                          <span className="comparison-compare-answer-label">{comparison.nickname}</span>
-                          <span className="comparison-compare-answer-value">{item.otherAnswer}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="comparison-ai-explanation">
+                  <p className="comparison-ai-label">AI 궁합 설명</p>
+                  {aiExplanationLoading ? (
+                    <p className="comparison-ai-loading">AI가 설명을 작성하고 있어요...</p>
+                  ) : aiExplanationError ? (
+                    <p className="comparison-ai-error">{aiExplanationError}</p>
+                  ) : (
+                    <p className="comparison-ai-text">{aiExplanation}</p>
+                  )}
                 </div>
 
                 <div className="comparison-modal-footer">
@@ -442,7 +388,7 @@ function RecommendationPage() {
                     {comparison.nickname}님에게 첫 메시지 보내기
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </section>
         </div>
