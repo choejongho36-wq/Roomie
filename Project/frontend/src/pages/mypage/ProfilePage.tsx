@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, updateBio, changePassword, getMySurveys, API_ORIGIN } from "../../api";
+import { updateTags, updateBio, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
 import {
   PROFILE_TAG_GROUPS,
   PROFILE_TAGS,
