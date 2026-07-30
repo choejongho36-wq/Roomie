@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 // 채팅에서 "룸메이트 확정"을 누른 두 사용자를 연결하는 엔티티.
@@ -35,14 +34,11 @@ public class MatchedPair {
     @Column(length = 100)
     private String region;
 
-    @Column(name = "budget_min")
-    private Integer budgetMin;
+    @Column(name = "deposit_max")
+    private Integer depositMax; // 보증금 최대
 
-    @Column(name = "budget_max")
-    private Integer budgetMax;
-
-    @Column(name = "move_in_date")
-    private LocalDate moveInDate;
+    @Column(name = "monthly_rent_max")
+    private Integer monthlyRentMax; // 월세 최대
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -68,11 +64,10 @@ public class MatchedPair {
         return userAId.equals(userId) || userBId.equals(userId);
     }
 
-    public void updateConditions(String region, Integer budgetMin, Integer budgetMax, LocalDate moveInDate) {
+    public void updateConditions(String region, Integer depositMax, Integer monthlyRentMax) {
         this.region = region;
-        this.budgetMin = budgetMin;
-        this.budgetMax = budgetMax;
-        this.moveInDate = moveInDate;
+        this.depositMax = depositMax;
+        this.monthlyRentMax = monthlyRentMax;
     }
 
     public void confirm() {

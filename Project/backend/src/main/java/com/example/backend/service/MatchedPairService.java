@@ -39,7 +39,7 @@ public class MatchedPairService {
 
     public MatchedPairResponse updateConditions(Long pairId, Long requestUserId, MatchedPairConditionsRequest request) {
         MatchedPair pair = findPairForUser(pairId, requestUserId);
-        pair.updateConditions(request.region(), request.budgetMin(), request.budgetMax(), request.moveInDate());
+        pair.updateConditions(request.region(), request.depositMax(), request.monthlyRentMax());
         matchedPairRepository.save(pair);
         return toResponse(pair, requestUserId);
     }
@@ -65,9 +65,8 @@ public class MatchedPairService {
                 pair.getId(),
                 pair.getStatus(),
                 pair.getRegion(),
-                pair.getBudgetMin(),
-                pair.getBudgetMax(),
-                pair.getMoveInDate(),
+                pair.getDepositMax(),
+                pair.getMonthlyRentMax(),
                 pair.getCreatedAt(),
                 new MatchedPairResponse.PartnerInfo(me.getUserId(), me.getNickname(), me.getProfileImageUrl(), me.getRegion()),
                 new MatchedPairResponse.PartnerInfo(partner.getUserId(), partner.getNickname(), partner.getProfileImageUrl(), partner.getRegion()),

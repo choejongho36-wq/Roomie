@@ -363,7 +363,7 @@ export const getMatchedPair = async (token: string, pairId: number): Promise<Mat
 export const updateMatchedPairConditions = async (
   token: string,
   pairId: number,
-  conditions: { region: string | null; budgetMin: number | null; budgetMax: number | null; moveInDate: string | null }
+  conditions: { region: string | null; depositMax: number | null; monthlyRentMax: number | null }
 ): Promise<MatchedPair> => {
   const response = await axios.put<MatchedPair>(
     `${API_BASE_URL}/matched-pairs/${pairId}/conditions`,
