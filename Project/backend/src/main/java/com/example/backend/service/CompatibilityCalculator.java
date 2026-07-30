@@ -39,7 +39,7 @@ public class CompatibilityCalculator {
             2, // 15 음주 후 행동
             1, // 16 야식
             2, // 17 실내 취식
-            2, // 18 실내 온도
+            3, // 18 청소 방식
             2, // 19 월 생활비
             2  // 20 방 크기
     };
@@ -47,7 +47,7 @@ public class CompatibilityCalculator {
     // 흡연은 "얼마나 피우냐"의 정도가 아니라 "피우냐 / 아예 안 피우냐"의 범주 문제다.
     // 하드 캡 대신 위 WEIGHTS의 높은 가중치로 자연스럽게 점수를 크게 끌어내린다.
     private static final int SMOKING_QUESTION_ID = 13;
-    private static final int SMOKER_MAX_ANSWER = 4; // 1~4 흡연(전자담배 포함), 5 비흡연
+    private static final int SMOKER_MAX_ANSWER = 1; // 1 흡연, 2 비흡연
 
     /**
      * @param a 내 답변 목록 (각 원소 1~5)
