@@ -5,6 +5,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
+import FindIdPage from "./pages/FindIdPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPage from "./pages/MyPage";
@@ -25,10 +27,8 @@ import BoardDetailPage from "./pages/board/BoardDetailPage";
 import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
-import NotFoundPage from "./pages/NotFoundPage";
 import MatchedPairPage from "./pages/MatchedPairPage";
 import HousePage from "./pages/HousePage";
-
 
 function App() {
   return (
@@ -39,6 +39,8 @@ function App() {
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/find-id" element={<FindIdPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
             <Route path="/complete-profile" element={<CompleteProfilePage />} />
             <Route path="/survey" element={<SurveyPage />} />
@@ -65,7 +67,6 @@ function App() {
               <Route path="chat" element={<ChatPage />} />
               <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
             </Route>
-            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Footer />
         </ChatProvider>
