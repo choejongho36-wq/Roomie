@@ -2,6 +2,7 @@ import axios from "axios";
 import type { Comment, Inquiry, InquiryRequest, Page, Post, PostRequest, User } from "./types";
 import type {
   RecommendationResult,
+  SurveyComparisonExplanationResult,
   SurveyComparisonResult,
   SurveyResult,
   SurveySummaryResult,
@@ -298,6 +299,17 @@ export const getSurveyComparison = async (
 ): Promise<SurveyComparisonResult> => {
   const response = await axios.get<SurveyComparisonResult>(
     `${API_BASE_URL}/recommendations/${userId}/comparison`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const getSurveyComparisonAiExplanation = async (
+  token: string,
+  userId: number
+): Promise<SurveyComparisonExplanationResult> => {
+  const response = await axios.get<SurveyComparisonExplanationResult>(
+    `${API_BASE_URL}/recommendations/${userId}/comparison/ai-explanation`,
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return response.data;
