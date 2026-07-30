@@ -29,14 +29,24 @@ function InquiryListPage() {
   const [error, setError] = useState("");
 
   const loadInquiries = () => {
-    getInquiries()
+    if (!token) return;
+    getInquiries(token)
       .then(setInquiries)
       .catch(() => setError("문의 목록을 불러오지 못했습니다."));
   };
 
   useEffect(() => {
     loadInquiries();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  if (!token) {
+    return (
+      <div className="page board-list-page">
+        <p className="board-empty">문의 게시판은 로그인 후 이용할 수 있어요.</p>
+      </div>
+    );
+  }
 
   const toggle = (inquiryId: number) => {
     setOpenId((prev) => (prev === inquiryId ? null : inquiryId));

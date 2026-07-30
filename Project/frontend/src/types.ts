@@ -88,4 +88,5 @@ export interface User {
   tags: string[];
   bio: string | null;
   provider: string;
+  emailVerified: boolean;
 }

@@ -211,25 +211,12 @@
   transform: skewX(-20deg);
 }
 
-/* :empty는 "자식 노드가 아예 없을 때"만 잡아내는데, 숨겨둔 이미지 컨테이너가 항상
-   자식으로 남아있어서 :empty만으로는 부족하다(텍스트 유무와 무관하게 항상 자식이
-   1개 있는 상태가 됨). 그래서 실제 텍스트 유무는 JS(updateEmptyState)가 판단해서
-   is-empty 클래스로 토글하고, 진짜 완전히 빈 최초 상태만 :empty로 보조한다. */
-.board-write-content:empty:before,
-.board-write-content.is-empty:before {
+.board-write-content:empty:before {
   content: attr(data-placeholder);
   color: #aaa;
 }
 
-/* 글쓰기 편집창에서는 안 보이게 숨긴다 (아래 썸네일 목록으로만 확인).
-   실제 이미지 태그는 description HTML에 그대로 남아 있어서 등록 시 저장되고,
-   게시글 상세 화면(BoardDetailPage)에는 정상적으로 표시된다. */
-.board-write-content [data-role="inline-images"] {
-  display: none;
-}
-
-.board-write-tags input,
-.board-write-images input {
+.board-write-tags input {
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 10px 12px;
@@ -266,60 +253,6 @@
   line-height: 1;
   cursor: pointer;
   padding: 0;
-}
-
-.board-write-image-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.board-write-image-item {
-  position: relative;
-  width: 96px;
-  height: 96px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid #eee;
-}
-
-.board-write-image-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.board-write-image-item button {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 12px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.board-write-image-add {
-  width: 96px;
-  height: 96px;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  background: #fafafa;
-  color: #888;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.board-write-image-add:hover {
-  border-color: #ff6600;
-  color: #ff6600;
 }
 
 .board-write-actions {

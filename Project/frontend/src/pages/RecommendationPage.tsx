@@ -266,7 +266,26 @@ function RecommendationPage() {
                         <img className="profile-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
                         <div className="profile-card-info">
-                          <h2>{item.nickname}</h2>
+                          <h2>
+                            {item.nickname}
+                            {item.emailVerified && (
+                              <span className="verified-badge" title="이메일 인증 완료" aria-label="이메일 인증 완료">
+                                <svg width="16" height="18" viewBox="0 0 18 20" fill="none" aria-hidden="true">
+                                  <path
+                                    d="M9 1l7 2.6v5.2c0 5-3 8.4-7 10.2-4-1.8-7-5.2-7-10.2V3.6L9 1z"
+                                    fill="currentColor"
+                                  />
+                                  <path
+                                    d="M5.8 9.6l2.3 2.3L12.4 7"
+                                    stroke="#fff"
+                                    strokeWidth="1.6"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </span>
+                            )}
+                          </h2>
                           <p>{item.age}세</p>
                           <p>
                             <span>{item.job}</span>

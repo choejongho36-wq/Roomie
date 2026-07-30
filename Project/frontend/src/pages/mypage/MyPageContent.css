@@ -66,6 +66,13 @@
   margin-top: 8px;
 }
 
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #f16526;
+}
+
 .profile-inline-edit-btn,
 .profile-box-edit-btn {
   border: none;

@@ -68,7 +68,8 @@ public class CompatibilityService {
                 score,
                 calculateAge(user.getBirthDate()),
                 user.getJob(),
-                user.getRegion()
+                user.getRegion(),
+                user.getEmailVerified()
         );
     }
 

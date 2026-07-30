@@ -93,13 +93,17 @@ export const deleteComment = async (token: string, commentId: number): Promise<v
   });
 };
 
-export const getInquiries = async (): Promise<Inquiry[]> => {
-  const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/inquiries`);
+export const getInquiries = async (token: string): Promise<Inquiry[]> => {
+  const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/inquiries`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 
-export const getInquiry = async (inquiryId: number): Promise<Inquiry> => {
-  const response = await axios.get<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`);
+export const getInquiry = async (token: string, inquiryId: number): Promise<Inquiry> => {
+  const response = await axios.get<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 

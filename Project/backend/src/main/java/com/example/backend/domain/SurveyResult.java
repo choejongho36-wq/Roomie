@@ -26,7 +26,7 @@ public class SurveyResult {
     private String answers;
 
     @Setter
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "vector_json", columnDefinition = "TEXT")
     private String vector;
 
     @Column(name = "completed_at", nullable = false, updatable = false)

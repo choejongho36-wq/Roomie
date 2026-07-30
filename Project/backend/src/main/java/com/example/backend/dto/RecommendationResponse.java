@@ -11,5 +11,6 @@ public record RecommendationResponse(
         Integer compatibilityScore,
         Integer age,
         String job,
-        String region
+        String region,
+        Boolean emailVerified
 ) {}

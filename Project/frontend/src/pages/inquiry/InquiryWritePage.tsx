@@ -30,8 +30,8 @@ function InquiryWritePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isEdit) return;
-    getInquiry(Number(inquiryId)).then((inquiry) => {
+    if (!isEdit || !token) return;
+    getInquiry(token, Number(inquiryId)).then((inquiry) => {
       setTitle(inquiry.title);
       setContent(inquiry.content);
       setSelectedCategory(inquiry.category ?? null);
