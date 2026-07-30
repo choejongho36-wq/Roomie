@@ -8,10 +8,12 @@ import com.example.backend.dto.PasswordChangeRequest;
 import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
+import com.example.backend.dto.WithdrawRequest;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -246,6 +248,20 @@ public class UserController {
         user.updateProfileImage(null);
         userRepository.save(user);
         return toResponse(user);
+    }
+
+    // 소셜 로그인 계정은 비밀번호를 본인이 모르니(자동 생성된 값), 그 경우엔 비밀번호 확인을 건너뜀
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> withdraw(Authentication authentication, @RequestBody WithdrawRequest request) {
+        User user = findUser(authentication);
+        if (!user.isSocialAccount()) {
+            if (request.password() == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
+                throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            }
+        }
+        user.withdraw();
+        userRepository.save(user);
+        return ResponseEntity.ok().build();
     }
 
     private void deleteImageFile(String profileImageUrl) {

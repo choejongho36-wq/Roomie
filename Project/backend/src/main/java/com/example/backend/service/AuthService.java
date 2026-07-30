@@ -7,6 +7,9 @@ import com.example.backend.dto.NicknameCheckResponse;
 import com.example.backend.dto.LoginRequest;
 import com.example.backend.dto.LoginResponse;
 import com.example.backend.dto.SignupRequest;
+import com.example.backend.dto.FindIdResponse;
+import com.example.backend.dto.PasswordResetRequest;
+import com.example.backend.dto.PasswordResetConfirmRequest;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -81,6 +84,49 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
+        if ("WITHDRAWN".equals(user.getStatus())) {
+            throw new IllegalArgumentException("탈퇴한 계정입니다.");
+        }
         return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
+    }
+
+    // ===== 아이디 찾기 =====
+
+    // 이메일 인증번호 발송은 컨트롤러에서 emailVerificationService.sendVerificationCodeForAccountRecovery()로 바로 호출
+
+    public FindIdResponse findLoginId(String email) {
+        if (!emailVerificationService.isVerified(email)) {
+            throw new IllegalArgumentException("이메일 인증을 먼저 완료해주세요.");
+        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("가입된 계정을 찾을 수 없습니다."));
+        emailVerificationService.invalidate(email); // 한 번 조회했으면 재사용 못 하게 무효화
+        return new FindIdResponse(user.getLoginId());
+    }
+
+    // ===== 비밀번호 재설정 =====
+
+    // 아이디+이메일이 실제로 같은 계정 소유인지 먼저 확인한 뒤에만 인증번호를 보냄
+    public void requestPasswordReset(PasswordResetRequest request) {
+        User user = userRepository.findByLoginId(request.loginId())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다."));
+        if (!user.getEmail().equals(request.email())) {
+            throw new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다.");
+        }
+        emailVerificationService.sendVerificationCodeForAccountRecovery(request.email());
+    }
+
+    public void resetPassword(PasswordResetConfirmRequest request) {
+        if (!emailVerificationService.isVerified(request.email())) {
+            throw new IllegalArgumentException("이메일 인증을 먼저 완료해주세요.");
+        }
+        User user = userRepository.findByLoginId(request.loginId())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다."));
+        if (!user.getEmail().equals(request.email())) {
+            throw new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다.");
+        }
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        emailVerificationService.invalidate(request.email());
     }
 }
