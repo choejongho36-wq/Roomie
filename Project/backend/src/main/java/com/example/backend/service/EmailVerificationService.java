@@ -36,7 +36,10 @@ public class EmailVerificationService {
 
         emailVerificationRepository.findByEmail(email)
                 .ifPresentOrElse(
-                        existing -> existing.reissue(code, expiresAt),
+                        existing -> {
+                            existing.reissue(code, expiresAt);
+                            emailVerificationRepository.save(existing); // detached 상태라 명시적 save 필요
+                        },
                         () -> emailVerificationRepository.save(new EmailVerification(email, code, expiresAt))
                 );
 
@@ -55,6 +58,7 @@ public class EmailVerificationService {
             throw new IllegalArgumentException("인증번호가 일치하지 않습니다.");
         }
         verification.markVerified();
+        emailVerificationRepository.save(verification); // detached 상태라 명시적 save 필요
     }
 
     // 회원가입 시점에 서버가 최종적으로 다시 확인하는 용도 (프론트 우회 방지)
