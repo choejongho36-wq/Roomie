@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { updateTags, updateBio, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
@@ -36,7 +36,8 @@ function extractErrorMessage(err: unknown, fallback: string): string {
 }
 
 function ProfilePage() {
-  const { user, token, setUser } = useAuth();
+  const { user, token, setUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
   const [editingTags, setEditingTags] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>([]);
@@ -55,6 +56,10 @@ function ProfilePage() {
   const [draftNewPasswordConfirm, setDraftNewPasswordConfirm] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [withdrawPassword, setWithdrawPassword] = useState("");
+  const [withdrawError, setWithdrawError] = useState("");
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -187,8 +192,25 @@ function ProfilePage() {
     }
   };
 
-  const handleWithdraw = () => {
-    alert("준비 중인 기능이에요.");
+  const isSocialAccount = Boolean(user?.provider && user.provider !== "LOCAL");
+
+  const handleConfirmWithdraw = async () => {
+    if (!token) return;
+    setWithdrawError("");
+    if (!isSocialAccount && !withdrawPassword) {
+      setWithdrawError("비밀번호를 입력해주세요.");
+      return;
+    }
+    setWithdrawing(true);
+    try {
+      await withdraw(token, withdrawPassword);
+      logout();
+      navigate("/");
+    } catch (err) {
+      setWithdrawError(extractErrorMessage(err, "회원탈퇴에 실패했습니다."));
+    } finally {
+      setWithdrawing(false);
+    }
   };
 
 
@@ -519,9 +541,55 @@ function ProfilePage() {
           </div>
         </div>
 
-        <button type="button" className="profile-withdraw-btn" onClick={handleWithdraw}>
-          회원탈퇴
-        </button>
+        {!showWithdrawConfirm ? (
+          <button
+            type="button"
+            className="profile-withdraw-btn"
+            onClick={() => {
+              setShowWithdrawConfirm(true);
+              setWithdrawError("");
+              setWithdrawPassword("");
+            }}
+          >
+            회원탈퇴
+          </button>
+        ) : (
+          <div className="profile-password-box">
+            <div className="profile-bio-editor">
+              <p className="mypage-error" style={{ color: "#333", fontWeight: 600 }}>
+                정말 탈퇴하시겠어요? 이 작업은 되돌릴 수 없어요.
+              </p>
+              {!isSocialAccount && (
+                <input
+                  type="password"
+                  className="profile-nickname-input"
+                  placeholder="비밀번호 확인"
+                  value={withdrawPassword}
+                  onChange={(e) => setWithdrawPassword(e.target.value)}
+                />
+              )}
+              {withdrawError && <p className="mypage-error">{withdrawError}</p>}
+              <div className="profile-tags-actions">
+                <button
+                  type="button"
+                  className="mypage-avatar-btn mypage-avatar-btn-delete"
+                  onClick={handleConfirmWithdraw}
+                  disabled={withdrawing}
+                >
+                  {withdrawing ? "처리 중..." : "탈퇴하기"}
+                </button>
+                <button
+                  type="button"
+                  className="mypage-avatar-btn mypage-avatar-btn-change"
+                  onClick={() => setShowWithdrawConfirm(false)}
+                  disabled={withdrawing}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
