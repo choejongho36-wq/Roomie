@@ -174,13 +174,13 @@ public class DataInitializer {
         for (SurveyResult surveyResult : surveyResultRepository.findAll()) {
             boolean updated = false;
             String normalizedAnswers = normalizeJson(surveyResult.getAnswers());
-            if (!normalizedAnswers.equals(surveyResult.getAnswers())) {
+            if (!java.util.Objects.equals(normalizedAnswers, surveyResult.getAnswers())) {
                 surveyResult.setAnswers(normalizedAnswers);
                 updated = true;
             }
 
             String normalizedVector = normalizeJson(surveyResult.getVector());
-            if (!normalizedVector.equals(surveyResult.getVector())) {
+            if (!java.util.Objects.equals(normalizedVector, surveyResult.getVector())) {
                 surveyResult.setVector(normalizedVector);
                 updated = true;
             }
