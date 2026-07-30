@@ -28,6 +28,9 @@ public class Comment {
     @Column(nullable = false, length = 500)
     private String content;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -46,5 +49,10 @@ public class Comment {
 
     public void editContent(String content) {
         this.content = content;
+    }
+
+    // 답글의 스레드 구조와 @멘션이 깨지지 않도록, 실제로 행을 지우지 않고 표시만 바꾼다.
+    public void markDeleted() {
+        this.deleted = true;
     }
 }
