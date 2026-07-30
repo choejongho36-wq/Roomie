@@ -310,6 +310,7 @@
   color: rgba(62, 44, 35, 0.7);
 }
 
+
 .recommendation-card-info {
   flex: 1;
   min-width: 0;
@@ -338,6 +339,18 @@
   flex-shrink: 0;
   color: #ff6600;
 }
+
+
+.recommendation-card-meta {
+  margin: 8px 0 0;
+  color: #777;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.recommendation-card-bio {
+  width: 100%;
 
 .recommendation-card-info p {
   margin: 6px 0 0;
@@ -373,8 +386,8 @@
   overflow-wrap: anywhere;
   box-sizing: border-box;
 }
-
 .recommendation-card-tags {
+  width: 100%;
   margin: 10px 0 0;
   min-height: 20px;
   display: flex;
@@ -384,13 +397,17 @@
 }
 
 .recommendation-card-tag {
-  font-size: 11.5px;
+  border-radius: 8px;
+  background: #f6f6f6;
+  color: #555;
+  padding: 5px 9px;
+  font-size: 12px;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 
 .recommendation-card-tag.is-empty {
-  color: rgba(62, 44, 35, 0.55);
+  color: #999;
 }
 
 .profile-compare-button {
@@ -845,8 +862,9 @@
     min-height: 340px;
     padding: 26px 20px 20px;
   }
-
+  
   .recommendation-card-info p {
     font-size: 12.5px;
+
   }
 }
