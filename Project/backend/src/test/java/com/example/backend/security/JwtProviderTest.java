@@ -16,7 +16,7 @@ class JwtProviderTest {
         String token = jwtProvider.createToken("user@example.com");
 
         assertTrue(jwtProvider.isValid(token));
-        assertEquals("user@example.com", jwtProvider.getEmail(token));
+        assertEquals("user@example.com", jwtProvider.getLoginId(token));
     }
 
     @Test

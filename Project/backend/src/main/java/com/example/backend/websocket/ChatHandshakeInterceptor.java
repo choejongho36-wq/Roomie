@@ -37,7 +37,7 @@ public class ChatHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
 
-        User user = userRepository.findByLoginId(jwtProvider.getEmail(token)).orElse(null);
+        User user = userRepository.findByLoginId(jwtProvider.getLoginId(token)).orElse(null);
         if (user == null) {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
