@@ -7,6 +7,7 @@ import type {
   SurveySummaryResult,
 } from "./types/survey";
 import type { ChatMessage, Conversation, NotificationItem } from "./types/chat";
+import type { MatchedPair } from "./types/matchedPair";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
@@ -328,4 +329,34 @@ export const markNotificationRead = async (token: string, notificationId: number
   await axios.patch(`${API_BASE_URL}/notifications/${notificationId}/read`, null, {
     headers: { Authorization: `Bearer ${token}` },
   });
+};
+
+// 채팅방에서 "룸메이트 확정" 버튼을 누르면 호출 (이미 있으면 기존 페어를 그대로 돌려줌)
+export const createOrGetMatchedPair = async (token: string, partnerUserId: number): Promise<MatchedPair> => {
+  const response = await axios.post<MatchedPair>(
+    `${API_BASE_URL}/matched-pairs`,
+    { partnerUserId },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+export const getMatchedPair = async (token: string, pairId: number): Promise<MatchedPair> => {
+  const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/${pairId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const updateMatchedPairConditions = async (
+  token: string,
+  pairId: number,
+  conditions: { region: string | null; budgetMin: number | null; budgetMax: number | null; moveInDate: string | null }
+): Promise<MatchedPair> => {
+  const response = await axios.put<MatchedPair>(
+    `${API_BASE_URL}/matched-pairs/${pairId}/conditions`,
+    conditions,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
 };

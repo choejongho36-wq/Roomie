@@ -70,7 +70,8 @@ public class MatchedPairService {
                 pair.getMoveInDate(),
                 pair.getCreatedAt(),
                 new MatchedPairResponse.PartnerInfo(me.getUserId(), me.getNickname(), me.getProfileImageUrl(), me.getRegion()),
-                new MatchedPairResponse.PartnerInfo(partner.getUserId(), partner.getNickname(), partner.getProfileImageUrl(), partner.getRegion())
+                new MatchedPairResponse.PartnerInfo(partner.getUserId(), partner.getNickname(), partner.getProfileImageUrl(), partner.getRegion()),
+                ExternalSearchLinkBuilder.build(pair)
         );
     }
 }
