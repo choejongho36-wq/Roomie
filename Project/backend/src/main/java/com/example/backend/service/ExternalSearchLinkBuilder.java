@@ -18,17 +18,22 @@ public class ExternalSearchLinkBuilder {
         String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
 
         double[] coordinate = DistrictCoordinates.findCoordinate(pair.getRegion());
-        // 구 하나가 화면에 적당히 들어오는 줌 레벨 (다방 URL 예시들 기준 13 정도가 적당함)
-        // Locale.US로 고정: 서버 로케일에 따라 소수점이 쉼표(,)로 바뀌는 걸 방지
-        String dabangMapUrl = String.format(
-                java.util.Locale.US,
-                "https://www.dabangapp.com/map/onetwo?m_lat=%s&m_lng=%s&m_zoom=13",
-                coordinate[0], coordinate[1]
-        );
+
+        StringBuilder dabangUrl = new StringBuilder("https://www.dabangapp.com/map/onetwo?");
+        // 보증금/월세 조건이 있으면 지도 좌표보다 먼저 붙여야 정상 반영됨 (실제 다방 공유링크 구조 기준)
+        if (pair.getDepositMax() != null) {
+            dabangUrl.append("depositRangeMax=").append(pair.getDepositMax()).append("&");
+        }
+        if (pair.getMonthlyRentMax() != null) {
+            dabangUrl.append("priceRangeMax=").append(pair.getMonthlyRentMax()).append("&");
+        }
+        // 구 단위보다 한 단계 더 확대된 줌 (동네가 잘 보이는 수준)
+        dabangUrl.append(String.format(java.util.Locale.US, "m_lat=%s&m_lng=%s&m_zoom=15", coordinate[0], coordinate[1]));
+
         String naverSearchUrl = "https://search.naver.com/search.naver?query=" + encoded;
         String googleSearchUrl = "https://www.google.com/search?q=" + encoded;
 
-        return new MatchedPairResponse.ExternalLinks(dabangMapUrl, naverSearchUrl, googleSearchUrl);
+        return new MatchedPairResponse.ExternalLinks(dabangUrl.toString(), naverSearchUrl, googleSearchUrl);
     }
 
     private static String buildQuery(MatchedPair pair) {
@@ -39,10 +44,11 @@ public class ExternalSearchLinkBuilder {
 
         sb.append(" 원룸 투룸 매물");
 
-        if (pair.getBudgetMin() != null && pair.getBudgetMax() != null) {
-            sb.append(" ").append(pair.getBudgetMin()).append("~").append(pair.getBudgetMax()).append("만원");
-        } else if (pair.getBudgetMax() != null) {
-            sb.append(" ").append(pair.getBudgetMax()).append("만원 이하");
+        if (pair.getDepositMax() != null) {
+            sb.append(" 보증금 ").append(pair.getDepositMax()).append("만원 이하");
+        }
+        if (pair.getMonthlyRentMax() != null) {
+            sb.append(" 월세 ").append(pair.getMonthlyRentMax()).append("만원 이하");
         }
 
         return sb.toString();

@@ -15,8 +15,8 @@ export interface MatchedPair {
   id: number;
   status: "SEARCHING" | "CONFIRMED";
   region: string | null;
-  budgetMin: number | null;
-  budgetMax: number | null;
+  depositMax: number | null;
+  monthlyRentMax: number | null;
   moveInDate: string | null;
   createdAt: string;
   me: MatchedPairPartnerInfo;

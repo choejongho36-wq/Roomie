@@ -35,11 +35,11 @@ public class MatchedPair {
     @Column(length = 100)
     private String region;
 
-    @Column(name = "budget_min")
-    private Integer budgetMin;
+    @Column(name = "deposit_max")
+    private Integer depositMax; // 보증금 최대
 
-    @Column(name = "budget_max")
-    private Integer budgetMax;
+    @Column(name = "monthly_rent_max")
+    private Integer monthlyRentMax; // 월세 최대
 
     @Column(name = "move_in_date")
     private LocalDate moveInDate;
@@ -68,10 +68,10 @@ public class MatchedPair {
         return userAId.equals(userId) || userBId.equals(userId);
     }
 
-    public void updateConditions(String region, Integer budgetMin, Integer budgetMax, LocalDate moveInDate) {
+    public void updateConditions(String region, Integer depositMax, Integer monthlyRentMax, LocalDate moveInDate) {
         this.region = region;
-        this.budgetMin = budgetMin;
-        this.budgetMax = budgetMax;
+        this.depositMax = depositMax;
+        this.monthlyRentMax = monthlyRentMax;
         this.moveInDate = moveInDate;
     }
 

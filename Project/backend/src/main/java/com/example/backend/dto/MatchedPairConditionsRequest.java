@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public record MatchedPairConditionsRequest(
         String region,
-        Integer budgetMin,
-        Integer budgetMax,
+        Integer depositMax,
+        Integer monthlyRentMax,
         LocalDate moveInDate
 ) {}

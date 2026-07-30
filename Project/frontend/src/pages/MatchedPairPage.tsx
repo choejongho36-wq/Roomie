@@ -17,8 +17,8 @@ function MatchedPairPage() {
   const [loadError, setLoadError] = useState("");
 
   const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
+  const [depositMax, setDepositMax] = useState("");
+  const [monthlyRentMax, setMonthlyRentMax] = useState("");
   const [moveInDate, setMoveInDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -30,8 +30,8 @@ function MatchedPairPage() {
         setPair(data);
         const parsed = parseRegionToken(data.region);
         setRegionTokens(parsed ? [parsed] : []);
-        setBudgetMin(data.budgetMin != null ? String(data.budgetMin) : "");
-        setBudgetMax(data.budgetMax != null ? String(data.budgetMax) : "");
+        setDepositMax(data.depositMax != null ? String(data.depositMax) : "");
+        setMonthlyRentMax(data.monthlyRentMax != null ? String(data.monthlyRentMax) : "");
         setMoveInDate(data.moveInDate ?? "");
       })
       .catch(() => setLoadError("정보를 불러오지 못했어요. 접근 권한이 없거나 존재하지 않는 페이지예요."));
@@ -44,8 +44,8 @@ function MatchedPairPage() {
     try {
       const updated = await updateMatchedPairConditions(token, Number(id), {
         region: regionTokens[0]?.label ?? null,
-        budgetMin: budgetMin ? Number(budgetMin) : null,
-        budgetMax: budgetMax ? Number(budgetMax) : null,
+        depositMax: depositMax ? Number(depositMax) : null,
+        monthlyRentMax: monthlyRentMax ? Number(monthlyRentMax) : null,
         moveInDate: moveInDate || null,
       });
       setPair(updated);
@@ -119,21 +119,21 @@ function MatchedPairPage() {
           </label>
           <div className="matched-pair-form-row">
             <label>
-              예산(최소, 만원)
+              보증금 최대 (만원)
               <input
                 type="number"
-                value={budgetMin}
-                onChange={(e) => setBudgetMin(e.target.value)}
-                placeholder="예) 500"
+                value={depositMax}
+                onChange={(e) => setDepositMax(e.target.value)}
+                placeholder="예) 1000"
               />
             </label>
             <label>
-              예산(최대, 만원)
+              월세 최대 (만원)
               <input
                 type="number"
-                value={budgetMax}
-                onChange={(e) => setBudgetMax(e.target.value)}
-                placeholder="예) 1000"
+                value={monthlyRentMax}
+                onChange={(e) => setMonthlyRentMax(e.target.value)}
+                placeholder="예) 58"
               />
             </label>
           </div>
