@@ -25,10 +25,6 @@ public class SurveyResult {
     @Column(nullable = false, length = 200)
     private String answers;
 
-    @Setter
-    @Column(name = "vector_json", columnDefinition = "TEXT")
-    private String vector;
-
     @Column(name = "completed_at", nullable = false, updatable = false)
     private LocalDateTime completedAt;
 
@@ -37,9 +33,8 @@ public class SurveyResult {
         this.completedAt = LocalDateTime.now();
     }
 
-    public SurveyResult(Long userId, String answers, String vector) {
+    public SurveyResult(Long userId, String answers) {
         this.userId = userId;
         this.answers = answers;
-        this.vector = vector;
     }
 }
