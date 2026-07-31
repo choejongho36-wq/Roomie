@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
@@ -21,7 +21,7 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { token, user, login, logout } = useAuth();
-  const { notifications, unreadCount, markAsRead } = useChat();
+  const { notifications, unreadCount, removeNotification, clearAllNotifications } = useChat();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
@@ -44,12 +44,17 @@ function Navbar() {
   };
 
   const handleNotificationClick = (notification: NotificationItem) => {
-    markAsRead(notification.notificationId);
+    removeNotification(notification.notificationId);
     if (notification.type === "COMMENT_REPLY" && notification.targetId) {
       navigate(`/board/${notification.targetId}`);
     } else {
       navigate(`/mypage/chat?userId=${notification.senderId}`);
     }
+  };
+
+  const handleDeleteNotification = (e: MouseEvent, notificationId: number) => {
+    e.stopPropagation();
+    removeNotification(notificationId);
   };
 
   return (
@@ -99,21 +104,37 @@ function Navbar() {
                 {notifications.length === 0 ? (
                   <p className="navbar-notify-empty">알림이 없어요.</p>
                 ) : (
-                  notifications.map((notification) => (
-                    <button
-                      key={notification.notificationId}
-                      type="button"
-                      className={`navbar-notify-item${notification.read ? "" : " navbar-notify-item-unread"}`}
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <span className="navbar-notify-item-title">{notification.senderNickname}</span>
-                      <span className="navbar-notify-item-content">
-                        {notification.type === "CHAT"
-                          ? `${notification.senderNickname}님이 메시지를 보냈습니다.`
-                          : notification.content}
-                      </span>
-                    </button>
-                  ))
+                  <>
+                    <div className="navbar-notify-header">
+                      <button type="button" className="navbar-notify-clear-all" onClick={clearAllNotifications}>
+                        모두 지우기
+                      </button>
+                    </div>
+                    {notifications.map((notification) => (
+                      <div key={notification.notificationId} className="navbar-notify-row">
+                        <button
+                          type="button"
+                          className={`navbar-notify-item${notification.read ? "" : " navbar-notify-item-unread"}`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <span className="navbar-notify-item-title">{notification.senderNickname}</span>
+                          <span className="navbar-notify-item-content">
+                            {notification.type === "CHAT"
+                              ? `${notification.senderNickname}님이 메시지를 보냈습니다.`
+                              : notification.content}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="navbar-notify-delete"
+                          aria-label="알림 삭제"
+                          onClick={(e) => handleDeleteNotification(e, notification.notificationId)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </>
                 )}
               </div>
             </div>
