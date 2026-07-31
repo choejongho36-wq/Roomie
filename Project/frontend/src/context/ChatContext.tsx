@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "./AuthContext";
-import { getNotifications, markNotificationRead } from "../api";
+import { clearNotifications, deleteNotification, getNotifications } from "../api";
 import { useChatSocket } from "../hooks/useChatSocket";
 import type { ChatMessage, NotificationItem } from "../types/chat";
 
@@ -10,7 +10,8 @@ interface ChatContextValue {
   sendMessage: (toUserId: number, content: string) => boolean;
   notifications: NotificationItem[];
   unreadCount: number;
-  markAsRead: (notificationId: number) => void;
+  removeNotification: (notificationId: number) => void;
+  clearAllNotifications: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -35,22 +36,34 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     getNotifications(token).then(setNotifications).catch(() => {});
   }, [lastMessage, token, myUserId]);
 
-  const markAsRead = useCallback(
+  const removeNotification = useCallback(
     (notificationId: number) => {
       if (!token) return;
-      setNotifications((prev) =>
-        prev.map((n) => (n.notificationId === notificationId ? { ...n, read: true } : n))
-      );
-      markNotificationRead(token, notificationId).catch(() => {});
+      setNotifications((prev) => prev.filter((n) => n.notificationId !== notificationId));
+      deleteNotification(token, notificationId).catch(() => {});
     },
     [token]
   );
+
+  const clearAllNotifications = useCallback(() => {
+    if (!token) return;
+    setNotifications([]);
+    clearNotifications(token).catch(() => {});
+  }, [token]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   return (
     <ChatContext.Provider
-      value={{ isConnected, lastMessage, sendMessage, notifications, unreadCount, markAsRead }}
+      value={{
+        isConnected,
+        lastMessage,
+        sendMessage,
+        notifications,
+        unreadCount,
+        removeNotification,
+        clearAllNotifications,
+      }}
     >
       {children}
     </ChatContext.Provider>

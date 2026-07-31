@@ -67,4 +67,17 @@ public class NotificationService {
         notification.markAsRead();
         notificationRepository.save(notification);
     }
+
+    public void deleteNotification(Long userId, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다."));
+        if (!notification.getRecipientId().equals(userId)) {
+            throw new IllegalArgumentException("본인의 알림만 삭제할 수 있습니다.");
+        }
+        notificationRepository.delete(notification);
+    }
+
+    public void deleteAllNotifications(Long userId) {
+        notificationRepository.deleteByRecipientId(userId);
+    }
 }

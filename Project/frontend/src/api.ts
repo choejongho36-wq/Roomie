@@ -343,6 +343,18 @@ export const markNotificationRead = async (token: string, notificationId: number
   });
 };
 
+export const deleteNotification = async (token: string, notificationId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const clearNotifications = async (token: string): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/notifications`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 // 채팅방에서 "룸메이트 확정" 버튼을 누르면 호출 (이미 있으면 기존 페어를 그대로 돌려줌)
 export const createOrGetMatchedPair = async (token: string, partnerUserId: number): Promise<MatchedPair> => {
   const response = await axios.post<MatchedPair>(
