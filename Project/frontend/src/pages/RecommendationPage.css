@@ -668,6 +668,11 @@
   color: #666;
   font-size: 13px;
   line-height: 1.5;
+  text-align: center;
+  background: #fff4e6;
+  border-radius: 20px;
+  padding: 12px 14px;
+  box-sizing: border-box;
 }
 
 .comparison-profile-tags {
