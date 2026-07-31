@@ -7,6 +7,7 @@ import com.example.backend.repository.NotificationRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,7 @@ public class NotificationService {
         notificationRepository.delete(notification);
     }
 
+    @Transactional
     public void deleteAllNotifications(Long userId) {
         notificationRepository.deleteByRecipientId(userId);
     }

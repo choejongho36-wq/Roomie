@@ -1,9 +1,11 @@
 package com.example.backend.service;
 
+import com.example.backend.domain.ChatLeave;
 import com.example.backend.domain.ChatMessage;
 import com.example.backend.domain.User;
 import com.example.backend.dto.ChatMessageResponse;
 import com.example.backend.dto.ConversationResponse;
+import com.example.backend.repository.ChatLeaveRepository;
 import com.example.backend.repository.ChatMessageRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
+    private final ChatLeaveRepository chatLeaveRepository;
 
     public List<ConversationResponse> getConversations(Long userId) {
         List<ChatMessage> messages =
@@ -38,6 +41,7 @@ public class ChatService {
 
         return lastMessageByPartner.entrySet().stream()
                 .filter(entry -> partners.containsKey(entry.getKey()))
+                .filter(entry -> !chatLeaveRepository.existsByUserIdAndPartnerId(userId, entry.getKey()))
                 .map(entry -> {
                     User partner = partners.get(entry.getKey());
                     ChatMessage lastMessage = entry.getValue();
@@ -45,10 +49,21 @@ public class ChatService {
                             partner.getUserId(),
                             partner.getNickname(),
                             partner.getProfileImageUrl(),
+                            Boolean.TRUE.equals(partner.getIsVerified()),
                             lastMessage.getContent(),
                             lastMessage.getCreatedAt());
                 })
                 .toList();
+    }
+
+    public void leaveConversation(Long userId, Long partnerId) {
+        if (!chatLeaveRepository.existsByUserIdAndPartnerId(userId, partnerId)) {
+            chatLeaveRepository.save(new ChatLeave(userId, partnerId));
+        }
+    }
+
+    public boolean isLeftByPartner(Long userId, Long partnerId) {
+        return chatLeaveRepository.existsByUserIdAndPartnerId(partnerId, userId);
     }
 
     public List<ChatMessageResponse> getMessages(Long userId, Long otherUserId) {
@@ -73,6 +88,10 @@ public class ChatService {
         }
         if (!userRepository.existsById(receiverId)) {
             throw new IllegalArgumentException("대화 상대를 찾을 수 없습니다.");
+        }
+        if (chatLeaveRepository.existsByUserIdAndPartnerId(senderId, receiverId)
+                || chatLeaveRepository.existsByUserIdAndPartnerId(receiverId, senderId)) {
+            throw new IllegalArgumentException("연결이 끊긴 상대에게는 메시지를 보낼 수 없습니다.");
         }
 
         ChatMessage saved = chatMessageRepository.save(new ChatMessage(senderId, receiverId, trimmed));

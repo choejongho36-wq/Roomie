@@ -6,6 +6,7 @@ public record ConversationResponse(
         Long partnerId,
         String partnerNickname,
         String partnerProfileImageUrl,
+        boolean partnerVerified,
         String lastMessage,
         LocalDateTime lastMessageAt
 ) {}
