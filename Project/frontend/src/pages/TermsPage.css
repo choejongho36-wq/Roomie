@@ -2,6 +2,7 @@
   min-height: calc(100vh - 72px);
   padding: 48px 24px;
   text-align: left;
+  font-family: "Pretendard", sans-serif;
 }
 
 .terms-inner {
@@ -10,6 +11,7 @@
 }
 
 .terms-title {
+  font-family: inherit;
   font-size: 30px;
   margin: 0 0 32px;
   color: #222;
@@ -22,6 +24,7 @@
 }
 
 .terms-article h2 {
+  font-family: inherit;
   font-size: 17px;
   font-weight: 700;
   color: #333;

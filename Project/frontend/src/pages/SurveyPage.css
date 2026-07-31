@@ -4,6 +4,7 @@
   display: flex;
   justify-content: center;
   background: linear-gradient(180deg, #fffaf7 0%, #fff 100%);
+  font-family: "Pretendard", sans-serif;
 }
 
 .survey-shell {

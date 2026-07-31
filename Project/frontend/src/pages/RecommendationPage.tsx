@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
@@ -59,6 +59,7 @@ const createSurveyInsight = (survey: SurveyResult | null) => {
 function RecommendationPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
   const [surveys, setSurveys] = useState<SurveyResult[] | null>(null);
   const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
@@ -113,6 +114,21 @@ function RecommendationPage() {
       isMounted = false;
     };
   }, [token]);
+
+  // 네비바의 "매칭" 버튼은 이미 /recommend 페이지에 있어도 다시 navigate("/recommend")를 호출한다.
+  // 같은 라우트라 컴포넌트가 리마운트되지 않아 selectedUserId 등 이전 선택 상태가 그대로 남기 때문에,
+  // location.key(내비게이션마다 새로 발급되는 값)가 바뀔 때마다 선택 상태를 초기화해서
+  // "매칭"을 다시 눌렀을 때 처음 화면(매칭 요약 없는 상태)으로 돌아가도록 한다.
+  useEffect(() => {
+    setSelectedUserId(null);
+    setIsComparisonOpen(false);
+    setComparison(null);
+    setComparisonError("");
+    setComparisonLoadingUserId(null);
+    setAiExplanation(null);
+    setAiExplanationError("");
+    setAiExplanationLoading(false);
+  }, [location.key]);
 
   const visibleRecommendations = recommendations?.slice(0, RECOMMENDATION_CARD_LIMIT) ?? [];
   const selectedRecommendation = visibleRecommendations.find((item) => item.userId === selectedUserId) ?? null;
@@ -234,8 +250,6 @@ function RecommendationPage() {
       )}
 
       <section className="recommendation-list">
-        <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
-
         {error && <p className="survey-error">{error}</p>}
 
         {recommendations === null ? (
@@ -247,6 +261,7 @@ function RecommendationPage() {
             <div className="recommendation-stage">
               <div className="recommendation-header">
                 <h1>점수 높은 순</h1>
+                <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
               </div>
               <div className="recommendation-cards">
                 {visibleRecommendations.map((item) => {
@@ -304,7 +319,7 @@ function RecommendationPage() {
 
                       <div className="recommendation-card-tags">
                         {item.tags.length > 0 ? (
-                          item.tags.slice(0, 3).map((tag) => (
+                          item.tags.map((tag) => (
                             <span key={tag} className="recommendation-card-tag">
                               {tag}
                             </span>
@@ -424,7 +439,7 @@ function RecommendationPage() {
                     </p>
                     {selectedRecommendation && selectedRecommendation.tags.length > 0 && (
                       <div className="comparison-profile-tags">
-                        {selectedRecommendation.tags.slice(0, 3).map((tag) => (
+                        {selectedRecommendation.tags.map((tag) => (
                           <span key={tag} className="comparison-profile-tag">
                             {tag}
                           </span>
