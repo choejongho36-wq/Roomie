@@ -3,28 +3,11 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
-import RegionPicker, { type RegionToken, parseRegionToken } from "../../components/RegionPicker";
 import "./BoardWritePage.css";
 
-const BOARD_OPTIONS = ["모집게시판", "고민게시판"];
+const BOARD_OPTIONS = ["자유게시판", "고민게시판"];
 
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
-
-const BUDGET_MIN = 0;
-const BUDGET_MAX = 200;
-const BUDGET_STEP = 10;
-
-const MOVE_IN_MIN = 0;
-const MOVE_IN_MAX = 3;
-const MOVE_IN_STEP = 1;
-
-const formatBudgetLabel = (value: number) => (value >= BUDGET_MAX ? "200만원 이상" : `${value}만원`);
-
-const formatMoveInLabel = (value: number) => {
-  if (value <= 0) return "즉시입주";
-  if (value >= MOVE_IN_MAX) return "3개월 이후";
-  return `${value}개월`;
-};
 
 // 서버 에러 응답이 문자열이 아니라 객체({timestamp, status, error, path} 같은 스프링 기본 에러
 // 포맷 등)로 올 수 있어서, 그걸 그대로 화면에 렌더링하면 "Objects are not valid as a React
@@ -47,65 +30,6 @@ const extractErrorMessage = (err: unknown): string => {
   return "등록에 실패했습니다.";
 };
 
-function DualRangeSlider({
-  min,
-  max,
-  step,
-  valueMin,
-  valueMax,
-  onChange,
-  formatLabel,
-}: {
-  min: number;
-  max: number;
-  step: number;
-  valueMin: number;
-  valueMax: number;
-  onChange: (min: number, max: number) => void;
-  formatLabel: (value: number) => string;
-}) {
-  const range = max - min;
-  const minPct = range === 0 ? 0 : ((valueMin - min) / range) * 100;
-  const maxPct = range === 0 ? 100 : ((valueMax - min) / range) * 100;
-
-  return (
-    <div className="range-slider">
-      <div className="range-slider-labels">
-        <span>{formatLabel(valueMin)}</span>
-        <span>{formatLabel(valueMax)}</span>
-      </div>
-      <div className="range-slider-track-wrap">
-        <div className="range-slider-track" />
-        <div className="range-slider-range" style={{ left: `${minPct}%`, width: `${maxPct - minPct}%` }} />
-        <input
-          type="range"
-          className="range-slider-input"
-          min={min}
-          max={max}
-          step={step}
-          value={valueMin}
-          onChange={(event) => {
-            const next = Math.min(Number(event.target.value), valueMax - step);
-            onChange(Math.max(min, next), valueMax);
-          }}
-        />
-        <input
-          type="range"
-          className="range-slider-input"
-          min={min}
-          max={max}
-          step={step}
-          value={valueMax}
-          onChange={(event) => {
-            const next = Math.max(Number(event.target.value), valueMin + step);
-            onChange(valueMin, Math.min(max, next));
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 function BoardWritePage() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -119,17 +43,6 @@ function BoardWritePage() {
   const [tagInput, setTagInput] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
-
-  const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
-  const region = regionTokens[0]
-    ? regionTokens[0].dong
-      ? `${regionTokens[0].district} ${regionTokens[0].dong}`
-      : regionTokens[0].district
-    : null;
-  const [budgetMin, setBudgetMin] = useState(BUDGET_MIN);
-  const [budgetMax, setBudgetMax] = useState(BUDGET_MAX);
-  const [moveInMonthMin, setMoveInMonthMin] = useState(MOVE_IN_MIN);
-  const [moveInMonthMax, setMoveInMonthMax] = useState(MOVE_IN_MAX);
 
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
 
@@ -145,14 +58,6 @@ function BoardWritePage() {
       if (contentRef.current) {
         contentRef.current.innerHTML = post.description ?? "";
       }
-      if (post.region) {
-        const parsed = parseRegionToken(post.region);
-        if (parsed) setRegionTokens([parsed]);
-      }
-      if (post.budgetMin !== null) setBudgetMin(post.budgetMin);
-      if (post.budgetMax !== null) setBudgetMax(post.budgetMax);
-      if (post.moveInMonthMin !== null) setMoveInMonthMin(post.moveInMonthMin);
-      if (post.moveInMonthMax !== null) setMoveInMonthMax(post.moveInMonthMax);
     });
   }, [isEdit, postId]);
 
@@ -261,11 +166,6 @@ function BoardWritePage() {
       showError("제목을 입력해주세요.");
       return;
     }
-    const isRecruitBoard = selectedBoard === "모집게시판";
-    if (isRecruitBoard && !region) {
-      showError("지역을 선택해주세요.");
-      return;
-    }
     const contentText = contentRef.current?.textContent?.trim() ?? "";
     if (!contentText) {
       showError("내용을 입력해주세요.");
@@ -280,12 +180,12 @@ function BoardWritePage() {
 
     const request = {
       title,
-      region: isRecruitBoard ? region : null,
-      budgetMin: isRecruitBoard ? budgetMin : null,
-      budgetMax: isRecruitBoard ? budgetMax : null,
+      region: null,
+      budgetMin: null,
+      budgetMax: null,
       moveInDate: null,
-      moveInMonthMin: isRecruitBoard ? moveInMonthMin : null,
-      moveInMonthMax: isRecruitBoard ? moveInMonthMax : null,
+      moveInMonthMin: null,
+      moveInMonthMax: null,
       roomType: null,
       recruitCount: null,
       description: contentRef.current?.innerHTML ?? "",
@@ -348,52 +248,6 @@ function BoardWritePage() {
           onChange={(event) => setTitle(event.target.value)}
           placeholder="제목을 입력해주세요."
         />
-
-        {selectedBoard === "모집게시판" && (
-          <div className="board-write-recruit-fields">
-            <div className="board-write-field-row">
-              <div className="board-write-field-label">지역</div>
-              <RegionPicker
-                selected={regionTokens}
-                onChange={setRegionTokens}
-                multiple={false}
-                variant="inline"
-              />
-            </div>
-
-            <div className="board-write-field-row">
-              <div className="board-write-field-label">예산</div>
-              <DualRangeSlider
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={BUDGET_STEP}
-                valueMin={budgetMin}
-                valueMax={budgetMax}
-                onChange={(next, nextMax) => {
-                  setBudgetMin(next);
-                  setBudgetMax(nextMax);
-                }}
-                formatLabel={formatBudgetLabel}
-              />
-            </div>
-
-            <div className="board-write-field-row">
-              <div className="board-write-field-label">입주 시기</div>
-              <DualRangeSlider
-                min={MOVE_IN_MIN}
-                max={MOVE_IN_MAX}
-                step={MOVE_IN_STEP}
-                valueMin={moveInMonthMin}
-                valueMax={moveInMonthMax}
-                onChange={(next, nextMax) => {
-                  setMoveInMonthMin(next);
-                  setMoveInMonthMax(nextMax);
-                }}
-                formatLabel={formatMoveInLabel}
-              />
-            </div>
-          </div>
-        )}
 
         <div className="board-write-toolbar">
           <button
