@@ -320,7 +320,7 @@ function RecommendationPage() {
 
                       <div className="recommendation-card-tags">
                         {item.tags.length > 0 ? (
-                          item.tags.slice(0, 3).map((tag) => (
+                          item.tags.map((tag) => (
                             <span key={tag} className="recommendation-card-tag">
                               {tag}
                             </span>
@@ -440,7 +440,7 @@ function RecommendationPage() {
                     </p>
                     {selectedRecommendation && selectedRecommendation.tags.length > 0 && (
                       <div className="comparison-profile-tags">
-                        {selectedRecommendation.tags.slice(0, 3).map((tag) => (
+                        {selectedRecommendation.tags.map((tag) => (
                           <span key={tag} className="comparison-profile-tag">
                             {tag}
                           </span>
