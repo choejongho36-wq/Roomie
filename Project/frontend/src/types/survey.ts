@@ -6,6 +6,7 @@ export interface SurveyOption {
   export interface SurveyQuestion {
     id: number;
     category: string;
+    situation?: string | string[];
     question: string;
     options: SurveyOption[];
   }
