@@ -1,6 +1,7 @@
 import type { SurveyQuestion } from "../../types/survey";
 import OptionButton from "./OptionButton";
 import { HelpTip } from "./SurveyHelp";
+import roomieLogo from "../../assets/Roomie_logo.png";
 
 interface QuestionCardProps {
   question: SurveyQuestion;
@@ -21,7 +22,10 @@ function QuestionCard({
         <span className="question-category">{question.category}</span>
         <HelpTip />
       </div>
-      <h2 className="question-text">{question.question}</h2>
+      <div className="question-bubble-row">
+        <img src={roomieLogo} alt="Roomie" className="question-avatar" />
+        <h2 className="question-bubble-text">{question.question}</h2>
+      </div>
       <div className="options-list">
         {question.options.map((option, index) => (
           <OptionButton
