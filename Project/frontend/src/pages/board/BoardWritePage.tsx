@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
 import "./BoardWritePage.css";
 
-const BOARD_OPTIONS = ["자유게시판", "고민게시판"];
+const BOARD_OPTIONS = ["자유 게시판", "고민 게시판"];
 
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
 

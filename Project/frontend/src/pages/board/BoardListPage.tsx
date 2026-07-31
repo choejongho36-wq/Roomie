@@ -82,7 +82,7 @@ function BoardListPage() {
         <div>
           <h1>{boardType ?? "커뮤니티"}</h1>
           <p className="board-list-subtitle">
-            {boardType === "고민게시판"
+            {boardType === "고민 게시판"
               ? "함께 나누고 싶은 고민을 이야기해보세요."
               : "자유롭게 이야기를 나눠보세요."}
           </p>

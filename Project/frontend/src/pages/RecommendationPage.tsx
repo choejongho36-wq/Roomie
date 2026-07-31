@@ -250,8 +250,6 @@ function RecommendationPage() {
       )}
 
       <section className="recommendation-list">
-        <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
-
         {error && <p className="survey-error">{error}</p>}
 
         {recommendations === null ? (
@@ -263,6 +261,7 @@ function RecommendationPage() {
             <div className="recommendation-stage">
               <div className="recommendation-header">
                 <h1>점수 높은 순</h1>
+                <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
               </div>
               <div className="recommendation-cards">
                 {visibleRecommendations.map((item) => {
