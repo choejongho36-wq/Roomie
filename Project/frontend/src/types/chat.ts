@@ -10,6 +10,7 @@ export interface Conversation {
   partnerId: number;
   partnerNickname: string;
   partnerProfileImageUrl: string | null;
+  partnerVerified: boolean;
   lastMessage: string;
   lastMessageAt: string;
 }

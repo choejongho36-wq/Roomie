@@ -330,6 +330,19 @@ export const getChatMessages = async (token: string, otherUserId: number): Promi
   return response.data;
 };
 
+export const getChatStatus = async (token: string, otherUserId: number): Promise<{ leftByPartner: boolean }> => {
+  const response = await axios.get<{ leftByPartner: boolean }>(`${API_BASE_URL}/chat/${otherUserId}/status`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const leaveChat = async (token: string, otherUserId: number): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/chat/${otherUserId}/leave`, null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 export const getNotifications = async (token: string): Promise<NotificationItem[]> => {
   const response = await axios.get<NotificationItem[]>(`${API_BASE_URL}/notifications`, {
     headers: { Authorization: `Bearer ${token}` },

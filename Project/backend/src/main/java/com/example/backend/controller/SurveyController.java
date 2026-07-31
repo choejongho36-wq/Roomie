@@ -10,6 +10,7 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.service.SurveySummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.ObjectMapper;
 
@@ -28,6 +29,7 @@ public class SurveyController {
     private final SurveySummaryService surveySummaryService;
 
     @PostMapping
+    @Transactional
     public SurveyResultResponse submit(Authentication authentication, @RequestBody SurveyResultRequest request) {
         if (request.answers() == null || request.answers().isEmpty()) {
             throw new IllegalArgumentException("설문 응답이 비어있습니다.");
