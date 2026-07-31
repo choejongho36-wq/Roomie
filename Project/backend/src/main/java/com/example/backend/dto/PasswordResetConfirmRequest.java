@@ -1,0 +1,18 @@
+package com.example.backend.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+public record PasswordResetConfirmRequest(
+        @NotBlank String loginId,
+        @NotBlank @Email String email,
+        @NotBlank
+        @Size(min = 8, max = 24, message = "비밀번호는 8자 이상 24자 이하여야 합니다.")
+        @Pattern(
+                regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
+                message = "비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다."
+        )
+        String newPassword
+) {}

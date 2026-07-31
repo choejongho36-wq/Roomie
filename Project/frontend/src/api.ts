@@ -375,7 +375,7 @@ export const getMatchedPair = async (token: string, pairId: number): Promise<Mat
 export const updateMatchedPairConditions = async (
   token: string,
   pairId: number,
-  conditions: { region: string | null; budgetMin: number | null; budgetMax: number | null; moveInDate: string | null }
+  conditions: { region: string | null; depositMax: number | null; monthlyRentMax: number | null }
 ): Promise<MatchedPair> => {
   const response = await axios.put<MatchedPair>(
     `${API_BASE_URL}/matched-pairs/${pairId}/conditions`,
@@ -383,4 +383,38 @@ export const updateMatchedPairConditions = async (
     { headers: { Authorization: `Bearer ${token}` } }
   );
   return response.data;
+};
+
+// ===== 아이디 찾기 =====
+
+export const requestFindId = async (email: string): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/auth/find-id/request`, { email });
+};
+
+// 인증번호 확인은 confirmEmailVerification()을 그대로 재사용
+
+export const getFindIdResult = async (email: string): Promise<string> => {
+  const response = await axios.get<{ loginId: string }>(`${API_BASE_URL}/auth/find-id/result`, {
+    params: { email },
+  });
+  return response.data.loginId;
+};
+
+// ===== 비밀번호 재설정 =====
+
+export const requestPasswordReset = async (loginId: string, email: string): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/auth/password/reset-request`, { loginId, email });
+};
+
+export const resetPassword = async (loginId: string, email: string, newPassword: string): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/auth/password/reset`, { loginId, email, newPassword });
+};
+
+// ===== 회원탈퇴 =====
+
+export const withdraw = async (token: string, password: string): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/users/me`, {
+    data: { password },
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };

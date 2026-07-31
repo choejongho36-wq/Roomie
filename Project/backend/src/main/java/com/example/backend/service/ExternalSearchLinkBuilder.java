@@ -1,50 +1,31 @@
 package com.example.backend.service;
 
 import com.example.backend.domain.MatchedPair;
-import com.example.backend.dto.MatchedPairResponse;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
-// 네이버부동산/다방/직방은 공식 검색 URL이 없어서(내부 지역코드 기반 SPA),
-// 대신 확실히 동작하는 "네이버지도 검색"과 "일반 웹검색"으로 안내함
+// 다방은 좌표(m_lat/m_lng) + 보증금/월세 필터(depositRangeMax/priceRangeMax)를
+// URL 파라미터로 그대로 받아주는 공유링크 형식을 지원해서, 이 하나만 만들어줌
+// (네이버부동산/직방은 공식 검색 URL이 없어서 제외, 네이버/구글 일반검색은 매물이 잘 안 뜨는 걸 확인해서 제외)
 public class ExternalSearchLinkBuilder {
 
     private ExternalSearchLinkBuilder() {
     }
 
-    public static MatchedPairResponse.ExternalLinks build(MatchedPair pair) {
-        String query = buildQuery(pair);
-        String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
-
+    public static String build(MatchedPair pair) {
         double[] coordinate = DistrictCoordinates.findCoordinate(pair.getRegion());
-        // 구 하나가 화면에 적당히 들어오는 줌 레벨 (다방 URL 예시들 기준 13 정도가 적당함)
-        // Locale.US로 고정: 서버 로케일에 따라 소수점이 쉼표(,)로 바뀌는 걸 방지
-        String dabangMapUrl = String.format(
-                java.util.Locale.US,
-                "https://www.dabangapp.com/map/onetwo?m_lat=%s&m_lng=%s&m_zoom=13",
-                coordinate[0], coordinate[1]
-        );
-        String naverSearchUrl = "https://search.naver.com/search.naver?query=" + encoded;
-        String googleSearchUrl = "https://www.google.com/search?q=" + encoded;
 
-        return new MatchedPairResponse.ExternalLinks(dabangMapUrl, naverSearchUrl, googleSearchUrl);
-    }
-
-    private static String buildQuery(MatchedPair pair) {
-        StringBuilder sb = new StringBuilder();
-
-        String region = pair.getRegion();
-        sb.append((region != null && !region.isBlank()) ? region : "서울");
-
-        sb.append(" 원룸 투룸 매물");
-
-        if (pair.getBudgetMin() != null && pair.getBudgetMax() != null) {
-            sb.append(" ").append(pair.getBudgetMin()).append("~").append(pair.getBudgetMax()).append("만원");
-        } else if (pair.getBudgetMax() != null) {
-            sb.append(" ").append(pair.getBudgetMax()).append("만원 이하");
+        StringBuilder dabangUrl = new StringBuilder("https://www.dabangapp.com/map/onetwo?");
+        // 보증금/월세 조건이 있으면 지도 좌표보다 먼저 붙여야 정상 반영됨 (실제 다방 공유링크 구조 기준)
+        if (pair.getDepositMax() != null) {
+            dabangUrl.append("depositRangeMax=").append(pair.getDepositMax()).append("&");
         }
+        if (pair.getMonthlyRentMax() != null) {
+            dabangUrl.append("priceRangeMax=").append(pair.getMonthlyRentMax()).append("&");
+        }
+        // 동네가 잘 보이는 확대 수준
+        dabangUrl.append(String.format(Locale.US, "m_lat=%s&m_lng=%s&m_zoom=15", coordinate[0], coordinate[1]));
 
-        return sb.toString();
+        return dabangUrl.toString();
     }
 }

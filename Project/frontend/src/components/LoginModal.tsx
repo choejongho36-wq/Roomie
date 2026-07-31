@@ -67,6 +67,30 @@ function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
         {error && <p className="login-modal-error">{error}</p>}
         <button type="submit">로그인</button>
 
+        <p className="login-modal-recovery-links">
+          <button
+            type="button"
+            className="login-modal-link"
+            onClick={() => {
+              onClose();
+              navigate("/find-id");
+            }}
+          >
+            아이디 찾기
+          </button>
+          <span aria-hidden="true">|</span>
+          <button
+            type="button"
+            className="login-modal-link"
+            onClick={() => {
+              onClose();
+              navigate("/reset-password");
+            }}
+          >
+            비밀번호 찾기
+          </button>
+        </p>
+
         <div className="login-modal-divider">
           <span>또는</span>
         </div>

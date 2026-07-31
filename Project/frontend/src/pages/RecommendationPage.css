@@ -236,8 +236,8 @@
   padding: 22px 22px 18px;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  text-align: left;
+  align-items: center;
+  text-align: center;
   box-shadow: 0 16px 24px -8px rgba(62, 44, 35, 0.4);
   box-sizing: border-box;
   cursor: pointer;
@@ -263,20 +263,21 @@
 .recommendation-card-main {
   width: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
+  text-align: center;
+  gap: 12px;
 }
 
 .recommendation-card-avatar {
   display: block;
-  width: 100px;
-  height: 100px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  border: 2px solid #ff6600;
+  border: 3px solid #ff6600;
   object-fit: cover;
-  background: #f5e9d8;
+  background: #f1f1f1;
   flex-shrink: 0;
-  box-shadow: 0 6px 16px rgba(62, 44, 35, 0.2);
 }
 
 .recommendation-card-score-badge {
@@ -309,19 +310,24 @@
   color: rgba(62, 44, 35, 0.7);
 }
 
+
 .recommendation-card-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .recommendation-card-info h2 {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin: 0;
-  color: #3e2c23;
-  font-size: 22px;
-  font-weight: 800;
+  color: #111;
+  font-size: 26px;
+  font-weight: 900;
   letter-spacing: -0.01em;
   line-height: 1.2;
   overflow-wrap: anywhere;
@@ -333,6 +339,18 @@
   flex-shrink: 0;
   color: #ff6600;
 }
+
+
+.recommendation-card-meta {
+  margin: 8px 0 0;
+  color: #777;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.recommendation-card-bio {
+  width: 100%;
 
 .recommendation-card-info p {
   margin: 6px 0 0;
@@ -354,39 +372,42 @@
 
 .recommendation-card-bio {
   margin: 12px 0 0;
-  color: #3e2c23;
-  font-size: 13.5px;
-  line-height: 1.6;
-  background: rgba(245, 233, 216, 0.45);
-  border-radius: 12px;
+  color: #555;
+  font-size: 15px;
+  line-height: 1.7;
+  text-align: center;
+  background: #fff4e6;
+  border-radius: 20px;
   padding: 12px 14px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
-
 .recommendation-card-tags {
+  width: 100%;
   margin: 10px 0 0;
   min-height: 20px;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .recommendation-card-tag {
-  font-size: 11.5px;
+  border-radius: 8px;
+  background: #f6f6f6;
+  color: #555;
+  padding: 5px 9px;
+  font-size: 12px;
   font-weight: 700;
-  color: #3e2c23;
-  background: rgba(245, 233, 216, 0.6);
-  padding: 5px 11px;
-  border-radius: 999px;
+  overflow-wrap: anywhere;
 }
 
 .recommendation-card-tag.is-empty {
-  color: rgba(62, 44, 35, 0.55);
+  color: #999;
 }
 
 .profile-compare-button {
@@ -542,28 +563,55 @@
   text-align: center;
 }
 
-.comparison-gauge.compatibility-gauge {
+.comparison-gauge {
+  position: relative;
   width: 100px;
   height: 100px;
   margin: 0 20px 0 0;
   flex-shrink: 0;
 }
 
-.comparison-gauge .gauge-ring {
+.comparison-gauge-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(#ff6600 var(--gauge-percent), #ffe8d6 0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: inset 0 0 0 8px #ffe8d6;
 }
 
-.comparison-gauge .gauge-center {
+.comparison-gauge-center {
   width: 72px;
   height: 72px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
-.comparison-gauge .compatibility-score-value {
+.comparison-gauge-score {
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  font-weight: 800;
+  color: #ff6600;
+}
+
+.comparison-gauge-score-value {
   font-size: 22px;
+  line-height: 1;
 }
 
-.comparison-gauge .compatibility-score-unit {
+.comparison-gauge-score-unit {
   font-size: 13px;
+  line-height: 1;
 }
 
 .comparison-points-grid {
@@ -814,8 +862,9 @@
     min-height: 340px;
     padding: 26px 20px 20px;
   }
-
+  
   .recommendation-card-info p {
     font-size: 12.5px;
+
   }
 }

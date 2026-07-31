@@ -129,3 +129,7 @@
   flex-wrap: wrap;
   gap: 10px;
 }
+
+.matched-pair-section .btn-primary {
+  margin-top: 4px;
+}

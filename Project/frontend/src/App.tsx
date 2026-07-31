@@ -5,6 +5,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
+import FindIdPage from "./pages/FindIdPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPage from "./pages/MyPage";
@@ -26,6 +28,7 @@ import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
 import MatchedPairPage from "./pages/MatchedPairPage";
+import HousePage from "./pages/HousePage";
 
 function App() {
   return (
@@ -36,6 +39,8 @@ function App() {
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/find-id" element={<FindIdPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
             <Route path="/complete-profile" element={<CompleteProfilePage />} />
             <Route path="/survey" element={<SurveyPage />} />
@@ -52,6 +57,7 @@ function App() {
             <Route path="/inquiry/write" element={<InquiryWritePage />} />
             <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
             <Route path="/matched/:id" element={<MatchedPairPage />} />
+            <Route path="/house/:id" element={<HousePage />} />
             <Route path="/mypage" element={<MyPage />}>
               <Route index element={<ProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />
