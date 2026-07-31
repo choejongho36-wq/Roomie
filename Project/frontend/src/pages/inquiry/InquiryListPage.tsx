@@ -83,7 +83,7 @@ function InquiryListPage() {
           <p className="board-list-subtitle">궁금한 점을 남겨주시면 답변해드릴게요.</p>
         </div>
         <Link to="/inquiry/write" className="btn btn-primary">
-          문의하기
+          문의 하기
         </Link>
       </div>
 

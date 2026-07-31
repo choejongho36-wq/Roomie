@@ -2,6 +2,7 @@
   min-height: calc(100vh - 52px);
   display: flex;
   position: relative;
+  font-family: "Pretendard", sans-serif;
 }
 
 .mypage-content {

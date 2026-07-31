@@ -634,6 +634,7 @@
   font-weight: 600;
   cursor: pointer;
   border: 2px solid #f16526;
+  text-decoration: none;
   transition: transform 0.15s, opacity 0.15s;
 }
 

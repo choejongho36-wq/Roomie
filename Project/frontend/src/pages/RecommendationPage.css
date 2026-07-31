@@ -44,9 +44,11 @@
 }
 
 .recommendation-hint {
-  margin: 0 0 20px;
+  flex-shrink: 0;
+  margin: 0;
   color: #8c7f74;
   font-size: 13.5px;
+  text-align: right;
 }
 
 .recommendation-summary-title {
@@ -351,26 +353,6 @@
 
 .recommendation-card-bio {
   width: 100%;
-
-.recommendation-card-info p {
-  margin: 6px 0 0;
-  color: rgba(62, 44, 35, 0.75);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.recommendation-card-info p + p {
-  margin-top: 3px;
-}
-
-.recommendation-card-info p span + span::before {
-  content: "·";
-  margin: 0 5px;
-  opacity: 0.5;
-}
-
-.recommendation-card-bio {
   margin: 12px 0 0;
   color: #555;
   font-size: 15px;
@@ -686,6 +668,11 @@
   color: #666;
   font-size: 13px;
   line-height: 1.5;
+  text-align: center;
+  background: #fff4e6;
+  border-radius: 20px;
+  padding: 12px 14px;
+  box-sizing: border-box;
 }
 
 .comparison-profile-tags {
