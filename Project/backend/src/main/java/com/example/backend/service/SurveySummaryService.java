@@ -23,27 +23,28 @@ public class SurveySummaryService {
 
     private static final URI GROQ_CHAT_COMPLETIONS_URI = URI.create("https://api.groq.com/openai/v1/chat/completions");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    // 2026-07-31: 프론트 설문 문항이 주제별로 재배열되면서 순서/문구가 바뀜에 따라 함께 갱신.
     private static final List<SurveyQuestionPrompt> QUESTIONS = List.of(
-            new SurveyQuestionPrompt("청결", List.of("물건을 사용한 뒤 거의 정리하지 않는다.", "방이 자주 어질러지며 하루에 한 번 정도 정리한다.", "어느 정도 정리하지만 완벽하게 유지하지는 않는다.", "사용한 물건은 바로 정리하는 편이다.", "항상 완벽하게 정리된 상태를 유지한다.")),
             new SurveyQuestionPrompt("취침 시간", List.of("새벽 3시 이후", "새벽 1~3시", "밤 11시~1시", "밤 10~11시", "밤 10시 이전")),
-            new SurveyQuestionPrompt("요리", List.of("거의 매일 요리한다.", "주 3~5회 정도 요리한다.", "주 1~2회 정도 요리한다.", "한 달에 몇 번 정도만 요리한다.", "거의 요리하지 않는다.")),
-            new SurveyQuestionPrompt("전화 통화", List.of("거의 매일 오래 통화한다.", "자주 통화한다.", "가끔 통화한다.", "필요한 경우에만 짧게 통화한다.", "거의 통화하지 않는다.")),
-            new SurveyQuestionPrompt("생활 소음", List.of("웬만한 소음은 거의 신경 쓰지 않는다.", "큰 소음만 신경 쓰인다.", "보통 수준이다.", "작은 소음도 신경 쓰이는 편이다.", "아주 작은 소음도 잠이나 생활에 영향을 준다.")),
-            new SurveyQuestionPrompt("공용 비품", List.of("대부분 함께 구매하고 함께 사용한다.", "가능한 함께 사용하는 편이다.", "상황에 따라 다르다.", "웬만하면 따로 구매해서 사용한다.", "모든 물건을 개인용으로 사용하는 것을 선호한다.")),
-            new SurveyQuestionPrompt("친구 초대", List.of("거의 매주 초대한다.", "한 달에 2~3번 정도 초대한다.", "한 달에 1번 정도 초대한다.", "거의 초대하지 않는다.", "집에는 다른 사람을 초대하지 않는다.")),
-            new SurveyQuestionPrompt("이어폰 사용", List.of("대부분 블루투스 스피커를 사용한다.", "대부분 핸드폰 스피커를 사용한다.", "상황에 따라 스피커와 이어폰을 모두 사용한다.", "대부분 이어폰을 사용한다.", "항상 이어폰만 사용한다.")),
-            new SurveyQuestionPrompt("야간 생활", List.of("평소와 똑같이 생활한다.", "조금만 조심한다.", "상황에 따라 다르다.", "최대한 조용히 생활한다.", "소음이 발생하는 행동은 하지 않는다.")),
-            new SurveyQuestionPrompt("갈등 해결", List.of("바로 이야기하며 해결하려고 한다.", "하루 이내에 대화를 시도한다.", "상황을 보고 판단한다.", "시간이 지난 후 이야기한다.", "먼저 이야기하지 않는 편이다.")),
-            new SurveyQuestionPrompt("벌레", List.of("직접 바로 잡는다.", "대부분 직접 처리한다.", "상황에 따라 다르다.", "다른 사람에게 부탁하는 편이다.", "벌레를 전혀 처리하지 못한다.")),
-            new SurveyQuestionPrompt("코골이", List.of("심하게 곤다.", "비교적 조용히 곤다.", "가끔 곤다.", "골지 않는다.", "모른다.")),
-            new SurveyQuestionPrompt("흡연", List.of("흡연을 한다.", "흡연하지 않는다.")),
-            new SurveyQuestionPrompt("음주", List.of("일주일에 4회 이상", "일주일에 1~2회", "한 달에 1~2회", "가끔 마신다.", "마시지 않는다.")),
-            new SurveyQuestionPrompt("음주 후 행동", List.of("매우 시끄러워진다.", "다소 시끄러워지는 편이다.", "평소와 비슷하다.", "조용한 편이다.", "술을 마시지 않는다.")),
-            new SurveyQuestionPrompt("야식", List.of("거의 매일 먹는다.", "주 3~5회", "주 1~2회", "한 달에 몇 번", "거의 먹지 않는다.")),
-            new SurveyQuestionPrompt("실내 취식", List.of("거의 모든 식사를 집에서 한다.", "자주 집에서 먹는다.", "가끔 먹는다.", "거의 먹지 않는다.", "집에서는 절대 먹지 않는다.")),
-            new SurveyQuestionPrompt("청소 방식", List.of("사람을 고용해서 청소한다.", "정해진 당번표 없이 그때그때 필요할 때 치운다.", "상황에 따라 다르게 한다.", "어느 정도 정해진 기준(요일, 담당)을 선호한다.", "명확한 당번표나 규칙을 정해서 지키는 것을 선호한다.")),
+            new SurveyQuestionPrompt("화장실 사용", List.of("6시 이전에 써.", "6~7시 사이에 써.", "7~8시 사이에 써.", "8~9시 사이에 써.", "9시 이후에 쓰거나 정해진 시간이 없어.")),
+            new SurveyQuestionPrompt("코골이", List.of("심하게 골아.", "비교적 조용히 고는거같아.", "피곤할때 가끔 골아.", "골지 않아.", "나도 코를 고는지 안 고는지 몰라.")),
+            new SurveyQuestionPrompt("야간 생활", List.of("평소와 똑같아.", "조금 조심해.", "상황에 따라 다른거 같아.", "최대한 조용히 행동하지.", "소음이 발생하는 행동자체를 안해.")),
+            new SurveyQuestionPrompt("청결", List.of("거의 정리하지 않아.", "하루에 한 번 정도 정리하는 편이야.", "어느 정도 정리하지만 완벽하게 유지하려고는 않아.", "사용한 물건은 바로 정리하는 편이야.", "항상 완벽하게 정리된 상태야")),
+            new SurveyQuestionPrompt("청소 방식", List.of("사람을 고용해서 청소해.", "정해진 당번표 없이 그때그때 필요할 때 치워.", "상황에 따라 다른게 좋아.", "어느 정도 정해진 기준(요일, 담당)이 있어야 해.", "명확한 당번표나 규칙을 정해서 지키는 게 좋아.")),
+            new SurveyQuestionPrompt("생활 소음", List.of("거의 신경 쓰지 않는 편이야.", "큰 소음만 아니면 괜찮아.", "평범한거 같은데?", "작은 소음도 신경 쓰일때가 있어.", "아주 작은 소음도 예민해서 신경쓰여.")),
+            new SurveyQuestionPrompt("전화 통화", List.of("거의 매일 통화해!", "주 3~5회 정도 통화해.", "주 1~2회 정도 통화해.", "필요한 경우에만 짧게 통화해.", "거의 통화하지 않아.")),
+            new SurveyQuestionPrompt("이어폰 사용", List.of("블루투스 스피커로 빵빵하게 틀어놔.", "핸드폰 스피커를 틀어놔.", "상황에 따라 스피커나 이어폰을 모두 사용해.", "대부분 이어폰을 사용하거나 작게 틀어.", "항상 이어폰만 사용해.")),
+            new SurveyQuestionPrompt("실내 취식", List.of("거의 모든 식사를 집에서 해.", "자주 집에서 먹어.", "가끔 먹어.", "거의 먹지 않아.", "집에서는 절대 먹지 않아.")),
+            new SurveyQuestionPrompt("야식", List.of("거의 매일 먹어.", "주 3~5회 먹어.", "주 1~2회 먹어.", "한 달에 몇 번?", "거의 안 먹어.")),
+            new SurveyQuestionPrompt("흡연", List.of("흡연해.", "흡연하지 않아.")),
+            new SurveyQuestionPrompt("음주", List.of("일주일에 4회 이상", "일주일에 1~2회", "한 달에 1~2회", "가끔 마셔.", "마시지 않아.")),
+            new SurveyQuestionPrompt("음주 후 행동", List.of("엄청 시끄러워져.", "평소보단 시끄러워져.", "평소와 비슷한듯?", "평소보다 조용해져.", "술을 안 마셔.")),
+            new SurveyQuestionPrompt("친구 초대", List.of("허락없이 언제든 상관없어.", "말만 해주면 언제든 상관없어.", "허락을 구한 뒤에 초대하는거면 언제든 상관없어.", "허락을 구해도 자주는 부담스러워.", "집에 다른 사람을 초대하지 않는게 좋아.")),
+            new SurveyQuestionPrompt("갈등 해결", List.of("바로 이야기로 해결하려고 해.", "하루 이내에 대화를 시도해보는거 같아.", "몇일은 지난 후 이야기할거 같아.", "일주일은 지난 후 이야기할거 같아.", "먼저 이야기하지 않는 편이야.")),
+            new SurveyQuestionPrompt("벌레", List.of("바로 잡아.", "대부분 직접 처리해.", "상황에 따라 다른거 같아.", "다른 사람이 있으면 부탁하는 편이야.", "벌레는 절대 혼자 처리못해.")),
+            new SurveyQuestionPrompt("공용 비품", List.of("공용으로 쓸 수 있는건 함께 사용하는게 좋아.", "몇가지 빼고는 함께 사용하는게 좋아.", "상황에 따라 다른것 같아", "몇가지 빼고는 따로 사용하는게 좋아.", "모든 물건을 개인용으로 사용할래.")),
             new SurveyQuestionPrompt("월 생활비", List.of("100만 원 이상", "70~100만 원", "50~70만 원", "30~50만 원", "30만 원 미만")),
-            new SurveyQuestionPrompt("방 크기", List.of("12평 이상", "10~12평", "7~10평", "5~7평", "5평 이하도 괜찮다."))
+            new SurveyQuestionPrompt("방 크기", List.of("20평 이상이어야 해.", "15~19평", "10~14평", "7~9평", "6평 이하도 좋아."))
     );
 
     private final HttpClient httpClient = HttpClient.newBuilder()
