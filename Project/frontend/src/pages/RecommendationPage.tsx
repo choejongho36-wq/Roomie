@@ -288,7 +288,7 @@ function RecommendationPage() {
                               </span>
                             )}
                           </h2>
-                          <p className="profile-card-meta">
+                          <p className="recommendation-card-meta">
                             {item.age}세
                             {" · "}
                             {item.job ?? "직업 정보 준비 중"}

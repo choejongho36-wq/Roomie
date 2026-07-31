@@ -351,26 +351,6 @@
 
 .recommendation-card-bio {
   width: 100%;
-
-.recommendation-card-info p {
-  margin: 6px 0 0;
-  color: rgba(62, 44, 35, 0.75);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.recommendation-card-info p + p {
-  margin-top: 3px;
-}
-
-.recommendation-card-info p span + span::before {
-  content: "·";
-  margin: 0 5px;
-  opacity: 0.5;
-}
-
-.recommendation-card-bio {
   margin: 12px 0 0;
   color: #555;
   font-size: 15px;
