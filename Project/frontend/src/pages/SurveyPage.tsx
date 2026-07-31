@@ -90,14 +90,14 @@ function SurveyPage() {
   return (
     <div className="survey-page">
       <div className="survey-shell">
-        <SurveyHeader />
+        <SurveyHeader showGreeting={showIntro} />
         {showIntro ? (
           <>
             <SurveyIntro />
             <div className="survey-navigation">
               <button
                 type="button"
-                className="nav-button nav-button-primary"
+                className="nav-button nav-button-primary survey-start-button"
                 onClick={() => setShowIntro(false)}
               >
                 설문 시작하기
