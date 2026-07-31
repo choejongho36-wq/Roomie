@@ -21,7 +21,7 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { token, user, login, logout } = useAuth();
-  const { notifications, unreadCount, removeNotification, clearAllNotifications } = useChat();
+  const { notifications, unreadCount, removeNotification, clearAllNotifications, chatUnreadCount } = useChat();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
@@ -161,6 +161,11 @@ function Navbar() {
                   >
                     <Icon name={item.icon} />
                     {item.label}
+                    {item.to === "/mypage/chat" && chatUnreadCount > 0 && (
+                      <span className="navbar-profile-chat-badge">
+                        {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
                 <button

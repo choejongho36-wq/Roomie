@@ -58,7 +58,7 @@ function ChatPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { lastMessage, sendMessage } = useChat();
+  const { lastMessage, sendMessage, refreshChatUnreadCount } = useChat();
 
   const [conversations, setConversations] = useState<Conversation[] | null>(null);
   const [activePartner, setActivePartner] = useState<ActivePartner | null>(null);
@@ -119,12 +119,15 @@ function ChatPage() {
       return;
     }
     getChatMessages(token, activePartner.userId)
-      .then(setMessages)
+      .then((data) => {
+        setMessages(data);
+        refreshChatUnreadCount();
+      })
       .catch(() => setError("대화 내용을 불러오지 못했습니다."));
     getChatStatus(token, activePartner.userId)
       .then((status) => setLeftByPartner(status.leftByPartner))
       .catch(() => setLeftByPartner(false));
-  }, [token, activePartner]);
+  }, [token, activePartner, refreshChatUnreadCount]);
 
   useEffect(() => {
     if (!lastMessage || !myUserId) return;

@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.domain.User;
 import com.example.backend.dto.ChatMessageResponse;
 import com.example.backend.dto.ChatStatusResponse;
+import com.example.backend.dto.ChatUnreadCountResponse;
 import com.example.backend.dto.ConversationResponse;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.ChatService;
@@ -23,6 +24,11 @@ public class ChatController {
     @GetMapping("/conversations")
     public List<ConversationResponse> getConversations(Authentication authentication) {
         return chatService.getConversations(currentUser(authentication).getUserId());
+    }
+
+    @GetMapping("/unread-count")
+    public ChatUnreadCountResponse getUnreadCount(Authentication authentication) {
+        return new ChatUnreadCountResponse(chatService.getUnreadCount(currentUser(authentication).getUserId()));
     }
 
     @GetMapping("/{otherUserId}/messages")

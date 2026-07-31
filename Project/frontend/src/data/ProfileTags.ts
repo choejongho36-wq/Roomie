@@ -88,8 +88,8 @@ export const PROFILE_TAGS = [...MBTI_TAGS, ...PROFILE_TAG_GROUPS.flatMap((g) => 
 
 export const PROFILE_TAG_SET = new Set(PROFILE_TAGS);
 
-/** MBTI와 직접 입력 태그를 뺀, 목록에서 고르는 관심사 태그 상한 */
-export const MAX_PROFILE_TAGS = 5;
+/** 프로필 태그 총 개수 상한 - MBTI, 관심사, 직접 입력 태그를 합쳐서 셈 */
+export const MAX_PROFILE_TAGS = 10;
 
 /** 직접 입력 태그 길이 상한. 백엔드 UserController.MAX_CUSTOM_TAG_LENGTH와 맞춰야 한다 */
 export const MAX_CUSTOM_TAG_LENGTH = 12;

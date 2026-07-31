@@ -330,6 +330,13 @@ export const getChatMessages = async (token: string, otherUserId: number): Promi
   return response.data;
 };
 
+export const getChatUnreadCount = async (token: string): Promise<number> => {
+  const response = await axios.get<{ count: number }>(`${API_BASE_URL}/chat/unread-count`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.count;
+};
+
 export const getChatStatus = async (token: string, otherUserId: number): Promise<{ leftByPartner: boolean }> => {
   const response = await axios.get<{ leftByPartner: boolean }>(`${API_BASE_URL}/chat/${otherUserId}/status`, {
     headers: { Authorization: `Bearer ${token}` },

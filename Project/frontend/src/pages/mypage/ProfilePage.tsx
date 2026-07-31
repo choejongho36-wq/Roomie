@@ -86,11 +86,17 @@ function ProfilePage() {
 
   const draftMbti = draftTags.find((t) => MBTI_TAG_SET.has(t));
   const draftInterests = draftTags.filter((t) => !MBTI_TAG_SET.has(t));
-  // 목록에서 고른 태그와 직접 입력 태그는 상한을 따로 센다
-  const draftPicked = draftInterests.filter((t) => PROFILE_TAG_SET.has(t));
   const draftCustom = draftInterests.find((t) => !PROFILE_TAG_SET.has(t));
 
+  // MBTI/관심사/직접입력 태그를 색으로 구분해서 보여주기 위한 분류
+  const tagVariant = (tag: string): "mbti" | "custom" | "interest" =>
+    MBTI_TAG_SET.has(tag) ? "mbti" : PROFILE_TAG_SET.has(tag) ? "interest" : "custom";
+
   const pickMbti = (tag: string) => {
+    if (!draftMbti && draftTags.length >= MAX_PROFILE_TAGS) {
+      setTagsError(`태그는 최대 ${MAX_PROFILE_TAGS}개까지 넣을 수 있어요.`);
+      return;
+    }
     setDraftTags(tag === draftMbti ? draftInterests : [tag, ...draftInterests]);
     setTagsError("");
   };
@@ -98,8 +104,8 @@ function ProfilePage() {
   const toggleDraftTag = (tag: string) => {
     if (draftTags.includes(tag)) {
       setDraftTags(draftTags.filter((t) => t !== tag));
-    } else if (draftPicked.length >= MAX_PROFILE_TAGS) {
-      setTagsError(`관심사 태그는 최대 ${MAX_PROFILE_TAGS}개까지 선택할 수 있어요.`);
+    } else if (draftTags.length >= MAX_PROFILE_TAGS) {
+      setTagsError(`태그는 최대 ${MAX_PROFILE_TAGS}개까지 넣을 수 있어요.`);
       return;
     } else {
       setDraftTags([...draftTags, tag]);
@@ -121,6 +127,10 @@ function ProfilePage() {
     }
     if (MBTI_TAG_SET.has(tag.toUpperCase())) {
       setTagsError("MBTI는 위에서 골라주세요.");
+      return;
+    }
+    if (!draftCustom && draftTags.length >= MAX_PROFILE_TAGS) {
+      setTagsError(`태그는 최대 ${MAX_PROFILE_TAGS}개까지 넣을 수 있어요.`);
       return;
     }
     // 직접 입력 태그는 1개뿐이라 기존 것을 갈아끼운다
@@ -230,7 +240,7 @@ function ProfilePage() {
           alt={user.nickname}
         />
         <Link to="/mypage/edit" className="profile-edit-btn">
-          프로필 편집
+          이미지 편집
         </Link>
 
         <div className="profile-nickname-row">
@@ -330,11 +340,17 @@ function ProfilePage() {
               <div className="profile-tags-view">
                 {savedTags.length > 0 && (
                   <div className="profile-tags">
-                    {savedTags.map((tag) => (
-                      <span key={tag} className="profile-tag">
-                        {tag}
-                      </span>
-                    ))}
+                    {savedTags.map((tag) => {
+                      const variant = tagVariant(tag);
+                      return (
+                        <span
+                          key={tag}
+                          className={`profile-tag${variant !== "interest" ? ` profile-tag-${variant}` : ""}`}
+                        >
+                          {tag}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
                 <button type="button" className="profile-tags-edit" onClick={startEditTags}>
@@ -344,9 +360,9 @@ function ProfilePage() {
             ) : (
               <div className="profile-tags-editor">
                 <p className="profile-tag-hint">
-                  MBTI 1개와 관심사 태그 최대 {MAX_PROFILE_TAGS}개, 직접 입력 태그 1개를 넣을 수 있어요.
+                 태그를 최대 {MAX_PROFILE_TAGS}개까지 넣을 수 있어요.
                   <span className="profile-tag-hint-count">
-                    ({draftPicked.length}/{MAX_PROFILE_TAGS})
+                    ({draftTags.length}/{MAX_PROFILE_TAGS})
                   </span>
                 </p>
 
@@ -357,7 +373,7 @@ function ProfilePage() {
                       type="button"
                       key={tag}
                       className={`profile-tag profile-tag-selectable${
-                        draftMbti === tag ? " profile-tag-selected" : ""
+                        draftMbti === tag ? " profile-tag-selected profile-tag-mbti" : ""
                       }`}
                       onClick={() => pickMbti(tag)}
                     >
@@ -430,16 +446,21 @@ function ProfilePage() {
 
                 {draftTags.length > 0 && (
                   <div className="profile-tag-row profile-tag-row-picked">
-                    {draftTags.map((tag) => (
-                      <button
-                        type="button"
-                        key={tag}
-                        className="profile-tag profile-tag-selected"
-                        onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
-                      >
-                        {tag} ×
-                      </button>
-                    ))}
+                    {draftTags.map((tag) => {
+                      const variant = tagVariant(tag);
+                      return (
+                        <button
+                          type="button"
+                          key={tag}
+                          className={`profile-tag profile-tag-selected${
+                            variant !== "interest" ? ` profile-tag-${variant}` : ""
+                          }`}
+                          onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
+                        >
+                          {tag} ×
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
                 {tagsError && <p className="mypage-error">{tagsError}</p>}
