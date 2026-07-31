@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark, updateComment } from "../../api";
 import type { Comment, Post } from "../../types";
+import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardDetailPage.css";
 
@@ -255,10 +256,11 @@ function BoardDetailPage() {
   };
 
   useEffect(() => {
-    getPost(Number(postId))
+    getPost(Number(postId), token)
       .then(setPost)
       .catch(() => setError("게시글을 찾을 수 없습니다."));
     loadComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
   useEffect(() => {
@@ -326,7 +328,11 @@ function BoardDetailPage() {
       navigate("/board");
       return;
     }
-    navigate(post.boardType ? `/board?type=${encodeURIComponent(post.boardType)}` : "/board");
+    // 자유게시판 글의 boardType은 "잡담" 같은 카테고리라, 그 값을 그대로 목록 필터로
+    // 쓰면 "자유 게시판" 대신 카테고리 이름이 게시판인 것처럼 나온다. 공지사항/이벤트처럼
+    // 별도 게시판인 경우만 그 타입으로 돌아가고, 나머지는 자유 게시판으로 돌아간다.
+    const listType = post.boardType && SPECIAL_BOARDS.includes(post.boardType) ? post.boardType : "자유 게시판";
+    navigate(`/board?type=${encodeURIComponent(listType)}`);
   };
 
   const handleReportPost = () => {

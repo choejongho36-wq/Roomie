@@ -1,0 +1,303 @@
+.activity-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 auto 24px;
+  max-width: 980px;
+}
+
+.activity-stat-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 16px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-width: 110px;
+}
+
+.activity-stat-number {
+  font-size: 30px;
+  font-weight: 800;
+  color: #f16526;
+  line-height: 1.1;
+}
+
+.activity-stat-label {
+  font-size: 13px;
+  color: #999;
+  font-weight: 600;
+}
+
+.activity-stat-card-wide {
+  flex: 1 1 200px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.activity-stat-recent-link {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-stat-recent-link:hover {
+  color: #f16526;
+}
+
+.activity-stat-recent-empty {
+  font-size: 14px;
+  color: #bbb;
+}
+
+.activity-tabs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto 16px;
+  max-width: 980px;
+  border-bottom: 1px solid #eee;
+}
+
+.activity-tab {
+  
+  border: none;
+  background: none;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #999;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.activity-tab:hover {
+  color: #f16526;
+}
+
+.activity-tab-active {
+  color: #f16526;
+  border-bottom-color: #f16526;
+}
+
+.activity-empty-cta {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: #f16526;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.activity-row-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 980px;
+  margin: 0 auto 10px;
+  padding: 10px 14px;
+  background: #fafafa;
+  border-radius: 10px;
+}
+
+.activity-row-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+  cursor: pointer;
+}
+
+.activity-row-delete-btn {
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.activity-row-delete-btn:hover:not(:disabled) {
+  border-color: #e03131;
+  color: #e03131;
+}
+
+.activity-row-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.activity-row-list {
+  max-width: 980px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.activity-row-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.activity-row-row:last-child {
+  border-bottom: none;
+}
+
+.activity-row-row:hover {
+  background: #fafafa;
+}
+
+.activity-row-checkbox {
+  margin-top: 4px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.activity-row-card {
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.activity-row-date {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.activity-row-content {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #222;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-row-source {
+  font-size: 12px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-row-source-title {
+  color: #f16526;
+  font-weight: 600;
+}
+
+.activity-comment-list {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.activity-comment-item {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f1f1;
+  text-align: left;
+}
+
+.activity-comment-item:last-child {
+  border-bottom: none;
+}
+
+.activity-comment-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #f16526;
+  object-fit: cover;
+  margin-top: 2px;
+}
+
+.activity-comment-body {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.activity-comment-header {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.activity-comment-nickname {
+  font-weight: 700;
+  font-size: 15px;
+  color: #222;
+}
+
+.activity-comment-date {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.activity-comment-content {
+  margin: 0 0 6px;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #333;
+  text-align: left;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.activity-comment-source {
+  display: inline-block;
+  font-size: 12px;
+  color: #f16526;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.activity-comment-source:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .activity-stat-card {
+    flex: 1 1 100%;
+  }
+}

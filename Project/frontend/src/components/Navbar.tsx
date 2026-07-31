@@ -70,11 +70,14 @@ function Navbar() {
           <div className="navbar-dropdown">
             <span className="navbar-menu-link navbar-dropdown-trigger">커뮤니티</span>
             <div className="navbar-dropdown-menu">
+              <Link to="/board?type=공지사항" className="navbar-dropdown-item">
+                공지사항
+              </Link>
+              <Link to="/board?type=이벤트" className="navbar-dropdown-item">
+                이벤트
+              </Link>
               <Link to="/board?type=자유 게시판" className="navbar-dropdown-item">
                 자유 게시판
-              </Link>
-              <Link to="/board?type=고민 게시판" className="navbar-dropdown-item">
-                고민 게시판
               </Link>
             </div>
           </div>

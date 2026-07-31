@@ -17,6 +17,7 @@ import ProfileBoardPage from "./pages/ProfileBoardPage";
 import ProfilePage from "./pages/mypage/ProfilePage";
 import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
+import MyActivityDashboardPage from "./pages/mypage/MyActivityDashboardPage";
 import InterestsPage from "./pages/mypage/InterestsPage";
 import ChatPage from "./pages/mypage/ChatPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
@@ -63,7 +64,7 @@ function App() {
               <Route index element={<ProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />
               <Route path="activity" element={<ActivityPage />} />
-              <Route path="my-activity" element={<PlaceholderPage title="내 활동" />} />
+              <Route path="my-activity" element={<MyActivityDashboardPage />} />
               <Route path="interests" element={<InterestsPage />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />

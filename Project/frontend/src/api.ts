@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Comment, Inquiry, InquiryRequest, Page, Post, PostRequest, User } from "./types";
+import type { Comment, Inquiry, InquiryRequest, MyComment, Page, Post, PostRequest, User } from "./types";
 import type {
   RecommendationResult,
   SurveyComparisonExplanationResult,
@@ -20,8 +20,10 @@ export const getPosts = async (page: number): Promise<Page<Post>> => {
   return response.data;
 };
 
-export const getPost = async (postId: number): Promise<Post> => {
-  const response = await axios.get<Post>(`${API_BASE_URL}/posts/${postId}`);
+export const getPost = async (postId: number, token?: string | null): Promise<Post> => {
+  const response = await axios.get<Post>(`${API_BASE_URL}/posts/${postId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
   return response.data;
 };
 
@@ -47,6 +49,20 @@ export const deletePost = async (token: string, postId: number): Promise<void> =
 
 export const getBookmarkedPosts = async (token: string): Promise<Post[]> => {
   const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/bookmarked`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getMyPosts = async (token: string): Promise<Post[]> => {
+  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getMyComments = async (token: string): Promise<MyComment[]> => {
+  const response = await axios.get<MyComment[]>(`${API_BASE_URL}/comments/mine`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;

@@ -69,6 +69,14 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface MyComment {
+  commentId: number;
+  postId: number;
+  postTitle: string | null;
+  content: string;
+  createdAt: string;
+}
+
 export interface Page<T> {
   content: T[];
   number: number;
