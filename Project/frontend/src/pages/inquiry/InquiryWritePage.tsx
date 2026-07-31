@@ -110,7 +110,7 @@ function InquiryWritePage() {
     <div className="page board-write-page">
       <div className="board-write-header">
         <div>
-          <h1>{isEdit ? "문의 수정" : "문의하기"}</h1>
+          <h1>{isEdit ? "문의 수정" : "문의 하기"}</h1>
           <p className="board-write-subtitle">궁금한 점을 자유롭게 남겨주세요.</p>
         </div>
 
