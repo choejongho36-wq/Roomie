@@ -110,6 +110,10 @@ public class User {
         this.password = password;
     }
 
+    public void withdraw() {
+        this.status = "WITHDRAWN";
+    }
+
     public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {
         this.gender = gender;
         this.birthDate = birthDate;

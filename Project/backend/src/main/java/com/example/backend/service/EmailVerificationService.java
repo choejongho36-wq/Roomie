@@ -25,12 +25,23 @@ public class EmailVerificationService {
     @Value("${email.verification.expire-minutes:5}")
     private long expireMinutes;
 
-    // 1단계: 인증번호 발송 (이미 가입된 이메일이면 발송 대신 에러)
+    // 1단계(회원가입): 인증번호 발송 (이미 가입된 이메일이면 발송 대신 에러)
     public void sendVerificationCode(String email) {
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("이미 가입된 이메일입니다.");
         }
+        issueAndSend(email);
+    }
 
+    // 1단계(아이디 찾기 / 비밀번호 재설정): 이미 가입된 이메일이어야만 발송함 (회원가입과 반대 조건)
+    public void sendVerificationCodeForAccountRecovery(String email) {
+        if (!userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("가입되지 않은 이메일입니다.");
+        }
+        issueAndSend(email);
+    }
+
+    private void issueAndSend(String email) {
         String code = generateCode();
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expireMinutes);
 
@@ -66,6 +77,11 @@ public class EmailVerificationService {
         return emailVerificationRepository.findByEmail(email)
                 .map(EmailVerification::isVerified)
                 .orElse(false);
+    }
+
+    // 비밀번호 재설정처럼 "한 번 쓰고 끝"인 인증은, 다 쓴 뒤 삭제해서 재사용(리플레이)을 막음
+    public void invalidate(String email) {
+        emailVerificationRepository.findByEmail(email).ifPresent(emailVerificationRepository::delete);
     }
 
     private String generateCode() {

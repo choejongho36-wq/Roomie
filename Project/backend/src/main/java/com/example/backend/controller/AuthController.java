@@ -8,6 +8,9 @@ import com.example.backend.dto.LoginIdCheckResponse;
 import com.example.backend.dto.NicknameCheckResponse;
 import com.example.backend.dto.EmailVerificationRequest;
 import com.example.backend.dto.EmailVerificationConfirmRequest;
+import com.example.backend.dto.FindIdResponse;
+import com.example.backend.dto.PasswordResetRequest;
+import com.example.backend.dto.PasswordResetConfirmRequest;
 import com.example.backend.service.AuthService;
 import com.example.backend.service.EmailVerificationService;
 import jakarta.validation.Valid;
@@ -60,6 +63,37 @@ public class AuthController {
     @PostMapping("/email/verify-confirm")
     public ResponseEntity<Void> confirmEmailVerification(@Valid @RequestBody EmailVerificationConfirmRequest request) {
         emailVerificationService.confirmVerificationCode(request.email(), request.code());
+        return ResponseEntity.ok().build();
+    }
+
+    // ===== 아이디 찾기 =====
+
+    @PostMapping("/find-id/request")
+    public ResponseEntity<Void> requestFindId(@Valid @RequestBody EmailVerificationRequest request) {
+        emailVerificationService.sendVerificationCodeForAccountRecovery(request.email());
+        return ResponseEntity.ok().build();
+    }
+
+    // 인증번호 확인은 위의 공용 /email/verify-confirm 을 그대로 재사용함
+
+    @GetMapping("/find-id/result")
+    public ResponseEntity<FindIdResponse> findIdResult(@RequestParam String email) {
+        return ResponseEntity.ok(authService.findLoginId(email));
+    }
+
+    // ===== 비밀번호 재설정 =====
+
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest request) {
+        authService.requestPasswordReset(request);
+        return ResponseEntity.ok().build();
+    }
+
+    // 인증번호 확인도 위의 공용 /email/verify-confirm 을 그대로 재사용함
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        authService.resetPassword(request);
         return ResponseEntity.ok().build();
     }
 }

@@ -171,6 +171,8 @@ function Navbar() {
             if (redirectAfterLogin) {
               setRedirectAfterLogin(false);
               goToMatching(token);
+            } else {
+              navigate("/");
             }
           }}
         />
