@@ -21,7 +21,7 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { token, user, login, logout } = useAuth();
-  const { notifications, unreadCount, removeNotification, clearAllNotifications } = useChat();
+  const { notifications, unreadCount, removeNotification, clearAllNotifications, chatUnreadCount } = useChat();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
@@ -70,11 +70,14 @@ function Navbar() {
           <div className="navbar-dropdown">
             <span className="navbar-menu-link navbar-dropdown-trigger">커뮤니티</span>
             <div className="navbar-dropdown-menu">
+              <Link to="/board?type=공지사항" className="navbar-dropdown-item">
+                공지사항
+              </Link>
+              <Link to="/board?type=이벤트" className="navbar-dropdown-item">
+                이벤트
+              </Link>
               <Link to="/board?type=자유 게시판" className="navbar-dropdown-item">
                 자유 게시판
-              </Link>
-              <Link to="/board?type=고민 게시판" className="navbar-dropdown-item">
-                고민 게시판
               </Link>
             </div>
           </div>
@@ -161,6 +164,11 @@ function Navbar() {
                   >
                     <Icon name={item.icon} />
                     {item.label}
+                    {item.to === "/mypage/chat" && chatUnreadCount > 0 && (
+                      <span className="navbar-profile-chat-badge">
+                        {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
                 <button

@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types";
+import { FREE_BOARD_CATEGORIES } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardListPage.css";
+
+const FREE_BOARD_LABEL = "자유 게시판";
 
 const getProfileImageSrc = (url: string | null | undefined) => {
   if (!url) return null;
@@ -58,7 +61,15 @@ function BoardListPage() {
   const filteredPosts = useMemo(() => {
     if (!posts) return [];
     return posts
-      .filter((post) => !boardType || post.boardType === boardType)
+      .filter((post) => {
+        if (!boardType) return true;
+        // "자유 게시판"은 별도 boardType 값이 아니라, 공지사항/이벤트를 뺀
+        // 카테고리(고민상담·잡담 등)로 분류된 글 전체를 묶어서 보여준다.
+        if (boardType === FREE_BOARD_LABEL) {
+          return !post.boardType || FREE_BOARD_CATEGORIES.includes(post.boardType);
+        }
+        return post.boardType === boardType;
+      })
       // 최신 글이 맨 위로 오도록 작성일 기준 내림차순 정렬. (백엔드가 정렬 없이
       // 그냥 저장 순서대로 내려주고 있어서 프론트에서 한 번 더 정렬해준다.)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -70,8 +81,10 @@ function BoardListPage() {
         <div>
           <h1>{boardType ?? "커뮤니티"}</h1>
           <p className="board-list-subtitle">
-            {boardType === "고민 게시판"
-              ? "함께 나누고 싶은 고민을 이야기해보세요."
+            {boardType === "공지사항"
+              ? "서비스 공지·업데이트 소식을 확인하세요."
+              : boardType === "이벤트"
+              ? "진행 중이거나 예정된 이벤트를 확인하세요."
               : "자유롭게 이야기를 나눠보세요."}
           </p>
         </div>

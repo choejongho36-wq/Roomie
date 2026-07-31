@@ -10,6 +10,7 @@ import com.example.backend.repository.ChatMessageRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -66,13 +67,19 @@ public class ChatService {
         return chatLeaveRepository.existsByUserIdAndPartnerId(partnerId, userId);
     }
 
+    @Transactional
     public List<ChatMessageResponse> getMessages(Long userId, Long otherUserId) {
+        chatMessageRepository.markAsRead(userId, otherUserId);
         return chatMessageRepository
                 .findBySenderIdAndReceiverIdOrSenderIdAndReceiverIdOrderByCreatedAtAsc(
                         userId, otherUserId, otherUserId, userId)
                 .stream()
                 .map(ChatService::toResponse)
                 .toList();
+    }
+
+    public long getUnreadCount(Long userId) {
+        return chatMessageRepository.countByReceiverIdAndReadFalse(userId);
     }
 
     public ChatMessageResponse saveMessage(Long senderId, Long receiverId, String content) {

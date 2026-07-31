@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.domain.User;
 import com.example.backend.dto.CommentRequest;
 import com.example.backend.dto.CommentResponse;
+import com.example.backend.dto.MyCommentResponse;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,11 @@ public class CommentController {
     public CommentResponse createComment(Authentication authentication, @PathVariable Long postId,
             @RequestBody CommentRequest request) {
         return commentService.create(findUser(authentication).getUserId(), postId, request);
+    }
+
+    @GetMapping("/api/comments/mine")
+    public List<MyCommentResponse> getMyComments(Authentication authentication) {
+        return commentService.getMyComments(findUser(authentication).getUserId());
     }
 
     @PutMapping("/api/comments/{commentId}")

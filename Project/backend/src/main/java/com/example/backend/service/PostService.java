@@ -108,6 +108,17 @@ public class PostService {
                 .toList();
     }
 
+    // 마이페이지 "내 활동" 대시보드용. 본인이 작성한 글을 최신순으로 반환한다.
+    public List<PostResponse> getMyPosts(Long userId) {
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Long> postIds = posts.stream().map(Post::getPostId).toList();
+        Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
+        User author = authorOf(userId);
+        return posts.stream()
+                .map(p -> toResponse(p, author, bookmarkCounts.getOrDefault(p.getPostId(), 0L), false))
+                .toList();
+    }
+
     public PostResponse toggleBookmark(Long postId, Long userId) {
         Post post = findPost(postId);
         if (post.getUserId().equals(userId)) {

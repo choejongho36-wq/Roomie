@@ -324,9 +324,9 @@
 }
 
 .profile-tags-view .profile-tag:not(.profile-tag-selectable) {
-  background: #f16526;
-  border-color: #f16526;
-  color: #fff;
+  background: #ffe0d0;
+  border-color: #ffc2a3;
+  color: #d9531e;
 }
 
 .profile-tags-edit {
@@ -347,9 +347,9 @@
 }
 
 .profile-tag-selected {
-  background: #f16526;
-  color: #fff;
-  border-color: #f16526;
+  background: #ffe0d0;
+  color: #d9531e;
+  border-color: #ffc2a3;
 }
 
 .profile-tags-editor {
@@ -420,7 +420,7 @@
 }
 
 .profile-tag-row-picked .profile-tag:hover {
-  background: #d9531e;
+  background: #ffc2a3;
   border-color: #d9531e;
 }
 
@@ -464,6 +464,21 @@
   margin-left: 4px;
   color: #16a34a;
   font-weight: 700;
+}
+
+/* MBTI/직접입력 태그는 관심사 태그(주황)와 구분되게 톤만 살짝 다르게 보여준다 */
+.profile-tags-view .profile-tag.profile-tag-mbti,
+.profile-tag.profile-tag-selected.profile-tag-mbti {
+  background: #eef1fb;
+  border-color: #c3cdf0;
+  color: #4a5a9e;
+}
+
+.profile-tags-view .profile-tag.profile-tag-custom,
+.profile-tag.profile-tag-selected.profile-tag-custom {
+  background: #f6eef8;
+  border-color: #dcc0e3;
+  color: #8c4f96;
 }
 
 .profile-bio {
@@ -514,6 +529,7 @@
 
 .profile-tags-actions {
   display: flex;
+  justify-content: center;
   gap: 6px;
 }
 
