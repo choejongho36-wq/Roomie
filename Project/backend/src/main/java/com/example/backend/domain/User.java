@@ -68,6 +68,12 @@ public class User {
     @Column(nullable = false, length = 20)
     private String status;
 
+    // 관리자 페이지 접근 권한. "USER" | "ADMIN" (기본값 USER)
+    // 기존 레코드에는 이 컬럼이 없다가 새로 추가되므로, NOT NULL로 두면 MySQL strict mode에서
+    // 기존 행 때문에 ALTER TABLE이 실패할 수 있어 nullable로 둔다. null은 USER와 동일하게 취급한다.
+    @Column(length = 20)
+    private String role = "USER";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -82,6 +88,8 @@ public class User {
         this.createdAt = LocalDateTime.now();
         if (this.status == null)
             this.status = "ACTIVE";
+        if (this.role == null)
+            this.role = "USER";
     }
 
     @PreUpdate
@@ -112,6 +120,18 @@ public class User {
 
     public void withdraw() {
         this.status = "WITHDRAWN";
+    }
+
+    public void suspend() {
+        this.status = "SUSPENDED";
+    }
+
+    public void activate() {
+        this.status = "ACTIVE";
+    }
+
+    public boolean isAdmin() {
+        return this.role != null && this.role.equalsIgnoreCase("ADMIN");
     }
 
     public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {
