@@ -12,4 +12,5 @@ export interface User {
   bio: string | null;
   provider: string;
   emailVerified: boolean;
+  isAdmin: boolean;
 }

@@ -182,11 +182,18 @@ public class AdminController {
     // ===== 공지/이벤트 관리 =====
 
     @GetMapping("/admin/notices")
-    public String notices(Model model) {
-        List<Post> notices = postRepository.findByBoardTypeInOrderByCreatedAtDesc(List.of("공지사항", "이벤트"));
+    public String notices(@RequestParam(required = false) String type, Model model) {
+        List<String> boardTypes = (type != null && !type.isBlank()) ? List.of(type) : List.of("공지사항", "이벤트");
+        List<Post> notices = postRepository.findByBoardTypeInOrderByCreatedAtDesc(boardTypes);
         model.addAttribute("notices", notices);
         model.addAttribute("authorNames", authorNameMap(notices.stream().map(Post::getUserId).toList()));
+        model.addAttribute("type", type == null ? "" : type);
         return "notices";
+    }
+
+    @GetMapping("/admin/notices/write")
+    public String noticeWriteForm() {
+        return "notice-write";
     }
 
     @PostMapping("/admin/notices")
@@ -195,7 +202,7 @@ public class AdminController {
             @RequestParam String boardType,
             @RequestParam String content,
             @RequestParam(required = false) String tags) {
-        User admin = userRepository.findByEmail(authentication.getName())
+        User admin = userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("관리자 계정을 찾을 수 없습니다."));
         PostRequest request = new PostRequest(
                 title, null, null, null, null, null, null, null, null,
