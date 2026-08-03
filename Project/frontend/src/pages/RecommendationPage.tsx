@@ -63,6 +63,7 @@ function RecommendationPage() {
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
   const [surveys, setSurveys] = useState<SurveyResult[] | null>(null);
   const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
+  const [aiSurveyInsightError, setAiSurveyInsightError] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -75,6 +76,7 @@ function RecommendationPage() {
 
   useEffect(() => {
     setAiSurveyInsight(null);
+    setAiSurveyInsightError("");
     if (!token) {
       setRecommendations(null);
       setSurveys(null);
@@ -107,7 +109,7 @@ function RecommendationPage() {
         if (isMounted) setAiSurveyInsight(result.summary);
       })
       .catch(() => {
-        if (isMounted) setAiSurveyInsight(null);
+        if (isMounted) setAiSurveyInsightError("AI 설문 요약을 불러오지 못했어요.");
       });
 
     return () => {
@@ -240,8 +242,10 @@ function RecommendationPage() {
               <h3>AI 설문 요약</h3>
             </div>
 
-            {surveys === null && aiSurveyInsight === null ? (
+            {surveys === null && aiSurveyInsight === null && !aiSurveyInsightError ? (
               <p className="recommendation-survey-summary-empty">설문 답변을 불러오는 중...</p>
+            ) : aiSurveyInsightError ? (
+              <p className="recommendation-survey-error">{aiSurveyInsightError}</p>
             ) : (
               <p className="recommendation-survey-insight">{surveyInsight}</p>
             )}

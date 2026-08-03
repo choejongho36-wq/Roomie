@@ -65,18 +65,6 @@ function InquiryListPage() {
 
   return (
     <div className="page board-list-page">
-      <div className="board-floating-menu">
-        <Link to="/inquiry" className="board-floating-menu-button">
-          문의
-        </Link>
-        <Link to="/mypage/interests" className="board-floating-menu-button">
-          찜목록
-        </Link>
-        <Link to="/mypage/chat" className="board-floating-menu-button">
-          채팅목록
-        </Link>
-      </div>
-
       <div className="board-list-header">
         <div>
           <h1>문의 게시판</h1>

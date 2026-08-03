@@ -3,14 +3,19 @@ package com.example.backend.controller;
 import com.example.backend.domain.Inquiry;
 import com.example.backend.domain.Post;
 import com.example.backend.domain.User;
+import com.example.backend.dto.PostRequest;
 import com.example.backend.repository.CommentRepository;
 import com.example.backend.repository.InquiryRepository;
+import com.example.backend.repository.PostReportRepository;
 import com.example.backend.repository.PostRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,6 +44,8 @@ public class AdminController {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final InquiryRepository inquiryRepository;
+    private final PostReportRepository postReportRepository;
+    private final PostService postService;
 
     // ===== 대시보드 =====
 
@@ -72,17 +80,28 @@ public class AdminController {
     // ===== 회원 관리 =====
 
     @GetMapping("/admin/users")
-    public String users(@RequestParam(defaultValue = "0") int page, Model model) {
+    public String users(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String keyword, Model model) {
         Pageable pageable = PageRequest.of(page, 20);
-        Page<User> usersPage = userRepository.findAllByOrderByCreatedAtDesc(pageable);
+        Page<User> usersPage = (keyword == null || keyword.isBlank())
+                ? userRepository.findAllByOrderByCreatedAtDesc(pageable)
+                : userRepository.findByNicknameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrderByCreatedAtDesc(
+                        keyword, keyword, pageable);
         model.addAttribute("usersPage", usersPage);
+        model.addAttribute("keyword", keyword == null ? "" : keyword);
         return "users";
     }
 
+    // duration: "7", "30", "PERMANENT"
     @PostMapping("/admin/users/{id}/suspend")
-    public String suspendUser(@PathVariable("id") Long id) {
+    public String suspendUser(@PathVariable("id") Long id, @RequestParam String duration) {
         userRepository.findById(id).ifPresent(user -> {
-            user.suspend();
+            LocalDateTime until = switch (duration) {
+                case "7" -> LocalDateTime.now().plusDays(7);
+                case "30" -> LocalDateTime.now().plusDays(30);
+                default -> null; // PERMANENT
+            };
+            user.suspend(until);
             userRepository.save(user);
         });
         return "redirect:/admin/users";
@@ -100,12 +119,56 @@ public class AdminController {
     // ===== 게시글 관리 =====
 
     @GetMapping("/admin/posts")
-    public String posts(@RequestParam(defaultValue = "0") int page, Model model) {
-        Pageable pageable = PageRequest.of(page, 20);
-        Page<Post> postsPage = postRepository.findAll(pageable);
+    public String posts(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String dir,
+            Model model) {
+        int pageSize = 20;
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+
+        List<Post> matched;
+        if (hasKeyword) {
+            List<Long> matchedAuthorIds = userRepository.findByNicknameContainingIgnoreCase(keyword).stream()
+                    .map(User::getUserId).toList();
+            // Spring Data의 IN 절에 빈 리스트를 넘기면 매칭되는 회원이 없다는 뜻이라, 절대 존재하지
+            // 않을 id(-1L)를 대신 넣어서 "제목에만 매칭" 조건이 정상 동작하도록 한다.
+            List<Long> authorIdsForQuery = matchedAuthorIds.isEmpty() ? List.of(-1L) : matchedAuthorIds;
+            matched = postRepository.findByTitleContainingIgnoreCaseOrUserIdIn(keyword, authorIdsForQuery);
+        } else {
+            matched = postRepository.findAll();
+        }
+
+        List<Long> matchedPostIds = matched.stream().map(Post::getPostId).toList();
+        Map<Long, Long> reportCounts = matchedPostIds.isEmpty() ? Map.of()
+                : postReportRepository.countGroupedByPostIds(matchedPostIds).stream()
+                        .collect(Collectors.toMap(
+                                PostReportRepository.PostReportCount::getPostId,
+                                PostReportRepository.PostReportCount::getCnt));
+
+        Comparator<Post> comparator = "reported".equals(sort)
+                ? Comparator.comparingLong((Post p) -> reportCounts.getOrDefault(p.getPostId(), 0L))
+                : Comparator.comparing(Post::getCreatedAt);
+        if ("desc".equals(dir)) {
+            comparator = comparator.reversed();
+        }
+
+        List<Post> sorted = new ArrayList<>(matched);
+        sorted.sort(comparator);
+
+        int totalElements = sorted.size();
+        int fromIndex = Math.min(page * pageSize, totalElements);
+        int toIndex = Math.min(fromIndex + pageSize, totalElements);
+        List<Post> pageContent = sorted.subList(fromIndex, toIndex);
+
+        Page<Post> postsPage = new PageImpl<>(pageContent, PageRequest.of(page, pageSize), totalElements);
+
         model.addAttribute("postsPage", postsPage);
-        model.addAttribute("authorNames", authorNameMap(
-                postsPage.getContent().stream().map(Post::getUserId).toList()));
+        model.addAttribute("authorNames", authorNameMap(pageContent.stream().map(Post::getUserId).toList()));
+        model.addAttribute("reportCounts", reportCounts);
+        model.addAttribute("keyword", keyword == null ? "" : keyword);
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
         return "posts";
     }
 
@@ -114,6 +177,38 @@ public class AdminController {
         commentRepository.deleteByPostId(id);
         postRepository.deleteById(id);
         return "redirect:/admin/posts";
+    }
+
+    // ===== 공지/이벤트 관리 =====
+
+    @GetMapping("/admin/notices")
+    public String notices(Model model) {
+        List<Post> notices = postRepository.findByBoardTypeInOrderByCreatedAtDesc(List.of("공지사항", "이벤트"));
+        model.addAttribute("notices", notices);
+        model.addAttribute("authorNames", authorNameMap(notices.stream().map(Post::getUserId).toList()));
+        return "notices";
+    }
+
+    @PostMapping("/admin/notices")
+    public String createNotice(Authentication authentication,
+            @RequestParam String title,
+            @RequestParam String boardType,
+            @RequestParam String content,
+            @RequestParam(required = false) String tags) {
+        User admin = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("관리자 계정을 찾을 수 없습니다."));
+        PostRequest request = new PostRequest(
+                title, null, null, null, null, null, null, null, null,
+                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
+        postService.create(admin.getUserId(), request);
+        return "redirect:/admin/notices";
+    }
+
+    @PostMapping("/admin/notices/{id}/delete")
+    public String deleteNotice(@PathVariable("id") Long id) {
+        commentRepository.deleteByPostId(id);
+        postRepository.deleteById(id);
+        return "redirect:/admin/notices";
     }
 
     // ===== 문의 관리 =====
@@ -134,6 +229,11 @@ public class AdminController {
         model.addAttribute("inquiry", inquiry);
         model.addAttribute("authorName", userRepository.findById(inquiry.getUserId())
                 .map(User::getNickname).orElse(null));
+
+        // 같은 작성자가 쓴 다른 문의 최신 5건 (지금 보고 있는 문의는 제외)
+        List<Inquiry> otherInquiries = inquiryRepository
+                .findTop5ByUserIdAndInquiryIdNotOrderByCreatedAtDesc(inquiry.getUserId(), id);
+        model.addAttribute("otherInquiries", otherInquiries);
         return "inquiry-detail";
     }
 
