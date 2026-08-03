@@ -1,13 +1,45 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Icon } from "../../components/mypage/MyPageSidebar";
+import { useAuth } from "../../context/AuthContext";
+import { getMySurveySummary } from "../../api";
+import roomieLogo from "../../assets/Roomie_logo.png";
 import "./SurveyPage.css";
 
 function SurveyCompletePage() {
+  const { token, user } = useAuth();
+  const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
+  const [aiSurveyFailed, setAiSurveyFailed] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    getMySurveySummary(token)
+      .then((result) => setAiSurveyInsight(result.summary))
+      .catch(() => setAiSurveyFailed(true));
+  }, [token]);
+
+  const surveyInsight = aiSurveyFailed
+    ? "AI 설문 요약을 불러오지 못했어요."
+    : aiSurveyInsight ?? "방금 답변을 분석하고 있어요...";
+
   return (
     <div className="survey-page">
       <div className="survey-shell survey-complete">
         <h1>설문이 완료되었어요!</h1>
         <p>응답해주신 내용은 룸메이트 매칭에 활용돼요.</p>
+
+        <div className="survey-greeting">
+          <div className="survey-greeting-row">
+            <img src={roomieLogo} alt="Roomie" className="survey-greeting-avatar" />
+            <div className="survey-greeting-bubbles">
+              <p className="survey-greeting-bubble">
+                루미가 {user?.nickname ?? "회원"}님의 설문 데이터를 취합하여 한줄요약 해보았어요!
+              </p>
+              <p className="survey-greeting-bubble">{surveyInsight}</p>
+            </div>
+          </div>
+        </div>
+
         <div className="survey-complete-actions">
           <Link to="/recommend" className="survey-complete-banner survey-complete-banner-primary">
             <span className="survey-complete-banner-icon">

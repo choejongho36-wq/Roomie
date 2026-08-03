@@ -87,6 +87,9 @@ public class AuthService {
         if ("WITHDRAWN".equals(user.getStatus())) {
             throw new IllegalArgumentException("탈퇴한 계정입니다.");
         }
+        if ("SUSPENDED".equals(user.getStatus())) {
+            throw new IllegalArgumentException("정지된 계정입니다. 고객센터에 문의해주세요.");
+        }
         return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
     }
 
