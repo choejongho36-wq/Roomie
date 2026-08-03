@@ -195,7 +195,7 @@ public class AdminController {
             @RequestParam String boardType,
             @RequestParam String content,
             @RequestParam(required = false) String tags) {
-        User admin = userRepository.findByEmail(authentication.getName())
+        User admin = userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("관리자 계정을 찾을 수 없습니다."));
         PostRequest request = new PostRequest(
                 title, null, null, null, null, null, null, null, null,

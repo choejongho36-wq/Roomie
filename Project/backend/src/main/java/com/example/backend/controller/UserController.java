@@ -309,7 +309,8 @@ public class UserController {
                 tags,
                 user.getBio(),
                 user.getProvider(),
-                user.getEmailVerified()
+                user.getEmailVerified(),
+                user.isAdmin()
         );
     }
 }

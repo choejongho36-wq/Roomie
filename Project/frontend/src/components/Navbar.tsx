@@ -174,6 +174,17 @@ function Navbar() {
                     )}
                   </NavLink>
                 ))}
+                {user?.isAdmin && (
+                  <a
+                    href={`${API_ORIGIN}/admin`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="navbar-profile-dropdown-item"
+                  >
+                    <Icon name="gear" />
+                    관리자 페이지
+                  </a>
+                )}
                 <button
                   type="button"
                   className="navbar-profile-dropdown-item navbar-profile-dropdown-item-logout"
