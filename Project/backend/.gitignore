@@ -37,6 +37,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### macOS ###
+.DS_Store
+
 ### 민감 정보 ###
 application.properties
 application-local.properties
