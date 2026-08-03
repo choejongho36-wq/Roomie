@@ -49,5 +49,10 @@ public class PostBookmarkService {
         return new BookmarkResult(bookmarked, count);
     }
 
+    // 게시글 삭제 시 그 글에 딸린 찜 기록도 함께 정리한다.
+    public void deleteAllForPost(Long postId) {
+        postBookmarkRepository.deleteByPostId(postId);
+    }
+
     public record BookmarkResult(boolean bookmarked, long count) {}
 }
