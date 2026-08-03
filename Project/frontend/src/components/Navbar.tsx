@@ -176,7 +176,7 @@ function Navbar() {
                 ))}
                 {user?.isAdmin && (
                   <a
-                    href={`${API_ORIGIN}/admin`}
+                    href={`${API_ORIGIN}/admin/login`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="navbar-profile-dropdown-item"

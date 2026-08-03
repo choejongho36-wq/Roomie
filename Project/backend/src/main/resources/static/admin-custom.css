@@ -45,6 +45,7 @@
     border-top: none;
 }
 
+
 /* 로그인 페이지 */
 .admin-login-bg {
     min-height: 100vh;
@@ -149,4 +150,46 @@
 #btnNavbarSearch:focus {
     background-color: #d9550f !important;
     border-color: #d9550f !important;
+}
+
+/* 상단 통합검색 드롭다운 */
+.admin-search-wrap {
+    position: relative;
+}
+
+.admin-search-results {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    z-index: 1050;
+}
+
+.admin-search-results.is-open {
+    display: block;
+}
+
+.admin-search-item {
+    display: block;
+    padding: 10px 14px;
+    color: #333;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.admin-search-item:hover {
+    background: #fff4ec;
+    color: #f16526;
+}
+
+.admin-search-empty {
+    padding: 10px 14px;
+    color: #999;
+    font-size: 13px;
 }

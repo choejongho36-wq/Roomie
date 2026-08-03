@@ -14,11 +14,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostController {
+
+    // 이 두 게시판은 운영자 공지/이벤트 전용이라 일반 회원은 글을 쓸 수 없다.
+    private static final Set<String> ADMIN_ONLY_BOARD_TYPES = Set.of("공지사항", "이벤트");
 
     private final PostService postService;
     private final UserRepository userRepository;
@@ -45,13 +49,17 @@ public class PostController {
 
     @PostMapping
     public PostResponse createPost(Authentication authentication, @RequestBody PostRequest request) {
-        return postService.create(findUser(authentication).getUserId(), request);
+        User user = findUser(authentication);
+        requireAdminForNoticeOrEvent(user, request);
+        return postService.create(user.getUserId(), request);
     }
 
     @PutMapping("/{postId}")
     public PostResponse updatePost(Authentication authentication, @PathVariable Long postId,
             @RequestBody PostRequest request) {
-        return postService.update(findUser(authentication).getUserId(), postId, request);
+        User user = findUser(authentication);
+        requireAdminForNoticeOrEvent(user, request);
+        return postService.update(user.getUserId(), postId, request);
     }
 
     @DeleteMapping("/{postId}")
@@ -74,6 +82,12 @@ public class PostController {
     private User findUser(Authentication authentication) {
         return userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    }
+
+    private void requireAdminForNoticeOrEvent(User user, PostRequest request) {
+        if (ADMIN_ONLY_BOARD_TYPES.contains(request.boardType()) && !user.isAdmin()) {
+            throw new IllegalArgumentException("공지사항/이벤트 게시판은 관리자만 글을 작성할 수 있습니다.");
+        }
     }
 
     // 비로그인 상태(또는 유효하지 않은 토큰)에서도 조회는 가능해야 하므로, 로그인 여부를 안전하게 확인합니다.

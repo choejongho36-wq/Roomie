@@ -160,6 +160,15 @@ export const deleteInquiry = async (token: string, inquiryId: number): Promise<v
   });
 };
 
+export const answerInquiry = async (token: string, inquiryId: number, answer: string): Promise<Inquiry> => {
+  const response = await axios.post<Inquiry>(
+    `${API_BASE_URL}/inquiries/${inquiryId}/answer`,
+    { answer },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
 export const login = async (loginId: string, password: string): Promise<string> => {
   const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/login`, {
     loginId,

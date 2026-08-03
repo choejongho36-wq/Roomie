@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.domain.Inquiry;
 import com.example.backend.domain.Post;
+import com.example.backend.domain.PostReport;
 import com.example.backend.domain.User;
 import com.example.backend.dto.PostRequest;
 import com.example.backend.repository.CommentRepository;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,9 +56,21 @@ public class AdminController {
         model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("totalPosts", postRepository.count());
         model.addAttribute("totalComments", commentRepository.countByDeletedFalse());
-        model.addAttribute("reportCount", inquiryRepository.countByCategory("신고"));
         model.addAttribute("pendingInquiries", inquiryRepository.countByStatus("PENDING"));
-        model.addAttribute("recentUsers", userRepository.findTop5ByOrderByCreatedAtDesc());
+        model.addAttribute("todayVisitors", userRepository.countByLastLoginAtAfter(LocalDate.now().atStartOfDay()));
+
+        Map<String, Long> inquiryCategoryCounts = new LinkedHashMap<>();
+        for (String category : List.of("버그", "신고", "문의", "제안")) {
+            inquiryCategoryCounts.put(category, inquiryRepository.countByCategoryAndStatus(category, "PENDING"));
+        }
+        model.addAttribute("inquiryCategoryCounts", inquiryCategoryCounts);
+
+        List<PostReport> recentReports = postReportRepository.findTop10ByOrderByCreatedAtDesc();
+        Map<Long, Post> reportedPosts = postRepository.findAllById(
+                recentReports.stream().map(PostReport::getPostId).distinct().toList()
+        ).stream().collect(Collectors.toMap(Post::getPostId, p -> p));
+        model.addAttribute("recentReports", recentReports);
+        model.addAttribute("reportedPosts", reportedPosts);
 
         List<LocalDate> last7Days = new ArrayList<>();
         for (int i = 6; i >= 0; i--) {
@@ -221,11 +235,14 @@ public class AdminController {
     // ===== 문의 관리 =====
 
     @GetMapping("/admin/inquiries")
-    public String inquiries(Model model) {
-        List<Inquiry> inquiries = inquiryRepository.findAllByOrderByCreatedAtDesc();
+    public String inquiries(@RequestParam(required = false) String category, Model model) {
+        List<Inquiry> inquiries = (category != null && !category.isBlank())
+                ? inquiryRepository.findByCategoryOrderByCreatedAtDesc(category)
+                : inquiryRepository.findAllByOrderByCreatedAtDesc();
         model.addAttribute("inquiries", inquiries);
         model.addAttribute("authorNames", authorNameMap(
                 inquiries.stream().map(Inquiry::getUserId).toList()));
+        model.addAttribute("category", category == null ? "" : category);
         return "inquiries";
     }
 
