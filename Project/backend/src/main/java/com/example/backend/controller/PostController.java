@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import com.example.backend.domain.User;
+import com.example.backend.dto.PostReportRequest;
 import com.example.backend.dto.PostRequest;
 import com.example.backend.dto.PostResponse;
 import com.example.backend.repository.UserRepository;
@@ -64,8 +65,10 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/report")
-    public void reportPost(Authentication authentication, @PathVariable Long postId) {
-        postService.reportPost(postId, findUser(authentication).getUserId());
+    public void reportPost(Authentication authentication, @PathVariable Long postId,
+            @RequestBody(required = false) PostReportRequest request) {
+        String reason = request != null ? request.reason() : null;
+        postService.reportPost(postId, findUser(authentication).getUserId(), reason);
     }
 
     private User findUser(Authentication authentication) {

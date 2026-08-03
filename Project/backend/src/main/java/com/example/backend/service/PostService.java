@@ -79,12 +79,12 @@ public class PostService {
         return toResponse(post, authorOf(userId), bookmarkCount, bookmarked);
     }
 
-    public void reportPost(Long postId, Long userId) {
+    public void reportPost(Long postId, Long userId, String reason) {
         Post post = findPost(postId);
         if (post.getUserId().equals(userId)) {
             throw new IllegalArgumentException("본인이 작성한 글은 신고할 수 없습니다.");
         }
-        postReportService.report(postId, userId);
+        postReportService.report(postId, userId, reason);
     }
 
     public void delete(Long userId, Long postId) {

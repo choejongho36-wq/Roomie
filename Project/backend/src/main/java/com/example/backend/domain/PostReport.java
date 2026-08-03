@@ -23,12 +23,17 @@ public class PostReport {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    // 신고 사유 (예: "혐오/차별적 표현이에요"). 프론트 신고 사유 선택 목록의 문구를 그대로 저장한다.
+    @Column(length = 50)
+    private String reason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public PostReport(Long postId, Long userId) {
+    public PostReport(Long postId, Long userId, String reason) {
         this.postId = postId;
         this.userId = userId;
+        this.reason = reason;
     }
 
     @PrePersist
