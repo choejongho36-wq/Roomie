@@ -10,6 +10,7 @@ import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.dto.WithdrawRequest;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.service.UserCategoryWeightService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -102,6 +104,7 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserCategoryWeightService userCategoryWeightService;
 
     @Value("${file.upload-dir:uploads/profile}")
     private String uploadDir;
@@ -109,6 +112,20 @@ public class UserController {
     @GetMapping("/me")
     public UserResponse me(Authentication authentication) {
         return toResponse(findUser(authentication));
+    }
+
+    // 설문 완료 후 가중치 설정 화면에서 기존 저장값을 불러올 때 사용. 문항 id -> 가중치(1~3)
+    @GetMapping("/me/category-weights")
+    public Map<Integer, Integer> getCategoryWeights(Authentication authentication) {
+        User me = findUser(authentication);
+        return userCategoryWeightService.getWeights(me.getUserId());
+    }
+
+    // 가중치 설정 화면에서 "완료"를 누르면 호출. 문항 id -> 가중치(1~3)
+    @PutMapping("/me/category-weights")
+    public void saveCategoryWeights(Authentication authentication, @RequestBody Map<Integer, Integer> weights) {
+        User me = findUser(authentication);
+        userCategoryWeightService.saveWeights(me.getUserId(), weights);
     }
 
     @GetMapping("/search")

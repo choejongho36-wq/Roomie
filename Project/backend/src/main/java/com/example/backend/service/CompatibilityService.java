@@ -20,6 +20,7 @@ public class CompatibilityService {
     private final SurveyResultRepository surveyResultRepository;
     private final UserRepository userRepository;
     private final CompatibilityCalculator compatibilityCalculator;
+    private final UserCategoryWeightService userCategoryWeightService;
 
     public List<RecommendationResponse> recommendForUser(Long userId) {
         List<SurveyResult> ownSurveys = surveyResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
@@ -33,18 +34,21 @@ public class CompatibilityService {
             return List.of();
         }
 
+        // 호환도는 "내가 볼 때" 기준이라 내가 설정한 가중치로 상대방들을 채점한다.
+        Map<Integer, Integer> myWeights = userCategoryWeightService.getWeights(userId);
+
         Map<Long, SurveyResult> latestByUser = surveyResultRepository.findByUserIdNot(userId).stream()
                 .collect(Collectors.toMap(SurveyResult::getUserId, r -> r,
                         BinaryOperator.maxBy(Comparator.comparing(SurveyResult::getCompletedAt))));
 
         return latestByUser.values().stream()
-                .map(result -> buildRecommendation(result, myAnswers))
+                .map(result -> buildRecommendation(result, myAnswers, myWeights))
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(RecommendationResponse::compatibilityScore).reversed())
                 .toList();
     }
 
-    private RecommendationResponse buildRecommendation(SurveyResult result, List<Integer> myAnswers) {
+    private RecommendationResponse buildRecommendation(SurveyResult result, List<Integer> myAnswers, Map<Integer, Integer> myWeights) {
         List<Integer> otherAnswers = parseAnswers(result.getAnswers());
         if (otherAnswers.isEmpty()) {
             return null;
@@ -55,7 +59,7 @@ public class CompatibilityService {
             return null;
         }
 
-        int score = compatibilityCalculator.score(myAnswers, otherAnswers);
+        int score = compatibilityCalculator.score(myAnswers, otherAnswers, myWeights);
         User user = userOpt.get();
         List<String> tags = toTags(user.getTags());
 

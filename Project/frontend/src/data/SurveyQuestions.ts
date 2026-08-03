@@ -27,6 +27,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 1,
     category: "취침 시간",
+    defaultWeight: 3,
     question: "{name}님이 잠드는 시간은 언제인가요?",
     options: [
       { score: 1, text: "새벽 3시 이후" },
@@ -39,6 +40,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 2,
     category: "화장실 사용",
+    defaultWeight: 2,
     situation: "안 겹치는 룸메이트로 찾아드릴게요.",
     question: "{name}님은 아침에 화장실을 몇 시쯤 쓰시나요?",
     options: [
@@ -52,6 +54,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 3,
     category: "코골이",
+    defaultWeight: 3,
     question: "{name}님은 잠잘 때 코를 고나요?",
     options: [
       { score: 1, text: "심하게 골아." },
@@ -64,6 +67,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 4,
     category: "야간 생활",
+    defaultWeight: 3,
     situation: "늦은시간 룸메이트가 자고 있어요!",
     question: "{name}님은 어떻게 행동하나요?",
     options: [
@@ -77,6 +81,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 5,
     category: "청결",
+    defaultWeight: 3,
     question: "{name}님의 방은 어떤가요?",
     options: [
       { score: 1, text: "거의 정리하지 않아." },
@@ -89,6 +94,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 6,
     category: "청소 방식",
+    defaultWeight: 3,
     situation: "화장실, 거실...",
     question: "공용공간 청소는 어떤 방식으로 하는 걸 선호하나요?",
     options: [
@@ -102,6 +108,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 7,
     category: "생활 소음",
+    defaultWeight: 3,
     situation: "룸메이트가 부스럭부스럭 움직이는 소리가 들려요.",
     question: "{name}님은 생활 소음에 민감한 편인가요?",
     options: [
@@ -115,6 +122,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 8,
     category: "전화 통화",
+    defaultWeight: 1,
     question: "{name}님은 집에서 전화 통화를 자주 하나요?",
     options: [
       { score: 1, text: "거의 매일 통화해!" },
@@ -127,6 +135,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 9,
     category: "이어폰 사용",
+    defaultWeight: 2,
     question: "{name}님은 집에서 영상이나 음악을 들을 때는 어떻게 하나요?",
     options: [
       { score: 1, text: "블루투스 스피커로 빵빵하게 틀어놔." },
@@ -139,6 +148,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 10,
     category: "실내 취식",
+    defaultWeight: 2,
     question: "{name}님은 집 안에서 음식을 자주 먹나요?",
     options: [
       { score: 1, text: "거의 모든 식사를 집에서 해." },
@@ -151,6 +161,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 11,
     category: "야식",
+    defaultWeight: 1,
     question: "{name}님은 야식을 자주 먹나요?",
     options: [
       { score: 1, text: "거의 매일 먹어." },
@@ -163,6 +174,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 12,
     category: "흡연",
+    defaultWeight: 3,
     question: "{name}님은 흡연 하시나요?",
     options: [
       { score: 1, text: "흡연해." },
@@ -172,6 +184,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 13,
     category: "음주",
+    defaultWeight: 2,
     question: "{name}님! 술은 얼마나 자주 마시나요?",
     options: [
       { score: 1, text: "일주일에 4회 이상" },
@@ -184,6 +197,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 14,
     category: "음주 후 행동",
+    defaultWeight: 2,
     question: "{name}님은 술을 마시면 어떤가요?",
     options: [
       { score: 1, text: "엄청 시끄러워져." },
@@ -196,6 +210,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 15,
     category: "친구 초대",
+    defaultWeight: 2,
     question: "{name}님은 룸메이트의 친구초대, 괜찮나요?",
     options: [
       { score: 1, text: "허락없이 언제든 상관없어." },
@@ -208,6 +223,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 16,
     category: "갈등 해결",
+    defaultWeight: 2,
     question: "{name}님은 갈등이 생기면 어떻게 해결하는 편인가요?",
     options: [
       { score: 1, text: "바로 이야기로 해결하려고 해." },
@@ -220,6 +236,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 17,
     category: "벌레",
+    defaultWeight: 1,
     situation: "{name}님은 벌레가 나오면 어떻게 하시나요?",
     question: "못 잡아도 걱정말아요. 루미가 잘 잡는 사람으로 추천해줄게요.",
     options: [
@@ -233,6 +250,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 18,
     category: "공용 비품",
+    defaultWeight: 2,
     situation: "쓰레기봉투, 와이파이, 휴지, 정수기...",
     question: "룸메와 공용 물품은 어떻게 사용하는게 좋을까요?",
     options: [
@@ -246,6 +264,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 19,
     category: "월 생활비",
+    defaultWeight: 2,
     situation: "월세말고 같이 쓰는 공동생활비!",
     question: "{name}님이 생각하는 한 달 공동생활비는?",
     options: [
@@ -259,6 +278,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 20,
     category: "방 크기",
+    defaultWeight: 2,
     question: "{name}님은 집 크기는 어느 정도 생각하시나요?",
     options: [
       { score: 1, text: "20평 이상이어야 해." },
