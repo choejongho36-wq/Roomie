@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,25 +69,10 @@ public class SurveySummaryService {
             return "설문 답변이 아직 충분하지 않아 요약을 만들 수 없어요.";
         }
 
-        try {
-            HttpRequest request = HttpRequest.newBuilder(GROQ_CHAT_COMPLETIONS_URI)
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(toJson(buildRequestBody(answers, resolveGroqModel()))))
-                    .build();
+        String systemPrompt = "너는 룸메이트 매칭 앱의 설문 요약가입니다. 개인정보를 추측하지 말고, 한국어 한 문장으로만 답하세요. 결과는 45자 이내로 자연스럽고 다정하게 작성하세요.";
+        String userPrompt = "아래 설문 답변을 바탕으로 룸메이트 생활 성향을 한 문장으로 요약해주세요. 접두사 없이 요약 문장만 출력하세요.\n\n" + buildAnswerPrompt(answers);
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalStateException("Groq API 호출에 실패했습니다.");
-            }
-            return extractSummary(response.body());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Groq API 호출이 중단되었습니다.", e);
-        } catch (Exception e) {
-            throw new IllegalStateException("설문 요약 생성에 실패했습니다.", e);
-        }
+        return callGroq(apiKey, systemPrompt, userPrompt, 400, "설문 요약 생성에 실패했습니다.");
     }
 
     public String explainComparison(
@@ -100,35 +86,6 @@ public class SurveySummaryService {
             throw new IllegalStateException("Groq API 키가 설정되지 않았습니다.");
         }
 
-        try {
-            HttpRequest request = HttpRequest.newBuilder(GROQ_CHAT_COMPLETIONS_URI)
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(toJson(buildComparisonRequestBody(
-                            nickname, compatibilityScore, topReasons, differences, resolveGroqModel()))))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalStateException("Groq API 호출에 실패했습니다.");
-            }
-            return extractSummary(response.body());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Groq API 호출이 중단되었습니다.", e);
-        } catch (Exception e) {
-            throw new IllegalStateException("궁합 설명 생성에 실패했습니다.", e);
-        }
-    }
-
-    private Map<String, Object> buildComparisonRequestBody(
-            String nickname,
-            int compatibilityScore,
-            List<SurveyComparisonHighlightResponse> topReasons,
-            List<SurveyComparisonHighlightResponse> differences,
-            String model
-    ) {
         String topReasonsText = topReasons.isEmpty()
                 ? "특별히 두드러지는 항목 없음"
                 : topReasons.stream().map(SurveyComparisonHighlightResponse::category).collect(Collectors.joining(", "));
@@ -136,30 +93,57 @@ public class SurveySummaryService {
                 ? "특별히 차이 나는 항목 없음"
                 : differences.stream().map(SurveyComparisonHighlightResponse::category).collect(Collectors.joining(", "));
 
+        String systemPrompt = "너는 룸메이트 매칭 앱의 궁합 설명가입니다. 두 사람의 설문 비교 결과(궁합 점수, 잘 맞는 항목, 다른 항목)를 보고 "
+                + "왜 그런 점수가 나왔는지 이유를 설명하고, 다른 항목에 대해서는 어떻게 하면 좋을지 짧은 조언을 함께 제시하세요. "
+                + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. 접두사 없이 설명 문장만 출력하세요.";
         String userPrompt = "닉네임: " + nickname
                 + "\n궁합 점수: " + compatibilityScore + "점"
                 + "\n잘 맞는 항목: " + topReasonsText
                 + "\n다른 항목: " + differencesText
                 + "\n\n위 정보를 바탕으로 두 사람의 궁합을 설명해주세요.";
 
-        return Map.of(
-                "model", model,
-                "temperature", 0.4,
-                "max_tokens", 600,
-                "reasoning_effort", "low",
-                "messages", List.of(
-                        Map.of(
-                                "role", "system",
-                                "content", "너는 룸메이트 매칭 앱의 궁합 설명가입니다. 두 사람의 설문 비교 결과(궁합 점수, 잘 맞는 항목, 다른 항목)를 보고 "
-                                        + "왜 그런 점수가 나왔는지 이유를 설명하고, 다른 항목에 대해서는 어떻게 하면 좋을지 짧은 조언을 함께 제시하세요. "
-                                        + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. 접두사 없이 설명 문장만 출력하세요."
-                        ),
-                        Map.of(
-                                "role", "user",
-                                "content", userPrompt
-                        )
-                )
-        );
+        return callGroq(apiKey, systemPrompt, userPrompt, 600, "궁합 설명 생성에 실패했습니다.");
+    }
+
+    private String callGroq(String apiKey, String systemPrompt, String userPrompt, int maxTokens, String failureMessage) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(GROQ_CHAT_COMPLETIONS_URI)
+                    .timeout(Duration.ofSeconds(15))
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(toJson(buildRequestBody(systemPrompt, userPrompt, maxTokens, resolveGroqModel()))))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                // Groq도 실패 사유(키 문제/모델 없음/한도 초과 등)를 body에 담아 보내므로 그대로 노출한다.
+                throw new IllegalStateException(failureMessage + " (Groq 응답 " + response.statusCode() + "): " + response.body());
+            }
+            return extractSummary(response.body());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Groq API 호출이 중단되었습니다.", e);
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException(failureMessage, e);
+        }
+    }
+
+    private Map<String, Object> buildRequestBody(String systemPrompt, String userPrompt, int maxTokens, String model) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", model);
+        body.put("temperature", 0.3);
+        body.put("max_tokens", maxTokens);
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", systemPrompt),
+                Map.of("role", "user", "content", userPrompt)
+        ));
+        // reasoning_effort는 gpt-oss 같은 추론 모델 전용 옵션이라, 지원 안 하는 모델(Llama 등)에 보내면 400 에러가 남.
+        if (model.contains("gpt-oss")) {
+            body.put("reasoning_effort", "low");
+        }
+        return body;
     }
 
     private String resolveGroqApiKey() {
@@ -186,28 +170,10 @@ public class SurveySummaryService {
         return stripWrappingQuotes(groqModel);
     }
 
-    private Map<String, Object> buildRequestBody(List<Integer> answers, String model) {
-        return Map.of(
-                "model", model,
-                "temperature", 0.2,
-                "max_tokens", 400,
-                "reasoning_effort", "low",
-                "messages", List.of(
-                        Map.of(
-                                "role", "system",
-                                "content", "너는 룸메이트 매칭 앱의 설문 요약가입니다. 개인정보를 추측하지 말고, 한국어 한 문장으로만 답하세요. 결과는 45자 이내로 자연스럽고 다정하게 작성하세요."
-                        ),
-                        Map.of(
-                                "role", "user",
-                                "content", "아래 설문 답변을 바탕으로 룸메이트 생활 성향을 한 문장으로 요약해주세요. 접두사 없이 요약 문장만 출력하세요.\n\n" + buildAnswerPrompt(answers)
-                        )
-                )
-        );
-    }
-
     private String readDotEnvValue(String key) {
         List<Path> candidates = List.of(
                 Path.of(".env"),
+                Path.of("../.env"), // backend/ 안에서 ./gradlew bootRun으로 로컬 실행할 때 (project/.env)
                 Path.of("backend/.env"),
                 Path.of("Project/backend/.env")
         );

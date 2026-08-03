@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +46,7 @@ public class SurveyComparisonService {
     private final SurveyResultRepository surveyResultRepository;
     private final UserRepository userRepository;
     private final CompatibilityCalculator compatibilityCalculator;
+    private final UserCategoryWeightService userCategoryWeightService;
 
     public SurveyComparisonResponse compare(Long myUserId, Long otherUserId) {
         if (myUserId.equals(otherUserId)) {
@@ -84,7 +86,7 @@ public class SurveyComparisonService {
         return new SurveyComparisonResponse(
                 otherUserId,
                 otherUser.getNickname(),
-                calculateCompatibilityScore(myAnswers, otherAnswers),
+                calculateCompatibilityScore(myUserId, myAnswers, otherAnswers),
                 topReasons,
                 differences,
                 items
@@ -134,8 +136,9 @@ public class SurveyComparisonService {
         return "차이 큼";
     }
 
-    private int calculateCompatibilityScore(List<Integer> myAnswers, List<Integer> otherAnswers) {
-        return compatibilityCalculator.score(myAnswers, otherAnswers);
+    private int calculateCompatibilityScore(Long myUserId, List<Integer> myAnswers, List<Integer> otherAnswers) {
+        Map<Integer, Integer> myWeights = userCategoryWeightService.getWeights(myUserId);
+        return compatibilityCalculator.score(myAnswers, otherAnswers, myWeights);
     }
 
     private List<Integer> parseAnswers(String answersJson) {

@@ -11,6 +11,7 @@ import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPageLayout from "./pages/mypage/MyPageLayout";
 import SurveyPage from "./pages/survey/SurveyPage";
+import SurveyWeightsPage from "./pages/survey/SurveyWeightsPage";
 import SurveyCompletePage from "./pages/survey/SurveyCompletePage";
 import RecommendationPage from "./pages/RecommendationPage";
 import ProfileBoardPage from "./pages/ProfileBoardPage";
@@ -64,11 +65,9 @@ function App() {
             <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
             <Route path="/matched/:id" element={<MatchedPairPage />} />
             <Route path="/house" element={<HouseEntryPage />} />
-            <Route path="/house/:id" element={<HouseLayout />}>
-              <Route index element={<HousePage />} />
-              <Route path="bills" element={<HouseBillsPage />} />
-              <Route path="chores" element={<HouseChoresPage />} />
-            </Route>
+            <Route path="/house/:id" element={<HousePage />} />
+            <Route path="/house/:id/bills" element={<PlaceholderPage title="관리비 정산" />} />
+            <Route path="/house/:id/chores" element={<PlaceholderPage title="청소당번" />} />
             <Route path="/mypage" element={<MyPageLayout />}>
               <Route index element={<MyProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />
