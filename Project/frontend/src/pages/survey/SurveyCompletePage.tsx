@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Icon } from "../components/mypage/MyPageSidebar";
+import { Icon } from "../../components/mypage/MyPageSidebar";
 import "./SurveyPage.css";
 
 function SurveyCompletePage() {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API_ORIGIN, getMatchedPair, updateMatchedPairConditions } from "../api";
+import { API_ORIGIN, confirmMatchedPair, getMatchedPair, updateMatchedPairConditions } from "../api";
 import type { MatchedPair } from "../types/matchedPair";
 import RegionPicker, { type RegionToken, parseRegionToken } from "../components/RegionPicker";
 import "./MatchedPairPage.css";
@@ -21,6 +21,7 @@ function MatchedPairPage() {
   const [monthlyRentMax, setMonthlyRentMax] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (!token || !id) return;
@@ -51,6 +52,17 @@ function MatchedPairPage() {
       setSaveMessage("저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleConfirmHouse = async () => {
+    if (!token || !id) return;
+    setConfirming(true);
+    try {
+      await confirmMatchedPair(token, Number(id));
+      navigate(`/house/${id}`);
+    } catch {
+      setConfirming(false);
     }
   };
 
@@ -154,8 +166,8 @@ function MatchedPairPage() {
       <section className="matched-pair-section">
         <h2>방을 구하셨나요?</h2>
         <p className="matched-pair-hint">함께 살 방이 정해졌다면, 하우스 공간으로 넘어가서 정산/청소 관리를 시작해보세요.</p>
-        <button className="btn btn-primary" onClick={() => navigate(`/house/${id}`)}>
-          하우스로 이동
+        <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirming}>
+          {confirming ? "이동 중..." : "하우스로 이동"}
         </button>
       </section>
     </div>

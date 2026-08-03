@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getMyPosts, getMyComments, deleteComment, deletePost, API_ORIGIN } from "../../api";
-import type { Post, MyComment } from "../../types";
+import type { Post, MyComment } from "../../types/board";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyActivityDashboardPage.css";
 

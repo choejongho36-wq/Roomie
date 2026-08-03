@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSurvey } from "../hooks/UseSurvey";
-import { surveyQuestions } from "../data/SurveyQuestions";
-import { useAuth } from "../context/AuthContext";
-import { submitSurvey } from "../api";
-import SurveyHeader from "../components/survey/SurveyHeader";
-import ProgressBar from "../components/survey/ProgressBar";
-import QuestionCard from "../components/survey/QuestionCard";
-import Navigation from "../components/survey/Navigation";
-import { SurveyIntro } from "../components/survey/SurveyHelp";
+import { useSurvey } from "../../hooks/useSurvey";
+import { surveyQuestions } from "../../data/SurveyQuestions";
+import { useAuth } from "../../context/AuthContext";
+import { submitSurvey } from "../../api";
+import SurveyHeader from "../../components/survey/SurveyHeader";
+import ProgressBar from "../../components/survey/ProgressBar";
+import QuestionCard from "../../components/survey/QuestionCard";
+import Navigation from "../../components/survey/Navigation";
+import { SurveyIntro } from "../../components/survey/SurveyHelp";
 import "./SurveyPage.css";
 
 function SurveyPage() {

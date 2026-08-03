@@ -3,7 +3,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
-import { CATEGORY_OPTIONS } from "../../data/BoardCategories";
+import { FREE_BOARD_CATEGORIES } from "../../data/BoardCategories";
 import "./BoardWritePage.css";
 
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
@@ -219,7 +219,7 @@ function BoardWritePage() {
           </button>
           {isBoardMenuOpen && (
             <div className="board-write-board-menu">
-              {CATEGORY_OPTIONS.map((board) => (
+              {FREE_BOARD_CATEGORIES.map((board) => (
                 <button
                   key={board}
                   type="button"

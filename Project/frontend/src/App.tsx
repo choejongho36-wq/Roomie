@@ -9,12 +9,12 @@ import FindIdPage from "./pages/FindIdPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
-import MyPage from "./pages/MyPage";
-import SurveyPage from "./pages/SurveyPage";
-import SurveyCompletePage from "./pages/SurveyCompletePage";
+import MyPageLayout from "./pages/mypage/MyPageLayout";
+import SurveyPage from "./pages/survey/SurveyPage";
+import SurveyCompletePage from "./pages/survey/SurveyCompletePage";
 import RecommendationPage from "./pages/RecommendationPage";
 import ProfileBoardPage from "./pages/ProfileBoardPage";
-import ProfilePage from "./pages/mypage/ProfilePage";
+import MyProfilePage from "./pages/mypage/MyProfilePage";
 import EditProfilePage from "./pages/mypage/EditProfilePage";
 import ActivityPage from "./pages/mypage/ActivityPage";
 import MyActivityDashboardPage from "./pages/mypage/MyActivityDashboardPage";
@@ -29,7 +29,8 @@ import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
 import MatchedPairPage from "./pages/MatchedPairPage";
-import HousePage from "./pages/HousePage";
+import HouseEntryPage from "./pages/house/HouseEntryPage";
+import HousePage from "./pages/house/HousePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -59,9 +60,12 @@ function App() {
             <Route path="/inquiry/write" element={<InquiryWritePage />} />
             <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
             <Route path="/matched/:id" element={<MatchedPairPage />} />
+            <Route path="/house" element={<HouseEntryPage />} />
             <Route path="/house/:id" element={<HousePage />} />
-            <Route path="/mypage" element={<MyPage />}>
-              <Route index element={<ProfilePage />} />
+            <Route path="/house/:id/bills" element={<PlaceholderPage title="관리비 정산" />} />
+            <Route path="/house/:id/chores" element={<PlaceholderPage title="청소당번" />} />
+            <Route path="/mypage" element={<MyPageLayout />}>
+              <Route index element={<MyProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />
               <Route path="activity" element={<ActivityPage />} />
               <Route path="my-activity" element={<MyActivityDashboardPage />} />

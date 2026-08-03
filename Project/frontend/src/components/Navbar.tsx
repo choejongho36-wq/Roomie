@@ -67,6 +67,9 @@ function Navbar() {
           <button type="button" className="navbar-menu-link" onClick={handleMatchClick}>
             매칭
           </button>
+          <Link to="/house" className="navbar-menu-link">
+            하우스
+          </Link>
           <div className="navbar-dropdown">
             <span className="navbar-menu-link navbar-dropdown-trigger">커뮤니티</span>
             <div className="navbar-dropdown-menu">
