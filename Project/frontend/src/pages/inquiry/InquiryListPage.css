@@ -93,6 +93,23 @@
   white-space: pre-wrap;
 }
 
+.inquiry-answer-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid #e5ded8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+
+.inquiry-answer-textarea:focus {
+  outline: none;
+  border-color: #f16526;
+}
+
 .inquiry-answer-pending {
   color: #aaa;
   font-size: 14px;
