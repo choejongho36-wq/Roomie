@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 @Service
 public class SurveySummaryService {
 
-    private static final URI GROQ_CHAT_COMPLETIONS_URI = URI.create("https://api.groq.com/openai/v1/chat/completions");
+    private static final String GEMINI_GENERATE_CONTENT_URI_TEMPLATE =
+            "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     // 2026-07-31: 프론트 설문 문항이 주제별로 재배열되면서 순서/문구가 바뀜에 따라 함께 갱신.
     private static final List<SurveyQuestionPrompt> QUESTIONS = List.of(
@@ -51,16 +52,16 @@ public class SurveySummaryService {
             .connectTimeout(Duration.ofSeconds(8))
             .build();
 
-    @Value("${groq.api-key:}")
-    private String groqApiKey;
+    @Value("${gemini.api-key:}")
+    private String geminiApiKey;
 
-    @Value("${groq.model:openai/gpt-oss-20b}")
-    private String groqModel;
+    @Value("${gemini.model:gemini-2.0-flash}")
+    private String geminiModel;
 
     public String summarize(SurveyResult surveyResult) {
-        String apiKey = resolveGroqApiKey();
+        String apiKey = resolveGeminiApiKey();
         if (apiKey.isBlank()) {
-            throw new IllegalStateException("Groq API 키가 설정되지 않았습니다.");
+            throw new IllegalStateException("Gemini API 키가 설정되지 않았습니다.");
         }
 
         List<Integer> answers = parseAnswers(surveyResult.getAnswers());
@@ -68,25 +69,10 @@ public class SurveySummaryService {
             return "설문 답변이 아직 충분하지 않아 요약을 만들 수 없어요.";
         }
 
-        try {
-            HttpRequest request = HttpRequest.newBuilder(GROQ_CHAT_COMPLETIONS_URI)
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(toJson(buildRequestBody(answers, resolveGroqModel()))))
-                    .build();
+        String systemPrompt = "너는 룸메이트 매칭 앱의 설문 요약가입니다. 개인정보를 추측하지 말고, 한국어 한 문장으로만 답하세요. 결과는 45자 이내로 자연스럽고 다정하게 작성하세요.";
+        String userPrompt = "아래 설문 답변을 바탕으로 룸메이트 생활 성향을 한 문장으로 요약해주세요. 접두사 없이 요약 문장만 출력하세요.\n\n" + buildAnswerPrompt(answers);
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalStateException("Groq API 호출에 실패했습니다.");
-            }
-            return extractSummary(response.body());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Groq API 호출이 중단되었습니다.", e);
-        } catch (Exception e) {
-            throw new IllegalStateException("설문 요약 생성에 실패했습니다.", e);
-        }
+        return callGemini(apiKey, systemPrompt, userPrompt, 100, "설문 요약 생성에 실패했습니다.");
     }
 
     public String explainComparison(
@@ -95,40 +81,11 @@ public class SurveySummaryService {
             List<SurveyComparisonHighlightResponse> topReasons,
             List<SurveyComparisonHighlightResponse> differences
     ) {
-        String apiKey = resolveGroqApiKey();
+        String apiKey = resolveGeminiApiKey();
         if (apiKey.isBlank()) {
-            throw new IllegalStateException("Groq API 키가 설정되지 않았습니다.");
+            throw new IllegalStateException("Gemini API 키가 설정되지 않았습니다.");
         }
 
-        try {
-            HttpRequest request = HttpRequest.newBuilder(GROQ_CHAT_COMPLETIONS_URI)
-                    .timeout(Duration.ofSeconds(15))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(toJson(buildComparisonRequestBody(
-                            nickname, compatibilityScore, topReasons, differences, resolveGroqModel()))))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalStateException("Groq API 호출에 실패했습니다.");
-            }
-            return extractSummary(response.body());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Groq API 호출이 중단되었습니다.", e);
-        } catch (Exception e) {
-            throw new IllegalStateException("궁합 설명 생성에 실패했습니다.", e);
-        }
-    }
-
-    private Map<String, Object> buildComparisonRequestBody(
-            String nickname,
-            int compatibilityScore,
-            List<SurveyComparisonHighlightResponse> topReasons,
-            List<SurveyComparisonHighlightResponse> differences,
-            String model
-    ) {
         String topReasonsText = topReasons.isEmpty()
                 ? "특별히 두드러지는 항목 없음"
                 : topReasons.stream().map(SurveyComparisonHighlightResponse::category).collect(Collectors.joining(", "));
@@ -136,73 +93,77 @@ public class SurveySummaryService {
                 ? "특별히 차이 나는 항목 없음"
                 : differences.stream().map(SurveyComparisonHighlightResponse::category).collect(Collectors.joining(", "));
 
+        String systemPrompt = "너는 룸메이트 매칭 앱의 궁합 설명가입니다. 두 사람의 설문 비교 결과(궁합 점수, 잘 맞는 항목, 다른 항목)를 보고 "
+                + "왜 그런 점수가 나왔는지 이유를 설명하고, 다른 항목에 대해서는 어떻게 하면 좋을지 짧은 조언을 함께 제시하세요. "
+                + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. 접두사 없이 설명 문장만 출력하세요.";
         String userPrompt = "닉네임: " + nickname
                 + "\n궁합 점수: " + compatibilityScore + "점"
                 + "\n잘 맞는 항목: " + topReasonsText
                 + "\n다른 항목: " + differencesText
                 + "\n\n위 정보를 바탕으로 두 사람의 궁합을 설명해주세요.";
 
+        return callGemini(apiKey, systemPrompt, userPrompt, 300, "궁합 설명 생성에 실패했습니다.");
+    }
+
+    private String callGemini(String apiKey, String systemPrompt, String userPrompt, int maxOutputTokens, String failureMessage) {
+        try {
+            URI uri = URI.create(GEMINI_GENERATE_CONTENT_URI_TEMPLATE.formatted(resolveGeminiModel()));
+            HttpRequest request = HttpRequest.newBuilder(uri)
+                    .timeout(Duration.ofSeconds(15))
+                    .header("x-goog-api-key", apiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(toJson(buildGeminiRequestBody(systemPrompt, userPrompt, maxOutputTokens))))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                // Gemini는 실패 사유(권한 없음/모델 없음/한도 초과 등)를 body에 담아 보내므로 그대로 노출한다.
+                throw new IllegalStateException(failureMessage + " (Gemini 응답 " + response.statusCode() + "): " + response.body());
+            }
+            return extractSummary(response.body());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Gemini API 호출이 중단되었습니다.", e);
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException(failureMessage, e);
+        }
+    }
+
+    private Map<String, Object> buildGeminiRequestBody(String systemPrompt, String userPrompt, int maxOutputTokens) {
         return Map.of(
-                "model", model,
-                "temperature", 0.4,
-                "max_tokens", 600,
-                "reasoning_effort", "low",
-                "messages", List.of(
-                        Map.of(
-                                "role", "system",
-                                "content", "너는 룸메이트 매칭 앱의 궁합 설명가입니다. 두 사람의 설문 비교 결과(궁합 점수, 잘 맞는 항목, 다른 항목)를 보고 "
-                                        + "왜 그런 점수가 나왔는지 이유를 설명하고, 다른 항목에 대해서는 어떻게 하면 좋을지 짧은 조언을 함께 제시하세요. "
-                                        + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. 접두사 없이 설명 문장만 출력하세요."
-                        ),
-                        Map.of(
-                                "role", "user",
-                                "content", userPrompt
-                        )
+                "system_instruction", Map.of("parts", List.of(Map.of("text", systemPrompt))),
+                "contents", List.of(Map.of("parts", List.of(Map.of("text", userPrompt)))),
+                "generationConfig", Map.of(
+                        "temperature", 0.3,
+                        "maxOutputTokens", maxOutputTokens
                 )
         );
     }
 
-    private String resolveGroqApiKey() {
-        if (groqApiKey != null && !groqApiKey.isBlank()) {
-            return stripWrappingQuotes(groqApiKey);
+    private String resolveGeminiApiKey() {
+        if (geminiApiKey != null && !geminiApiKey.isBlank()) {
+            return stripWrappingQuotes(geminiApiKey);
         }
-        return readDotEnvValue("GROQ_API_KEY");
+        return readDotEnvValue("GEMINI_API_KEY");
     }
 
-    private String resolveGroqModel() {
-        String envModel = System.getenv("GROQ_MODEL");
+    private String resolveGeminiModel() {
+        String envModel = System.getenv("GEMINI_MODEL");
         if (envModel != null && !envModel.isBlank()) {
-            return stripWrappingQuotes(groqModel);
+            return stripWrappingQuotes(geminiModel);
         }
 
-        String dotEnvModel = readDotEnvValue("GROQ_MODEL");
+        String dotEnvModel = readDotEnvValue("GEMINI_MODEL");
         if (!dotEnvModel.isBlank()) {
             return dotEnvModel;
         }
 
-        if (groqModel == null || groqModel.isBlank()) {
-            return "openai/gpt-oss-20b";
+        if (geminiModel == null || geminiModel.isBlank()) {
+            return "gemini-2.0-flash";
         }
-        return stripWrappingQuotes(groqModel);
-    }
-
-    private Map<String, Object> buildRequestBody(List<Integer> answers, String model) {
-        return Map.of(
-                "model", model,
-                "temperature", 0.2,
-                "max_tokens", 400,
-                "reasoning_effort", "low",
-                "messages", List.of(
-                        Map.of(
-                                "role", "system",
-                                "content", "너는 룸메이트 매칭 앱의 설문 요약가입니다. 개인정보를 추측하지 말고, 한국어 한 문장으로만 답하세요. 결과는 45자 이내로 자연스럽고 다정하게 작성하세요."
-                        ),
-                        Map.of(
-                                "role", "user",
-                                "content", "아래 설문 답변을 바탕으로 룸메이트 생활 성향을 한 문장으로 요약해주세요. 접두사 없이 요약 문장만 출력하세요.\n\n" + buildAnswerPrompt(answers)
-                        )
-                )
-        );
+        return stripWrappingQuotes(geminiModel);
     }
 
     private String readDotEnvValue(String key) {
@@ -284,27 +245,32 @@ public class SurveySummaryService {
     @SuppressWarnings("unchecked")
     private String extractSummary(String responseBody) throws Exception {
         Map<String, Object> root = OBJECT_MAPPER.readValue(responseBody, Map.class);
-        Object choicesObject = root.get("choices");
-        if (!(choicesObject instanceof List<?> choices) || choices.isEmpty()) {
-            throw new IllegalStateException("Groq 응답에 choices가 없습니다.");
+        Object candidatesObject = root.get("candidates");
+        if (!(candidatesObject instanceof List<?> candidates) || candidates.isEmpty()) {
+            throw new IllegalStateException("Gemini 응답에 candidates가 없습니다: " + responseBody);
         }
 
-        Object firstChoice = choices.get(0);
-        if (!(firstChoice instanceof Map<?, ?> choice)) {
-            throw new IllegalStateException("Groq 응답 형식이 올바르지 않습니다.");
+        Object firstCandidate = candidates.get(0);
+        if (!(firstCandidate instanceof Map<?, ?> candidate)) {
+            throw new IllegalStateException("Gemini 응답 형식이 올바르지 않습니다.");
         }
 
-        Object messageObject = choice.get("message");
-        if (!(messageObject instanceof Map<?, ?> message)) {
-            throw new IllegalStateException("Groq 응답에 message가 없습니다.");
+        Object contentObject = candidate.get("content");
+        if (!(contentObject instanceof Map<?, ?> content)) {
+            throw new IllegalStateException("Gemini 응답에 content가 없습니다.");
         }
 
-        Object contentObject = message.get("content");
-        if (!(contentObject instanceof String content) || content.isBlank()) {
-            throw new IllegalStateException("Groq 응답에 content가 없습니다.");
+        Object partsObject = content.get("parts");
+        if (!(partsObject instanceof List<?> parts) || parts.isEmpty()) {
+            throw new IllegalStateException("Gemini 응답에 parts가 없습니다.");
         }
 
-        return content.trim().replaceAll("\\s+", " ");
+        Object firstPart = parts.get(0);
+        if (!(firstPart instanceof Map<?, ?> part) || !(part.get("text") instanceof String text) || text.isBlank()) {
+            throw new IllegalStateException("Gemini 응답에 text가 없습니다.");
+        }
+
+        return text.trim().replaceAll("\\s+", " ");
     }
 
     private List<Integer> parseAnswers(String answersJson) {
