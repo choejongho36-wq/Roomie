@@ -7,6 +7,7 @@ import com.example.backend.repository.NotificationRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -66,5 +67,19 @@ public class NotificationService {
         }
         notification.markAsRead();
         notificationRepository.save(notification);
+    }
+
+    public void deleteNotification(Long userId, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다."));
+        if (!notification.getRecipientId().equals(userId)) {
+            throw new IllegalArgumentException("본인의 알림만 삭제할 수 있습니다.");
+        }
+        notificationRepository.delete(notification);
+    }
+
+    @Transactional
+    public void deleteAllNotifications(Long userId) {
+        notificationRepository.deleteByRecipientId(userId);
     }
 }

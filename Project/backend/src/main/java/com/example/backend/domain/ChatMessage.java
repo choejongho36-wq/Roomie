@@ -25,6 +25,9 @@ public class ChatMessage {
     @Column(nullable = false, length = 1000)
     private String content;
 
+    @Column(name = "is_read", nullable = false)
+    private boolean read = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

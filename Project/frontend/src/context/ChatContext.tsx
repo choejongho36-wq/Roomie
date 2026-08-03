@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "./AuthContext";
-import { getNotifications, markNotificationRead } from "../api";
+import { clearNotifications, deleteNotification, getChatUnreadCount, getNotifications } from "../api";
 import { useChatSocket } from "../hooks/useChatSocket";
 import type { ChatMessage, NotificationItem } from "../types/chat";
 
@@ -10,7 +10,10 @@ interface ChatContextValue {
   sendMessage: (toUserId: number, content: string) => boolean;
   notifications: NotificationItem[];
   unreadCount: number;
-  markAsRead: (notificationId: number) => void;
+  removeNotification: (notificationId: number) => void;
+  clearAllNotifications: () => void;
+  chatUnreadCount: number;
+  refreshChatUnreadCount: () => void;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -19,38 +22,61 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const { token, user } = useAuth();
   const { isConnected, lastMessage, sendMessage } = useChatSocket(token);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   const myUserId = user?.userId ?? null;
+
+  const refreshChatUnreadCount = useCallback(() => {
+    if (!token) return;
+    getChatUnreadCount(token).then(setChatUnreadCount).catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     if (!token) {
       setNotifications([]);
+      setChatUnreadCount(0);
       return;
     }
     getNotifications(token).then(setNotifications).catch(() => {});
-  }, [token]);
+    refreshChatUnreadCount();
+  }, [token, refreshChatUnreadCount]);
 
   useEffect(() => {
     if (!token || !lastMessage || lastMessage.senderId === myUserId) return;
     getNotifications(token).then(setNotifications).catch(() => {});
-  }, [lastMessage, token, myUserId]);
+    refreshChatUnreadCount();
+  }, [lastMessage, token, myUserId, refreshChatUnreadCount]);
 
-  const markAsRead = useCallback(
+  const removeNotification = useCallback(
     (notificationId: number) => {
       if (!token) return;
-      setNotifications((prev) =>
-        prev.map((n) => (n.notificationId === notificationId ? { ...n, read: true } : n))
-      );
-      markNotificationRead(token, notificationId).catch(() => {});
+      setNotifications((prev) => prev.filter((n) => n.notificationId !== notificationId));
+      deleteNotification(token, notificationId).catch(() => {});
     },
     [token]
   );
+
+  const clearAllNotifications = useCallback(() => {
+    if (!token) return;
+    setNotifications([]);
+    clearNotifications(token).catch(() => {});
+  }, [token]);
 
   const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
 
   return (
     <ChatContext.Provider
-      value={{ isConnected, lastMessage, sendMessage, notifications, unreadCount, markAsRead }}
+      value={{
+        isConnected,
+        lastMessage,
+        sendMessage,
+        notifications,
+        unreadCount,
+        removeNotification,
+        clearAllNotifications,
+        chatUnreadCount,
+        refreshChatUnreadCount,
+      }}
     >
       {children}
     </ChatContext.Provider>

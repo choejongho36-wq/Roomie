@@ -103,6 +103,53 @@
   transform: translateY(0) scaleY(1);
 }
 
+.navbar-notify-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 6px 6px;
+}
+
+.navbar-notify-clear-all {
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.navbar-notify-clear-all:hover {
+  color: #f03e3e;
+}
+
+.navbar-notify-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.navbar-notify-row .navbar-notify-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.navbar-notify-delete {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.navbar-notify-delete:hover {
+  color: #f03e3e;
+  background: #fff1e8;
+}
+
 .navbar-notify-item {
   display: flex;
   flex-direction: column;
@@ -352,6 +399,22 @@
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.navbar-profile-chat-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f03e3e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .navbar-logo {

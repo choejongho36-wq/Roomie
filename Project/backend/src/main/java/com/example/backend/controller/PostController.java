@@ -37,6 +37,11 @@ public class PostController {
         return postService.getBookmarkedPosts(findUser(authentication).getUserId());
     }
 
+    @GetMapping("/mine")
+    public List<PostResponse> getMyPosts(Authentication authentication) {
+        return postService.getMyPosts(findUser(authentication).getUserId());
+    }
+
     @PostMapping
     public PostResponse createPost(Authentication authentication, @RequestBody PostRequest request) {
         return postService.create(findUser(authentication).getUserId(), request);

@@ -28,6 +28,16 @@ public class NotificationController {
         notificationService.markAsRead(currentUser(authentication).getUserId(), notificationId);
     }
 
+    @DeleteMapping("/{notificationId}")
+    public void deleteNotification(Authentication authentication, @PathVariable Long notificationId) {
+        notificationService.deleteNotification(currentUser(authentication).getUserId(), notificationId);
+    }
+
+    @DeleteMapping
+    public void deleteAllNotifications(Authentication authentication) {
+        notificationService.deleteAllNotifications(currentUser(authentication).getUserId());
+    }
+
     private User currentUser(Authentication authentication) {
         return userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));

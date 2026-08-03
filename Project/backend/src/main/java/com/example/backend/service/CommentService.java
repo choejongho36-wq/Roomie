@@ -1,9 +1,11 @@
 package com.example.backend.service;
 
 import com.example.backend.domain.Comment;
+import com.example.backend.domain.Post;
 import com.example.backend.domain.User;
 import com.example.backend.dto.CommentRequest;
 import com.example.backend.dto.CommentResponse;
+import com.example.backend.dto.MyCommentResponse;
 import com.example.backend.repository.CommentRepository;
 import com.example.backend.repository.PostRepository;
 import com.example.backend.repository.UserRepository;
@@ -28,6 +30,26 @@ public class CommentService {
         Map<Long, User> authors = userRepository.findAllById(comments.stream().map(Comment::getUserId).toList())
                 .stream().collect(Collectors.toMap(User::getUserId, u -> u));
         return comments.stream().map(c -> toResponse(c, authors.get(c.getUserId()))).toList();
+    }
+
+    // 마이페이지 "내 활동" 대시보드용. 삭제된 댓글이나 글이 지워진 댓글은 보여줄 필요가 없어 걸러낸다.
+    public List<MyCommentResponse> getMyComments(Long userId) {
+        List<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                .filter(c -> !c.isDeleted())
+                .toList();
+        Map<Long, Post> postsById = postRepository.findAllById(
+                comments.stream().map(Comment::getPostId).distinct().toList()
+        ).stream().collect(Collectors.toMap(Post::getPostId, p -> p));
+
+        return comments.stream()
+                .filter(c -> postsById.containsKey(c.getPostId()))
+                .map(c -> {
+                    Post post = postsById.get(c.getPostId());
+                    String title = post.getTitle() != null && !post.getTitle().isBlank()
+                            ? post.getTitle() : post.getRegion();
+                    return new MyCommentResponse(c.getCommentId(), c.getPostId(), title, c.getContent(), c.getCreatedAt());
+                })
+                .toList();
     }
 
     public CommentResponse create(Long userId, Long postId, CommentRequest request) {

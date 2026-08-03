@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { Comment, Inquiry, InquiryRequest, Page, Post, PostRequest, User } from "./types";
+import type { Comment, Inquiry, InquiryRequest, MyComment, Page, Post, PostRequest, User } from "./types";
 import type {
   RecommendationResult,
   SurveyComparisonExplanationResult,
@@ -20,8 +20,10 @@ export const getPosts = async (page: number): Promise<Page<Post>> => {
   return response.data;
 };
 
-export const getPost = async (postId: number): Promise<Post> => {
-  const response = await axios.get<Post>(`${API_BASE_URL}/posts/${postId}`);
+export const getPost = async (postId: number, token?: string | null): Promise<Post> => {
+  const response = await axios.get<Post>(`${API_BASE_URL}/posts/${postId}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
   return response.data;
 };
 
@@ -47,6 +49,20 @@ export const deletePost = async (token: string, postId: number): Promise<void> =
 
 export const getBookmarkedPosts = async (token: string): Promise<Post[]> => {
   const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/bookmarked`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getMyPosts = async (token: string): Promise<Post[]> => {
+  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const getMyComments = async (token: string): Promise<MyComment[]> => {
+  const response = await axios.get<MyComment[]>(`${API_BASE_URL}/comments/mine`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -330,6 +346,26 @@ export const getChatMessages = async (token: string, otherUserId: number): Promi
   return response.data;
 };
 
+export const getChatUnreadCount = async (token: string): Promise<number> => {
+  const response = await axios.get<{ count: number }>(`${API_BASE_URL}/chat/unread-count`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.count;
+};
+
+export const getChatStatus = async (token: string, otherUserId: number): Promise<{ leftByPartner: boolean }> => {
+  const response = await axios.get<{ leftByPartner: boolean }>(`${API_BASE_URL}/chat/${otherUserId}/status`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const leaveChat = async (token: string, otherUserId: number): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/chat/${otherUserId}/leave`, null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 export const getNotifications = async (token: string): Promise<NotificationItem[]> => {
   const response = await axios.get<NotificationItem[]>(`${API_BASE_URL}/notifications`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -339,6 +375,18 @@ export const getNotifications = async (token: string): Promise<NotificationItem[
 
 export const markNotificationRead = async (token: string, notificationId: number): Promise<void> => {
   await axios.patch(`${API_BASE_URL}/notifications/${notificationId}/read`, null, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const deleteNotification = async (token: string, notificationId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const clearNotifications = async (token: string): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/notifications`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };

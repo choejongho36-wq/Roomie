@@ -3,9 +3,8 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
+import { CATEGORY_OPTIONS } from "../../data/BoardCategories";
 import "./BoardWritePage.css";
-
-const BOARD_OPTIONS = ["자유 게시판", "고민 게시판"];
 
 const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
 
@@ -159,7 +158,7 @@ function BoardWritePage() {
     setStatusMessage("");
 
     if (!selectedBoard) {
-      showError("게시판을 선택해주세요.");
+      showError("카테고리를 선택해주세요.");
       return;
     }
     if (!title.trim()) {
@@ -206,7 +205,7 @@ function BoardWritePage() {
       <div className="board-write-header">
         <div>
           <h1>글쓰기</h1>
-          <p className="board-write-subtitle">게시판을 선택하고 자유롭게 글을 남겨보세요.</p>
+          <p className="board-write-subtitle">카테고리를 선택하고 자유롭게 글을 남겨보세요.</p>
         </div>
 
         <div className="board-write-board-select" ref={boardMenuRef}>
@@ -215,12 +214,12 @@ function BoardWritePage() {
             className={`board-write-board-button${selectedBoard ? " is-selected" : ""}`}
             onClick={() => setIsBoardMenuOpen((prev) => !prev)}
           >
-            {selectedBoard ?? "게시판을 선택하세요"}
+            {selectedBoard ?? "카테고리를 선택하세요"}
             <span aria-hidden="true">▾</span>
           </button>
           {isBoardMenuOpen && (
             <div className="board-write-board-menu">
-              {BOARD_OPTIONS.map((board) => (
+              {CATEGORY_OPTIONS.map((board) => (
                 <button
                   key={board}
                   type="button"

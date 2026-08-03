@@ -2,6 +2,8 @@ package com.example.backend.controller;
 
 import com.example.backend.domain.User;
 import com.example.backend.dto.ChatMessageResponse;
+import com.example.backend.dto.ChatStatusResponse;
+import com.example.backend.dto.ChatUnreadCountResponse;
 import com.example.backend.dto.ConversationResponse;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.ChatService;
@@ -24,9 +26,25 @@ public class ChatController {
         return chatService.getConversations(currentUser(authentication).getUserId());
     }
 
+    @GetMapping("/unread-count")
+    public ChatUnreadCountResponse getUnreadCount(Authentication authentication) {
+        return new ChatUnreadCountResponse(chatService.getUnreadCount(currentUser(authentication).getUserId()));
+    }
+
     @GetMapping("/{otherUserId}/messages")
     public List<ChatMessageResponse> getMessages(Authentication authentication, @PathVariable Long otherUserId) {
         return chatService.getMessages(currentUser(authentication).getUserId(), otherUserId);
+    }
+
+    @GetMapping("/{otherUserId}/status")
+    public ChatStatusResponse getStatus(Authentication authentication, @PathVariable Long otherUserId) {
+        Long userId = currentUser(authentication).getUserId();
+        return new ChatStatusResponse(chatService.isLeftByPartner(userId, otherUserId));
+    }
+
+    @PostMapping("/{otherUserId}/leave")
+    public void leaveConversation(Authentication authentication, @PathVariable Long otherUserId) {
+        chatService.leaveConversation(currentUser(authentication).getUserId(), otherUserId);
     }
 
     private User currentUser(Authentication authentication) {

@@ -49,6 +49,13 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M6 10v9a1 1 0 001 1h4v-6h2v6h4a1 1 0 001-1v-9" />
     </>
   ),
+  smile: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 10h.01M15.5 10h.01" strokeLinecap="round" />
+      <path d="M8 14c1 1.6 2.5 2.5 4 2.5s3-.9 4-2.5" />
+    </>
+  ),
 };
 
 export function Icon({ name }: { name: string }) {
