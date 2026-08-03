@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     org.springframework.data.domain.Page<User> findAllByOrderByCreatedAtDesc(org.springframework.data.domain.Pageable pageable);
     List<User> findTop5ByOrderByCreatedAtDesc();
     List<User> findByCreatedAtAfter(LocalDateTime dateTime);
+    org.springframework.data.domain.Page<User> findByNicknameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrderByCreatedAtDesc(
+            String nickname, String email, org.springframework.data.domain.Pageable pageable);
 }

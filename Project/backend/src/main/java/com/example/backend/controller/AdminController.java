@@ -72,10 +72,15 @@ public class AdminController {
     // ===== 회원 관리 =====
 
     @GetMapping("/admin/users")
-    public String users(@RequestParam(defaultValue = "0") int page, Model model) {
+    public String users(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String keyword, Model model) {
         Pageable pageable = PageRequest.of(page, 20);
-        Page<User> usersPage = userRepository.findAllByOrderByCreatedAtDesc(pageable);
+        Page<User> usersPage = (keyword == null || keyword.isBlank())
+                ? userRepository.findAllByOrderByCreatedAtDesc(pageable)
+                : userRepository.findByNicknameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrderByCreatedAtDesc(
+                        keyword, keyword, pageable);
         model.addAttribute("usersPage", usersPage);
+        model.addAttribute("keyword", keyword == null ? "" : keyword);
         return "users";
     }
 
