@@ -74,6 +74,10 @@ public class User {
     @Column(length = 20)
     private String role = "USER";
 
+    // 정지 해제 예정 일시. status가 SUSPENDED이면서 이 값이 null이면 영구정지, 값이 있으면 그 시점까지 정지.
+    @Column(name = "suspended_until")
+    private LocalDateTime suspendedUntil;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -82,6 +86,10 @@ public class User {
 
     @Column(name = "nickname_changed_at")
     private LocalDateTime nicknameChangedAt;
+
+    // 관리자 대시보드 "오늘 방문자 수" 집계용. 로그인 성공 시마다 갱신된다.
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
 
     @PrePersist
     protected void onCreate() {
@@ -122,16 +130,34 @@ public class User {
         this.status = "WITHDRAWN";
     }
 
-    public void suspend() {
+    /**
+     * @param until 정지 해제 예정 일시. null이면 영구정지.
+     */
+    public void suspend(LocalDateTime until) {
         this.status = "SUSPENDED";
+        this.suspendedUntil = until;
     }
 
     public void activate() {
         this.status = "ACTIVE";
+        this.suspendedUntil = null;
+    }
+
+    /**
+     * 정지 기간이 지난 임시 정지인지 확인한다. 영구정지(suspendedUntil == null)는 대상이 아니다.
+     */
+    public boolean isSuspensionExpired() {
+        return "SUSPENDED".equals(this.status)
+                && this.suspendedUntil != null
+                && !this.suspendedUntil.isAfter(LocalDateTime.now());
     }
 
     public boolean isAdmin() {
         return this.role != null && this.role.equalsIgnoreCase("ADMIN");
+    }
+
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
     }
 
     public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {

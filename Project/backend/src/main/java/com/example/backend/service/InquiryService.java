@@ -59,6 +59,16 @@ public class InquiryService {
         inquiryRepository.delete(inquiry);
     }
 
+    // 관리자 전용. 공개 사이트(문의 게시판)와 관리자 페이지(/admin/inquiries) 양쪽에서 공용으로 쓴다.
+    public InquiryResponse answer(Long inquiryId, String answer) {
+        if (answer == null || answer.isBlank()) {
+            throw new IllegalArgumentException("답변 내용을 입력해주세요.");
+        }
+        Inquiry inquiry = findInquiry(inquiryId);
+        inquiry.answer(answer);
+        return toResponse(inquiry, authorOf(inquiry.getUserId()));
+    }
+
     private Inquiry findInquiry(Long inquiryId) {
         return inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("문의를 찾을 수 없습니다."));

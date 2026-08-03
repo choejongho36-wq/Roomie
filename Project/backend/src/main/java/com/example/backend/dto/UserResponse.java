@@ -19,6 +19,7 @@ public record UserResponse(
         List<String> tags,
         String bio,
         String provider,
-        Boolean emailVerified
+        Boolean emailVerified,
+        Boolean isAdmin
 ) {}
 

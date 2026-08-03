@@ -80,6 +80,14 @@ export const toggleBookmark = async (token: string, postId: number): Promise<Pos
   return response.data;
 };
 
+export const reportPost = async (token: string, postId: number, reason: string): Promise<void> => {
+  await axios.post(
+    `${API_BASE_URL}/posts/${postId}/report`,
+    { reason },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+};
+
 export const getComments = async (postId: number): Promise<Comment[]> => {
   const response = await axios.get<Comment[]>(`${API_BASE_URL}/posts/${postId}/comments`);
   return response.data;
@@ -150,6 +158,15 @@ export const deleteInquiry = async (token: string, inquiryId: number): Promise<v
   await axios.delete(`${API_BASE_URL}/inquiries/${inquiryId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+};
+
+export const answerInquiry = async (token: string, inquiryId: number, answer: string): Promise<Inquiry> => {
+  const response = await axios.post<Inquiry>(
+    `${API_BASE_URL}/inquiries/${inquiryId}/answer`,
+    { answer },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
 };
 
 export const login = async (loginId: string, password: string): Promise<string> => {

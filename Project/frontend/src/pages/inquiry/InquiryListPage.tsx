@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_ORIGIN, deleteInquiry, getInquiries } from "../../api";
+import { API_ORIGIN, answerInquiry, deleteInquiry, getInquiries } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import type { Inquiry } from "../../types/inquiry";
 import { renderRichText } from "../../utils/richText";
@@ -27,6 +27,9 @@ function InquiryListPage() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [answerDraft, setAnswerDraft] = useState("");
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const isAdmin = Boolean(user?.isAdmin);
 
   const loadInquiries = () => {
     if (!token) return;
@@ -49,7 +52,27 @@ function InquiryListPage() {
   }
 
   const toggle = (inquiryId: number) => {
-    setOpenId((prev) => (prev === inquiryId ? null : inquiryId));
+    setOpenId((prev) => {
+      const next = prev === inquiryId ? null : inquiryId;
+      if (next !== null) {
+        const target = inquiries.find((i) => i.inquiryId === next);
+        setAnswerDraft(target?.answer ?? "");
+      }
+      return next;
+    });
+  };
+
+  const handleAnswerSubmit = async (inquiryId: number) => {
+    if (!token || !answerDraft.trim()) return;
+    setIsSubmittingAnswer(true);
+    try {
+      await answerInquiry(token, inquiryId, answerDraft.trim());
+      loadInquiries();
+    } catch {
+      setError("답변 등록에 실패했습니다.");
+    } finally {
+      setIsSubmittingAnswer(false);
+    }
   };
 
   const handleEdit = (inquiryId: number) => {
@@ -65,18 +88,6 @@ function InquiryListPage() {
 
   return (
     <div className="page board-list-page">
-      <div className="board-floating-menu">
-        <Link to="/inquiry" className="board-floating-menu-button">
-          문의
-        </Link>
-        <Link to="/mypage/interests" className="board-floating-menu-button">
-          찜목록
-        </Link>
-        <Link to="/mypage/chat" className="board-floating-menu-button">
-          채팅목록
-        </Link>
-      </div>
-
       <div className="board-list-header">
         <div>
           <h1>문의 게시판</h1>
@@ -158,13 +169,36 @@ function InquiryListPage() {
                             className="inquiry-content-box"
                             dangerouslySetInnerHTML={{ __html: renderRichText(inquiry.content) }}
                           />
-                          {isAnswered ? (
+                          {isAnswered && !isAdmin && (
                             <div className="inquiry-answer">
                               <span className="inquiry-answer-label">답변</span>
                               <p>{inquiry.answer}</p>
                             </div>
-                          ) : (
+                          )}
+                          {!isAnswered && !isAdmin && (
                             <p className="inquiry-answer-pending">아직 답변이 등록되지 않았어요.</p>
+                          )}
+                          {isAdmin && (
+                            <div className="inquiry-answer" onClick={(e) => e.stopPropagation()}>
+                              <span className="inquiry-answer-label">
+                                {isAnswered ? "답변 (관리자)" : "답변 작성 (관리자)"}
+                              </span>
+                              <textarea
+                                className="inquiry-answer-textarea"
+                                value={answerDraft}
+                                onChange={(e) => setAnswerDraft(e.target.value)}
+                                rows={4}
+                                placeholder="답변을 입력해주세요."
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={isSubmittingAnswer || !answerDraft.trim()}
+                                onClick={() => handleAnswerSubmit(inquiry.inquiryId)}
+                              >
+                                {isAnswered ? "답변 수정" : "답변 등록"}
+                              </button>
+                            </div>
                           )}
                           {isAuthor && (
                             <div className="inquiry-item-actions">

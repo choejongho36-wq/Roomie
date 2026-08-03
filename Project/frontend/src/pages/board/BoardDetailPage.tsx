@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark, updateComment } from "../../api";
+import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, updateComment } from "../../api";
 import type { Comment, Post } from "../../types/board";
 import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
@@ -12,6 +13,16 @@ const getProfileImageSrc = (url: string | null | undefined) => {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
+
+const REPORT_REASONS = [
+  "혐오/차별적 표현이에요",
+  "스팸 홍보/도배성 글이에요",
+  "허위매물/사기가 의심돼요",
+  "청소년에게 유해한 내용이에요",
+  "불법정보를 포함하고 있어요",
+  "음란물이에요",
+  "기타 불쾌한 표현이 있어요",
+];
 
 const formatMoveInBudgetValue = (value: number | null) => {
   if (value == null) return "-";
@@ -245,6 +256,8 @@ function BoardDetailPage() {
   const [error, setError] = useState("");
   const [authorRecentPosts, setAuthorRecentPosts] = useState<Post[] | null>(null);
   const [infoModal, setInfoModal] = useState<string | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
     message: string;
     confirmLabel?: string;
@@ -336,17 +349,38 @@ function BoardDetailPage() {
   };
 
   const handleReportPost = () => {
+    if (!post) return;
     if (!token) {
       setInfoModal("신고하려면 로그인이 필요해요.");
       return;
     }
-    setConfirmModal({
-      message: "이 게시글을 신고할까요?",
-      confirmLabel: "신고",
-      onConfirm: () => {
-        setInfoModal("신고가 접수됐어요. 운영팀이 확인 후 조치할게요.");
-      },
-    });
+    if (isAuthor) {
+      setInfoModal("본인이 작성한 글은 신고할 수 없어요.");
+      return;
+    }
+    setReportReason(null);
+    setIsReportModalOpen(true);
+  };
+
+  const closeReportModal = () => {
+    setIsReportModalOpen(false);
+    setReportReason(null);
+  };
+
+  const submitReport = async () => {
+    if (!post || !token || !reportReason) return;
+    try {
+      await reportPost(token, post.postId, reportReason);
+      closeReportModal();
+      setInfoModal("신고가 접수됐어요. 운영팀이 확인 후 조치할게요.");
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && typeof err.response?.data === "string"
+          ? err.response.data
+          : "신고 처리에 실패했어요. 잠시 후 다시 시도해주세요.";
+      closeReportModal();
+      setInfoModal(message);
+    }
   };
 
   const handleAddComment = async () => {
@@ -564,6 +598,43 @@ function BoardDetailPage() {
             <button type="button" className="btn btn-primary" onClick={() => setInfoModal(null)}>
               확인
             </button>
+          </div>
+        </div>
+      )}
+
+      {isReportModalOpen && (
+        <div className="info-modal-backdrop" onClick={closeReportModal}>
+          <div
+            className="info-modal report-reason-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 className="report-reason-title">신고 사유를 선택해주세요</h3>
+            <ul className="report-reason-list">
+              {REPORT_REASONS.map((reason) => (
+                <li key={reason}>
+                  <label className="report-reason-option">
+                    <input
+                      type="radio"
+                      name="reportReason"
+                      value={reason}
+                      checked={reportReason === reason}
+                      onChange={() => setReportReason(reason)}
+                    />
+                    {reason}
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <div className="info-modal-actions">
+              <button type="button" className="btn btn-outline" onClick={closeReportModal}>
+                취소
+              </button>
+              <button type="button" className="btn btn-primary" disabled={!reportReason} onClick={submitReport}>
+                신고하기
+              </button>
+            </div>
           </div>
         </div>
       )}
