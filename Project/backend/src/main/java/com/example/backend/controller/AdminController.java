@@ -193,6 +193,11 @@ public class AdminController {
         model.addAttribute("inquiry", inquiry);
         model.addAttribute("authorName", userRepository.findById(inquiry.getUserId())
                 .map(User::getNickname).orElse(null));
+
+        // 같은 작성자가 쓴 다른 문의 최신 5건 (지금 보고 있는 문의는 제외)
+        List<Inquiry> otherInquiries = inquiryRepository
+                .findTop5ByUserIdAndInquiryIdNotOrderByCreatedAtDesc(inquiry.getUserId(), id);
+        model.addAttribute("otherInquiries", otherInquiries);
         return "inquiry-detail";
     }
 
