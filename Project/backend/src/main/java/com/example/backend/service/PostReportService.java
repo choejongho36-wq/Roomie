@@ -22,6 +22,11 @@ public class PostReportService {
         postReportRepository.save(new PostReport(postId, userId, reason));
     }
 
+    // 게시글 삭제 시 그 글에 대한 신고 기록도 함께 정리한다.
+    public void deleteAllForPost(Long postId) {
+        postReportRepository.deleteByPostId(postId);
+    }
+
     // 관리자 게시글 목록 등에서 여러 글의 신고 건수를 한 번에 조회할 때 사용.
     public Map<Long, Long> countsFor(List<Long> postIds) {
         if (postIds.isEmpty()) return Map.of();

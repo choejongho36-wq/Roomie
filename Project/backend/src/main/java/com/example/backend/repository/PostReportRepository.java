@@ -14,6 +14,8 @@ public interface PostReportRepository extends JpaRepository<PostReport, Long> {
 
     long countByPostId(Long postId);
 
+    void deleteByPostId(Long postId);
+
     @Query("select r.postId as postId, count(r) as cnt from PostReport r where r.postId in :postIds group by r.postId")
     List<PostReportCount> countGroupedByPostIds(@Param("postIds") List<Long> postIds);
 

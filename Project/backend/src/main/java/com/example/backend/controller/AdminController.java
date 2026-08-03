@@ -188,8 +188,8 @@ public class AdminController {
 
     @PostMapping("/admin/posts/{id}/delete")
     public String deletePost(@PathVariable("id") Long id) {
-        commentRepository.deleteByPostId(id);
-        postRepository.deleteById(id);
+        // 댓글/답글/찜/신고 기록까지 함께 정리하는 로직은 PostService.adminDelete()에 공용으로 있다.
+        postService.adminDelete(id);
         return "redirect:/admin/posts";
     }
 
@@ -227,8 +227,7 @@ public class AdminController {
 
     @PostMapping("/admin/notices/{id}/delete")
     public String deleteNotice(@PathVariable("id") Long id) {
-        commentRepository.deleteByPostId(id);
-        postRepository.deleteById(id);
+        postService.adminDelete(id);
         return "redirect:/admin/notices";
     }
 

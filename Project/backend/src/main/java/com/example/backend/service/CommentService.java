@@ -109,6 +109,12 @@ public class CommentService {
         commentRepository.save(comment);
     }
 
+    // 게시글 자체가 삭제될 때(작성자 본인 또는 관리자) 그 글의 댓글/답글을 통째로 정리하기 위한 것.
+    // 개별 댓글 삭제(markDeleted)와 달리, 글 자체가 없어지면 스레드를 보존할 이유가 없어 실제로 행을 지운다.
+    public void deleteAllForPost(Long postId) {
+        commentRepository.deleteByPostId(postId);
+    }
+
     private static final String DELETED_CONTENT_PLACEHOLDER = "삭제된 댓글입니다.";
 
     private CommentResponse toResponse(Comment c, User author) {

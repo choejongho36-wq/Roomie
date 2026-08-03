@@ -140,6 +140,21 @@
     font-size: 13px;
 }
 
+/* 회원 관리 "정지" 버튼: 기본 btn-outline-warning(연노랑)은 눈에 잘 안 띄어서
+   브랜드 오렌지 계열 진한 색으로 대체 */
+.btn-roomie-warning {
+    background-color: #f16526;
+    border-color: #f16526;
+    color: #fff;
+}
+
+.btn-roomie-warning:hover,
+.btn-roomie-warning:focus {
+    background-color: #d9550f;
+    border-color: #d9550f;
+    color: #fff;
+}
+
 /* 상단 검색창 돋보기 버튼 */
 #btnNavbarSearch {
     background-color: #f16526 !important;

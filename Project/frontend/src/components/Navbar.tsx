@@ -1,9 +1,9 @@
-import { useState, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 import type { NotificationItem } from "../types/chat";
-import { API_ORIGIN } from "../api";
+import { API_ORIGIN, getMyConfirmedHouse } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
 import MatchingLoadingOverlay from "./MatchingLoadingOverlay";
@@ -25,8 +25,20 @@ function Navbar() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
+  const [houseId, setHouseId] = useState<number | null>(null);
 
   const isOnVividBackground = VIVID_BACKGROUND_PATHS.has(location.pathname);
+
+  // 하우스 드롭다운(관리비정산/청소당번)은 매칭이 확정돼 실제 하우스가 있는 사람에게만 보여준다.
+  useEffect(() => {
+    if (!token) {
+      setHouseId(null);
+      return;
+    }
+    getMyConfirmedHouse(token)
+      .then((house) => setHouseId(house.id))
+      .catch(() => setHouseId(null));
+  }, [token]);
 
   const handleLogout = () => {
     logout();
@@ -67,9 +79,26 @@ function Navbar() {
           <button type="button" className="navbar-menu-link" onClick={handleMatchClick}>
             매칭
           </button>
-          <Link to="/house" className="navbar-menu-link">
-            하우스
-          </Link>
+          {houseId !== null ? (
+            <div className="navbar-dropdown">
+              <span className="navbar-menu-link navbar-dropdown-trigger">하우스</span>
+              <div className="navbar-dropdown-menu">
+                <Link to={`/house/${houseId}`} className="navbar-dropdown-item">
+                  하우스 홈
+                </Link>
+                <Link to={`/house/${houseId}/bills`} className="navbar-dropdown-item">
+                  관리비정산
+                </Link>
+                <Link to={`/house/${houseId}/chores`} className="navbar-dropdown-item">
+                  청소당번
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <Link to="/house" className="navbar-menu-link">
+              하우스
+            </Link>
+          )}
           <div className="navbar-dropdown">
             <span className="navbar-menu-link navbar-dropdown-trigger">커뮤니티</span>
             <div className="navbar-dropdown-menu">
