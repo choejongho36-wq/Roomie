@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +87,19 @@ public class AuthService {
         }
         if ("WITHDRAWN".equals(user.getStatus())) {
             throw new IllegalArgumentException("탈퇴한 계정입니다.");
+        }
+        if ("SUSPENDED".equals(user.getStatus())) {
+            // 정지 기간이 이미 지났다면 스케줄러가 아직 안 돌았더라도 로그인 시점에 바로 풀어준다.
+            if (user.isSuspensionExpired()) {
+                user.activate();
+                userRepository.save(user);
+            } else {
+                String message = user.getSuspendedUntil() == null
+                        ? "영구 정지된 계정입니다."
+                        : "정지된 계정입니다. (%s까지 정지)".formatted(
+                                user.getSuspendedUntil().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                throw new IllegalArgumentException(message);
+            }
         }
         return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
     }

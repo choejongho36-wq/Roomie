@@ -20,4 +20,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByCreatedAtAfter(LocalDateTime dateTime);
     org.springframework.data.domain.Page<User> findByNicknameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrderByCreatedAtDesc(
             String nickname, String email, org.springframework.data.domain.Pageable pageable);
+    List<User> findByStatusAndSuspendedUntilNotNullAndSuspendedUntilBefore(String status, LocalDateTime dateTime);
 }

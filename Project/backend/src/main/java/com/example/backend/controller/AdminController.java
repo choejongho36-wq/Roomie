@@ -84,10 +84,16 @@ public class AdminController {
         return "users";
     }
 
+    // duration: "7", "30", "PERMANENT"
     @PostMapping("/admin/users/{id}/suspend")
-    public String suspendUser(@PathVariable("id") Long id) {
+    public String suspendUser(@PathVariable("id") Long id, @RequestParam String duration) {
         userRepository.findById(id).ifPresent(user -> {
-            user.suspend();
+            LocalDateTime until = switch (duration) {
+                case "7" -> LocalDateTime.now().plusDays(7);
+                case "30" -> LocalDateTime.now().plusDays(30);
+                default -> null; // PERMANENT
+            };
+            user.suspend(until);
             userRepository.save(user);
         });
         return "redirect:/admin/users";

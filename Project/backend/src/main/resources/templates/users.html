@@ -107,15 +107,43 @@
                                             <td th:text="${u.email}">email@example.com</td>
                                             <td>
                                                 <span class="badge bg-success" th:if="${u.status == 'ACTIVE'}">활성</span>
-                                                <span class="badge bg-warning text-dark" th:if="${u.status == 'SUSPENDED'}">정지</span>
+                                                <span th:if="${u.status == 'SUSPENDED'}">
+                                                    <span class="badge bg-warning text-dark">정지</span>
+                                                    <div class="small text-muted mt-1">
+                                                        <span th:if="${u.suspendedUntil == null}">영구정지</span>
+                                                        <span th:if="${u.suspendedUntil != null}" th:text="${#temporals.format(u.suspendedUntil, 'yyyy-MM-dd HH:mm')} + '까지'">2026-01-01까지</span>
+                                                    </div>
+                                                </span>
                                                 <span class="badge bg-secondary" th:if="${u.status == 'WITHDRAWN'}">탈퇴</span>
                                             </td>
                                             <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">2026-01-01</td>
                                             <td>
-                                                <form th:if="${u.status == 'ACTIVE'}" th:action="@{'/admin/users/' + ${u.userId} + '/suspend'}" method="post" class="d-inline">
-                                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('이 회원을 정지시킬까요?');">정지</button>
-                                                </form>
+                                                <div th:if="${u.status == 'ACTIVE'}" class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">정지</button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <form th:action="@{'/admin/users/' + ${u.userId} + '/suspend'}" method="post">
+                                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                                                <input type="hidden" name="duration" value="7" />
+                                                                <button type="submit" class="dropdown-item" onclick="return confirm('7일간 정지시킬까요?');">7일 정지</button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form th:action="@{'/admin/users/' + ${u.userId} + '/suspend'}" method="post">
+                                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                                                <input type="hidden" name="duration" value="30" />
+                                                                <button type="submit" class="dropdown-item" onclick="return confirm('30일간 정지시킬까요?');">30일 정지</button>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form th:action="@{'/admin/users/' + ${u.userId} + '/suspend'}" method="post">
+                                                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                                                <input type="hidden" name="duration" value="PERMANENT" />
+                                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('영구 정지시킬까요?');">영구정지</button>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                                 <form th:if="${u.status == 'SUSPENDED'}" th:action="@{'/admin/users/' + ${u.userId} + '/activate'}" method="post" class="d-inline">
                                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                                     <button type="submit" class="btn btn-sm btn-outline-success">활성화</button>
