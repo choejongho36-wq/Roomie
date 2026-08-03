@@ -63,6 +63,11 @@ public class PostController {
         return postService.toggleBookmark(postId, findUser(authentication).getUserId());
     }
 
+    @PostMapping("/{postId}/report")
+    public void reportPost(Authentication authentication, @PathVariable Long postId) {
+        postService.reportPost(postId, findUser(authentication).getUserId());
+    }
+
     private User findUser(Authentication authentication) {
         return userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));

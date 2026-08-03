@@ -27,6 +27,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final PostBookmarkService postBookmarkService;
     private final PostViewRepository postViewRepository;
+    private final PostReportService postReportService;
 
     public Page<PostResponse> getPosts(Pageable pageable) {
         Page<Post> posts = postRepository.findAll(pageable);
@@ -76,6 +77,14 @@ public class PostService {
         long bookmarkCount = postBookmarkService.countFor(postId);
         boolean bookmarked = postBookmarkService.isBookmarked(postId, userId);
         return toResponse(post, authorOf(userId), bookmarkCount, bookmarked);
+    }
+
+    public void reportPost(Long postId, Long userId) {
+        Post post = findPost(postId);
+        if (post.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("본인이 작성한 글은 신고할 수 없습니다.");
+        }
+        postReportService.report(postId, userId);
     }
 
     public void delete(Long userId, Long postId) {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark, updateComment } from "../../api";
+import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, updateComment } from "../../api";
 import type { Comment, Post } from "../../types/board";
 import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
@@ -336,15 +337,29 @@ function BoardDetailPage() {
   };
 
   const handleReportPost = () => {
+    if (!post) return;
     if (!token) {
       setInfoModal("신고하려면 로그인이 필요해요.");
+      return;
+    }
+    if (isAuthor) {
+      setInfoModal("본인이 작성한 글은 신고할 수 없어요.");
       return;
     }
     setConfirmModal({
       message: "이 게시글을 신고할까요?",
       confirmLabel: "신고",
-      onConfirm: () => {
-        setInfoModal("신고가 접수됐어요. 운영팀이 확인 후 조치할게요.");
+      onConfirm: async () => {
+        try {
+          await reportPost(token, post.postId);
+          setInfoModal("신고가 접수됐어요. 운영팀이 확인 후 조치할게요.");
+        } catch (err) {
+          const message =
+            axios.isAxiosError(err) && typeof err.response?.data === "string"
+              ? err.response.data
+              : "신고 처리에 실패했어요. 잠시 후 다시 시도해주세요.";
+          setInfoModal(message);
+        }
       },
     });
   };

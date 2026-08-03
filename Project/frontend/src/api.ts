@@ -80,6 +80,14 @@ export const toggleBookmark = async (token: string, postId: number): Promise<Pos
   return response.data;
 };
 
+export const reportPost = async (token: string, postId: number): Promise<void> => {
+  await axios.post(
+    `${API_BASE_URL}/posts/${postId}/report`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+};
+
 export const getComments = async (postId: number): Promise<Comment[]> => {
   const response = await axios.get<Comment[]>(`${API_BASE_URL}/posts/${postId}/comments`);
   return response.data;
