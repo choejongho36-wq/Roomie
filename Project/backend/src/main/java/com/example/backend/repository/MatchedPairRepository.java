@@ -14,4 +14,7 @@ public interface MatchedPairRepository extends JpaRepository<MatchedPair, Long> 
 
     @Query("SELECT m FROM MatchedPair m WHERE m.userAId = :userId OR m.userBId = :userId")
     List<MatchedPair> findAllByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT m FROM MatchedPair m WHERE (m.userAId = :userId OR m.userBId = :userId) AND m.status = :status ORDER BY m.confirmedAt DESC")
+    List<MatchedPair> findByUserIdAndStatus(@Param("userId") Long userId, @Param("status") String status);
 }

@@ -29,7 +29,8 @@ import BoardWritePage from "./pages/board/BoardWritePage";
 import InquiryListPage from "./pages/inquiry/InquiryListPage";
 import InquiryWritePage from "./pages/inquiry/InquiryWritePage";
 import MatchedPairPage from "./pages/MatchedPairPage";
-import HousePage from "./pages/HousePage";
+import HouseEntryPage from "./pages/house/HouseEntryPage";
+import HousePage from "./pages/house/HousePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -59,7 +60,10 @@ function App() {
             <Route path="/inquiry/write" element={<InquiryWritePage />} />
             <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
             <Route path="/matched/:id" element={<MatchedPairPage />} />
+            <Route path="/house" element={<HouseEntryPage />} />
             <Route path="/house/:id" element={<HousePage />} />
+            <Route path="/house/:id/bills" element={<PlaceholderPage title="관리비 정산" />} />
+            <Route path="/house/:id/chores" element={<PlaceholderPage title="청소당번" />} />
             <Route path="/mypage" element={<MyPageLayout />}>
               <Route index element={<MyProfilePage />} />
               <Route path="edit" element={<EditProfilePage />} />
