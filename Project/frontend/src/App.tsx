@@ -43,42 +43,47 @@ function App() {
       <AuthProvider>
         <ChatProvider>
           <Navbar />
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/find-id" element={<FindIdPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
-            <Route path="/complete-profile" element={<CompleteProfilePage />} />
-            <Route path="/survey" element={<SurveyPage />} />
-            <Route path="/survey/complete" element={<SurveyCompletePage />} />
-            <Route path="/recommend" element={<RecommendationPage />} />
-            <Route path="/profiles" element={<ProfileBoardPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/board" element={<BoardListPage />} />
-            <Route path="/board/write" element={<BoardWritePage />} />
-            <Route path="/board/edit/:postId" element={<BoardWritePage />} />
-            <Route path="/board/:postId" element={<BoardDetailPage />} />
-            <Route path="/inquiry" element={<InquiryListPage />} />
-            <Route path="/inquiry/write" element={<InquiryWritePage />} />
-            <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
-            <Route path="/matched/:id" element={<MatchedPairPage />} />
-            <Route path="/house" element={<HouseEntryPage />} />
-            <Route path="/house/:id" element={<HousePage />} />
-            <Route path="/house/:id/bills" element={<PlaceholderPage title="관리비 정산" />} />
-            <Route path="/house/:id/chores" element={<PlaceholderPage title="청소당번" />} />
-            <Route path="/mypage" element={<MyPageLayout />}>
-              <Route index element={<MyProfilePage />} />
-              <Route path="edit" element={<EditProfilePage />} />
-              <Route path="activity" element={<ActivityPage />} />
-              <Route path="my-activity" element={<MyActivityDashboardPage />} />
-              <Route path="interests" element={<InterestsPage />} />
-              <Route path="chat" element={<ChatPage />} />
-              <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
-            </Route>
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
+          <main className="app-main">
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/find-id" element={<FindIdPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
+              <Route path="/survey" element={<SurveyPage />} />
+              <Route path="/survey/weights" element={<SurveyWeightsPage />} />
+              <Route path="/survey/complete" element={<SurveyCompletePage />} />
+              <Route path="/recommend" element={<RecommendationPage />} />
+              <Route path="/profiles" element={<ProfileBoardPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/board" element={<BoardListPage />} />
+              <Route path="/board/write" element={<BoardWritePage />} />
+              <Route path="/board/edit/:postId" element={<BoardWritePage />} />
+              <Route path="/board/:postId" element={<BoardDetailPage />} />
+              <Route path="/inquiry" element={<InquiryListPage />} />
+              <Route path="/inquiry/write" element={<InquiryWritePage />} />
+              <Route path="/inquiry/edit/:inquiryId" element={<InquiryWritePage />} />
+              <Route path="/matched/:id" element={<MatchedPairPage />} />
+              <Route path="/house" element={<HouseEntryPage />} />
+              <Route path="/house/:id" element={<HouseLayout />}>
+                <Route index element={<HousePage />} />
+                <Route path="bills" element={<HouseBillsPage />} />
+                <Route path="chores" element={<HouseChoresPage />} />
+              </Route>
+              <Route path="/mypage" element={<MyPageLayout />}>
+                <Route index element={<MyProfilePage />} />
+                <Route path="edit" element={<EditProfilePage />} />
+                <Route path="activity" element={<ActivityPage />} />
+                <Route path="my-activity" element={<MyActivityDashboardPage />} />
+                <Route path="interests" element={<InterestsPage />} />
+                <Route path="chat" element={<ChatPage />} />
+                <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
+              </Route>
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
           <Footer />
         </ChatProvider>
       </AuthProvider>
