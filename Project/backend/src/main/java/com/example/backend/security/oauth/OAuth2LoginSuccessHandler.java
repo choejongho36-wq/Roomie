@@ -1,6 +1,7 @@
 package com.example.backend.security.oauth;
 
 import com.example.backend.domain.User;
+import com.example.backend.repository.UserRepository;
 import com.example.backend.security.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,6 +21,7 @@ import java.io.IOException;
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -32,6 +34,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     ) throws IOException {
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
         User user = oAuth2User.getUser();
+        user.recordLogin();
+        userRepository.save(user);
 
         String token = jwtProvider.createToken(user.getLoginId());
 

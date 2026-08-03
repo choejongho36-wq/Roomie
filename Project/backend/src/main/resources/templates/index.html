@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>Dashboard - SB Admin</title>
+        <title>Dashboard - Roomie Admin</title>
         <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet" />
@@ -24,12 +24,13 @@
             <!-- Sidebar Toggle-->
             <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
             <!-- Navbar Search-->
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <div class="d-none d-md-inline-block ms-auto me-0 me-md-3 my-2 my-md-0 admin-search-wrap">
                 <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                    <input class="form-control" type="text" id="adminSearchInput" placeholder="기능 검색 (예: 회원, 공지)" aria-label="기능 검색" aria-describedby="btnNavbarSearch" autocomplete="off" />
                     <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
                 </div>
-            </form>
+                <div id="adminSearchResults" class="admin-search-results"></div>
+            </div>
             <!-- Navbar-->
             <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
                 <li class="nav-item dropdown">
@@ -70,63 +71,11 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
                                 공지/이벤트 관리
                             </a>
-                            <div class="sb-sidenav-menu-heading">Interface</div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
-                                <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
-                                Layouts
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    <a class="nav-link" th:href="@{/admin/layout-static}">Static Navigation</a>
-                                    <a class="nav-link" th:href="@{/admin/layout-sidenav-light}">Light Sidenav</a>
-                                </nav>
-                            </div>
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePages" aria-expanded="false" aria-controls="collapsePages">
-                                <div class="sb-nav-link-icon"><i class="fas fa-book-open"></i></div>
-                                Pages
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapsePages" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionPages">
-                                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapseAuth" aria-expanded="false" aria-controls="pagesCollapseAuth">
-                                        Authentication
-                                        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                                    </a>
-                                    <div class="collapse" id="pagesCollapseAuth" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
-                                        <nav class="sb-sidenav-menu-nested nav">
-                                            <a class="nav-link" th:href="@{/admin/login}">Login</a>
-                                            <a class="nav-link" th:href="@{/admin/register}">Register</a>
-                                            <a class="nav-link" th:href="@{/admin/password}">Forgot Password</a>
-                                        </nav>
-                                    </div>
-                                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapseError" aria-expanded="false" aria-controls="pagesCollapseError">
-                                        Error
-                                        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                                    </a>
-                                    <div class="collapse" id="pagesCollapseError" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
-                                        <nav class="sb-sidenav-menu-nested nav">
-                                            <a class="nav-link" th:href="@{/admin/401}">401 Page</a>
-                                            <a class="nav-link" th:href="@{/admin/404}">404 Page</a>
-                                            <a class="nav-link" th:href="@{/admin/500}">500 Page</a>
-                                        </nav>
-                                    </div>
-                                </nav>
-                            </div>
-                            <div class="sb-sidenav-menu-heading">Addons</div>
-                            <a class="nav-link" th:href="@{/admin/charts}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                                Charts
-                            </a>
-                            <a class="nav-link" th:href="@{/admin/tables}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                                Tables
-                            </a>
                         </div>
                     </div>
                     <div class="sb-sidenav-footer">
                         <div class="small">Logged in as:</div>
-                        Start Bootstrap
+                        관리자
                     </div>
                 </nav>
             </div>
@@ -139,13 +88,13 @@
                         </ol>
                         <div class="row">
                             <div class="col-xl-3 col-md-6">
-                                <div class="card bg-roomie-1 text-white mb-4">
+                                <div class="card bg-roomie-3 text-white mb-4">
                                     <div class="card-body">
-                                        전체 게시글<br />
-                                        <span style="font-size: 1.5rem;" th:text="${totalPosts}">0</span>건
+                                        오늘 방문자 수<br />
+                                        <span style="font-size: 1.5rem;" th:text="${todayVisitors}">0</span>명
                                     </div>
-                                    <a th:href="@{/admin/posts}" class="card-footer text-white clearfix small z-1 text-decoration-none">
-                                        <span class="float-start">게시글 관리</span>
+                                    <a th:href="@{/admin/users}" class="card-footer text-white clearfix small z-1 text-decoration-none">
+                                        <span class="float-start">회원 관리</span>
                                         <span class="float-end"><i class="fas fa-angle-right"></i></span>
                                     </a>
                                 </div>
@@ -163,22 +112,29 @@
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-6">
-                                <div class="card bg-roomie-3 text-white mb-4">
+                                <div class="card bg-roomie-1 text-white mb-4">
                                     <div class="card-body">
-                                        신고모음<br />
-                                        <span style="font-size: 1.5rem;" th:text="${reportCount}">0</span>건
+                                        전체 게시글<br />
+                                        <span style="font-size: 1.5rem;" th:text="${totalPosts}">0</span>건
                                     </div>
-                                    <a th:href="@{/admin/inquiries}" class="card-footer text-white clearfix small z-1 text-decoration-none">
-                                        <span class="float-start">문의 관리</span>
+                                    <a th:href="@{/admin/posts}" class="card-footer text-white clearfix small z-1 text-decoration-none">
+                                        <span class="float-start">게시글 관리</span>
                                         <span class="float-end"><i class="fas fa-angle-right"></i></span>
                                     </a>
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-roomie-4 text-white mb-4">
-                                    <div class="card-body">
-                                        미답변 문의<br />
-                                        <span style="font-size: 1.5rem;" th:text="${pendingInquiries}">0</span>건
+                                    <div class="card-body d-flex flex-column justify-content-center" style="min-height: 92px;">
+                                        <div class="mb-1">
+                                            미답변 문의 카테고리 (전체 <span th:text="${pendingInquiries}">0</span>건)
+                                        </div>
+                                        <div class="d-flex flex-wrap" style="row-gap: 2px; column-gap: 14px;">
+                                            <span th:each="entry : ${inquiryCategoryCounts}">
+                                                <span th:text="${entry.key}">버그</span>
+                                                <span th:text="${entry.value}">0</span>
+                                            </span>
+                                        </div>
                                     </div>
                                     <a th:href="@{/admin/inquiries}" class="card-footer text-white clearfix small z-1 text-decoration-none">
                                         <span class="float-start">문의 관리</span>
@@ -209,28 +165,30 @@
                         </div>
                         <div class="card mb-4">
                             <div class="card-header">
-                                <i class="fas fa-users me-1"></i>
-                                최근 가입 회원
+                                <i class="fas fa-flag me-1"></i>
+                                최근 신고된 게시글
                             </div>
                             <div class="card-body">
                                 <table class="table table-striped align-middle mb-0">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-                                            <th>닉네임</th>
-                                            <th>이메일</th>
-                                            <th>가입일</th>
+                                            <th>제목</th>
+                                            <th>사유</th>
+                                            <th>신고일시</th>
+                                            <th>관리</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr th:each="u : ${recentUsers}">
-                                            <td th:text="${u.userId}">1</td>
-                                            <td th:text="${u.nickname}">닉네임</td>
-                                            <td th:text="${u.email}">email@example.com</td>
-                                            <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">2026-01-01</td>
+                                        <tr th:each="r : ${recentReports}">
+                                            <td th:text="${reportedPosts.get(r.postId)?.title} ?: '(삭제된 글)'">제목</td>
+                                            <td th:text="${r.reason} ?: '-'">사유</td>
+                                            <td th:text="${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01</td>
+                                            <td>
+                                                <a th:href="@{/admin/posts}" class="btn btn-sm btn-outline-secondary">게시글 관리로</a>
+                                            </td>
                                         </tr>
-                                        <tr th:if="${#lists.isEmpty(recentUsers)}">
-                                            <td colspan="4" class="text-center text-muted">가입한 회원이 없습니다.</td>
+                                        <tr th:if="${#lists.isEmpty(recentReports)}">
+                                            <td colspan="4" class="text-center text-muted">신고된 게시글이 없습니다.</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -240,12 +198,7 @@
                 <footer class="py-4 bg-light mt-auto">
                     <div class="container-fluid px-4">
                         <div class="d-flex align-items-center justify-content-between small">
-                            <div class="text-muted">Copyright &copy; Your Website 2023</div>
-                            <div>
-                                <a href="#">Privacy Policy</a>
-                                &middot;
-                                <a href="#">Terms &amp; Conditions</a>
-                            </div>
+                            <div class="text-muted">Copyright &copy; Roomie</div>
                         </div>
                     </div>
                 </footer>
@@ -253,6 +206,7 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
         <script th:src="@{/startbootstrap-sb-admin-gh-pages/js/scripts.js}"></script>
+        <script th:src="@{/admin-search.js}"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" crossorigin="anonymous"></script>
         <script th:inline="javascript">
             /*<![CDATA[*/

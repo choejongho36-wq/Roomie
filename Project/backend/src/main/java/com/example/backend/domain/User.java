@@ -87,6 +87,10 @@ public class User {
     @Column(name = "nickname_changed_at")
     private LocalDateTime nicknameChangedAt;
 
+    // 관리자 대시보드 "오늘 방문자 수" 집계용. 로그인 성공 시마다 갱신된다.
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -150,6 +154,10 @@ public class User {
 
     public boolean isAdmin() {
         return this.role != null && this.role.equalsIgnoreCase("ADMIN");
+    }
+
+    public void recordLogin() {
+        this.lastLoginAt = LocalDateTime.now();
     }
 
     public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {

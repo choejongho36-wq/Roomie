@@ -17,6 +17,9 @@ public interface PostReportRepository extends JpaRepository<PostReport, Long> {
     @Query("select r.postId as postId, count(r) as cnt from PostReport r where r.postId in :postIds group by r.postId")
     List<PostReportCount> countGroupedByPostIds(@Param("postIds") List<Long> postIds);
 
+    // 대시보드 "최근 신고된 게시글" 목록용.
+    List<PostReport> findTop10ByOrderByCreatedAtDesc();
+
     interface PostReportCount {
         Long getPostId();
         Long getCnt();

@@ -24,4 +24,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 관리자 게시글 검색에서 작성자 닉네임으로 회원을 찾기 위해 사용.
     List<User> findByNicknameContainingIgnoreCase(String nickname);
+
+    // 관리자 대시보드 "오늘 방문자 수"(오늘 로그인한 회원 수) 집계용.
+    long countByLastLoginAtAfter(LocalDateTime dateTime);
 }

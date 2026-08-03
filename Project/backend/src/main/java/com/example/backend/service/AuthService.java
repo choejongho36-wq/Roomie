@@ -101,6 +101,8 @@ public class AuthService {
                 throw new IllegalArgumentException(message);
             }
         }
+        user.recordLogin();
+        userRepository.save(user);
         return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
     }
 

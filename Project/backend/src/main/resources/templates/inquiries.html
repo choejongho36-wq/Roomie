@@ -20,12 +20,13 @@
                 <span class="admin-brand-text">Roomie<span class="admin-brand-sub">Admin</span></span>
             </a>
             <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
-            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <div class="d-none d-md-inline-block ms-auto me-0 me-md-3 my-2 my-md-0 admin-search-wrap">
                 <div class="input-group">
-                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                    <input class="form-control" type="text" id="adminSearchInput" placeholder="기능 검색 (예: 회원, 공지)" aria-label="기능 검색" aria-describedby="btnNavbarSearch" autocomplete="off" />
                     <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
                 </div>
-            </form>
+                <div id="adminSearchResults" class="admin-search-results"></div>
+            </div>
             <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
@@ -79,9 +80,40 @@
                             <li class="breadcrumb-item active">문의 관리</li>
                         </ol>
                         <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-envelope-open-text me-1"></i>
-                                전체 문의 (<span th:text="${inquiries.size()}">0</span>건)
+                            <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <i class="fas fa-envelope-open-text me-1"></i>
+                                    <span th:text="${#strings.isEmpty(category)} ? '전체' : ${category}">전체</span>
+                                    문의 (<span th:text="${inquiries.size()}">0</span>건)
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span th:text="${#strings.isEmpty(category)} ? '전체' : ${category}">전체</span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" th:classappend="${#strings.isEmpty(category)} ? 'active'"
+                                               th:href="@{/admin/inquiries}">전체</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" th:classappend="${category == '버그'} ? 'active'"
+                                               th:href="@{/admin/inquiries(category='버그')}">버그</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" th:classappend="${category == '신고'} ? 'active'"
+                                               th:href="@{/admin/inquiries(category='신고')}">신고</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" th:classappend="${category == '제안'} ? 'active'"
+                                               th:href="@{/admin/inquiries(category='제안')}">제안</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" th:classappend="${category == '문의'} ? 'active'"
+                                               th:href="@{/admin/inquiries(category='문의')}">문의</a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <table class="table table-striped table-hover align-middle">
@@ -128,5 +160,6 @@
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
         <script th:src="@{/startbootstrap-sb-admin-gh-pages/js/scripts.js}"></script>
+        <script th:src="@{/admin-search.js}"></script>
     </body>
 </html>
