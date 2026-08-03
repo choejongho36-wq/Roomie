@@ -28,6 +28,7 @@ public class PostService {
     private final PostBookmarkService postBookmarkService;
     private final PostViewRepository postViewRepository;
     private final PostReportService postReportService;
+    private final CommentService commentService;
 
     public Page<PostResponse> getPosts(Pageable pageable) {
         Page<Post> posts = postRepository.findAll(pageable);
@@ -92,7 +93,25 @@ public class PostService {
         if (!post.getUserId().equals(userId)) {
             throw new IllegalArgumentException("본인이 작성한 글만 삭제할 수 있습니다.");
         }
+        deleteRelatedData(postId);
         postRepository.delete(post);
+    }
+
+    // 관리자 전용 삭제. 작성자 본인 여부를 따지지 않는다는 점만 delete()와 다르고,
+    // 댓글/답글/찜/신고 기록을 함께 정리하는 로직은 동일하게 공유한다.
+    public void adminDelete(Long postId) {
+        Post post = findPost(postId);
+        deleteRelatedData(postId);
+        postRepository.delete(post);
+    }
+
+    // 게시글을 지울 때 딸린 댓글/답글/찜/신고 기록까지 함께 정리해서 고아 데이터가 남지 않게 한다.
+    // 회원 탈퇴 경로가 아니라 게시글 삭제 경로(본인 삭제 · 관리자 삭제) 양쪽에서 공용으로 쓴다.
+    private void deleteRelatedData(Long postId) {
+        commentService.deleteAllForPost(postId);
+        postBookmarkService.deleteAllForPost(postId);
+        postViewRepository.deleteByPostId(postId);
+        postReportService.deleteAllForPost(postId);
     }
 
     // 마이페이지 "찜목록" 화면용. 최근에 찜한 글이 위로 오도록 정렬해서 반환한다.

@@ -126,7 +126,7 @@
                                             <td th:text="${#temporals.format(u.createdAt, 'yyyy-MM-dd')}">2026-01-01</td>
                                             <td>
                                                 <div th:if="${u.status == 'ACTIVE'}" class="dropdown">
-                                                    <button class="btn btn-sm btn-outline-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">정지</button>
+                                                    <button class="btn btn-sm btn-roomie-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">정지</button>
                                                     <ul class="dropdown-menu">
                                                         <li>
                                                             <form th:action="@{'/admin/users/' + ${u.userId} + '/suspend'}" method="post">
