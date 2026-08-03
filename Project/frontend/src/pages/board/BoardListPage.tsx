@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
-import type { Post } from "../../types";
+import type { Post } from "../../types/board";
 import { FREE_BOARD_CATEGORIES } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardListPage.css";
