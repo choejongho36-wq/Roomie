@@ -36,6 +36,20 @@ public class MatchedPairController {
         return ResponseEntity.ok(matchedPairService.getById(id, me.getUserId()));
     }
 
+    // 매칭 페어 화면에서 "하우스로 이동"을 누르면 호출 (SEARCHING -> CONFIRMED)
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<MatchedPairResponse> confirm(Authentication authentication, @PathVariable Long id) {
+        User me = findUser(authentication);
+        return ResponseEntity.ok(matchedPairService.confirm(id, me.getUserId()));
+    }
+
+    // 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용
+    @GetMapping("/me/confirmed")
+    public ResponseEntity<MatchedPairResponse> getMyConfirmed(Authentication authentication) {
+        User me = findUser(authentication);
+        return ResponseEntity.ok(matchedPairService.getMyConfirmedHouse(me.getUserId()));
+    }
+
     // 공동 방 탐색 화면에서 희망지역/예산/입주희망일 같은 공통 조건을 저장할 때 사용
     @PutMapping("/{id}/conditions")
     public ResponseEntity<MatchedPairResponse> updateConditions(

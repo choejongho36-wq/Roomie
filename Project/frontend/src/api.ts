@@ -424,6 +424,24 @@ export const updateMatchedPairConditions = async (
   return response.data;
 };
 
+// "방을 구하셨나요?" -> 하우스로 이동 버튼을 누르면 호출해서 페어를 CONFIRMED로 바꿈
+export const confirmMatchedPair = async (token: string, pairId: number): Promise<MatchedPair> => {
+  const response = await axios.put<MatchedPair>(
+    `${API_BASE_URL}/matched-pairs/${pairId}/confirm`,
+    null,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+// 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 400)
+export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair> => {
+  const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/me/confirmed`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 // ===== 아이디 찾기 =====
 
 export const requestFindId = async (email: string): Promise<void> => {

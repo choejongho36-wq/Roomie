@@ -44,6 +44,23 @@ public class MatchedPairService {
         return toResponse(pair, requestUserId);
     }
 
+    // "방을 구하셨나요?" -> 하우스로 이동 버튼을 누르면 호출. 페어를 CONFIRMED로 바꿔서 하우스 기능을 열어줌
+    public MatchedPairResponse confirm(Long pairId, Long requestUserId) {
+        MatchedPair pair = findPairForUser(pairId, requestUserId);
+        pair.confirm();
+        matchedPairRepository.save(pair);
+        return toResponse(pair, requestUserId);
+    }
+
+    // 네비바 "하우스" 메뉴에서 내가 확정한 하우스를 찾을 때 사용
+    public MatchedPairResponse getMyConfirmedHouse(Long requestUserId) {
+        MatchedPair pair = matchedPairRepository.findByUserIdAndStatus(requestUserId, MatchedPair.STATUS_CONFIRMED)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("확정된 하우스가 없습니다."));
+        return toResponse(pair, requestUserId);
+    }
+
     private MatchedPair findPairForUser(Long pairId, Long requestUserId) {
         MatchedPair pair = matchedPairRepository.findById(pairId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매칭 페어입니다."));
