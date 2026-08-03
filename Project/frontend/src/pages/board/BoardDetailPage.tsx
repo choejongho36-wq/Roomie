@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, toggleBookmark, updateComment } from "../../api";
-import type { Comment, Post } from "../../types";
+import type { Comment, Post } from "../../types/board";
 import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardDetailPage.css";

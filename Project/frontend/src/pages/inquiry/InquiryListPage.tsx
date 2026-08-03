@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_ORIGIN, deleteInquiry, getInquiries } from "../../api";
 import { useAuth } from "../../context/AuthContext";
-import type { Inquiry } from "../../types";
+import type { Inquiry } from "../../types/inquiry";
 import { renderRichText } from "../../utils/richText";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../board/BoardListPage.css";

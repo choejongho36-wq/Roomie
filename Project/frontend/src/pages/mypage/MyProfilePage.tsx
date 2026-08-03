@@ -35,7 +35,7 @@ function extractErrorMessage(err: unknown, fallback: string): string {
   return axios.isAxiosError(err) && typeof err.response?.data === "string" ? err.response.data : fallback;
 }
 
-function ProfilePage() {
+function MyProfilePage() {
   const { user, token, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const [hasSurvey, setHasSurvey] = useState<boolean | null>(null);
@@ -616,4 +616,4 @@ function ProfilePage() {
   );
 }
 
-export default ProfilePage;
+export default MyProfilePage;

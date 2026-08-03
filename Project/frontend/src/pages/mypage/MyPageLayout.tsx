@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import MyPageSidebar from "../components/mypage/MyPageSidebar";
-import "./MyPage.css";
+import { useAuth } from "../../context/AuthContext";
+import MyPageSidebar from "../../components/mypage/MyPageSidebar";
+import "./MyPageLayout.css";
 
-function MyPage() {
+function MyPageLayout() {
   const navigate = useNavigate();
   const { token } = useAuth();
 
@@ -22,4 +22,4 @@ function MyPage() {
   );
 }
 
-export default MyPage;
+export default MyPageLayout;

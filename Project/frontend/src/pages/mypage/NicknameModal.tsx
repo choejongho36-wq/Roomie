@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { updateNickname } from "../../api";
-import type { User } from "../../types";
+import type { User } from "../../types/user";
 import "../../components/LoginModal.css";
 
 const MAX_NICKNAME_LENGTH = 30;

@@ -2,6 +2,7 @@ services:
   backend:
     build: ./backend
     environment:
+      TZ: Asia/Seoul
       DB_URL: ${DB_URL}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}

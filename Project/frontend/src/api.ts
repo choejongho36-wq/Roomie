@@ -1,5 +1,8 @@
 import axios from "axios";
-import type { Comment, Inquiry, InquiryRequest, MyComment, Page, Post, PostRequest, User } from "./types";
+import type { Comment, MyComment, Post, PostRequest } from "./types/board";
+import type { Inquiry, InquiryRequest } from "./types/inquiry";
+import type { Page } from "./types/common";
+import type { User } from "./types/user";
 import type {
   RecommendationResult,
   SurveyComparisonExplanationResult,

@@ -3,5 +3,3 @@
 export const FREE_BOARD_CATEGORIES = ["고민상담", "잡담", "정보공유", "생활 꿀팁"];
 
 export const SPECIAL_BOARDS = ["공지사항", "이벤트"];
-
-export const CATEGORY_OPTIONS = [...FREE_BOARD_CATEGORIES, ...SPECIAL_BOARDS];

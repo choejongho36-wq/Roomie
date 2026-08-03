@@ -38,26 +38,6 @@ export interface PostRequest {
   boardType: string | null;
 }
 
-export interface Inquiry {
-  inquiryId: number;
-  userId: number;
-  nickname: string;
-  profileImageUrl: string | null;
-  title: string;
-  category: string;
-  content: string;
-  status: string;
-  answer: string | null;
-  createdAt: string;
-  answeredAt: string | null;
-}
-
-export interface InquiryRequest {
-  title: string;
-  category: string;
-  content: string;
-}
-
 export interface Comment {
   commentId: number;
   userId: number;
@@ -75,27 +55,4 @@ export interface MyComment {
   postTitle: string | null;
   content: string;
   createdAt: string;
-}
-
-export interface Page<T> {
-  content: T[];
-  number: number;
-  totalPages: number;
-  totalElements: number;
-}
-
-export interface User {
-  userId: number;
-  email: string;
-  nickname: string;
-  gender: string;
-  birthDate: string;
-  region: string | null;
-  job: string | null;
-  createdAt: string;
-  profileImageUrl: string | null;
-  tags: string[];
-  bio: string | null;
-  provider: string;
-  emailVerified: boolean;
 }
