@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -88,6 +89,10 @@ public class PostService {
         postReportService.report(postId, userId, reason);
     }
 
+    // 댓글/찜/조회/신고까지 여러 테이블에 걸쳐 지우는 작업이라 @Transactional로 묶는다.
+    // 이게 없으면 deleteByPostId 같은 파생 삭제 쿼리가 트랜잭션 없이 호출돼
+    // "No EntityManager with actual transaction available" 에러로 실패한다.
+    @Transactional
     public void delete(Long userId, Long postId) {
         Post post = findPost(postId);
         if (!post.getUserId().equals(userId)) {
@@ -99,6 +104,7 @@ public class PostService {
 
     // 관리자 전용 삭제. 작성자 본인 여부를 따지지 않는다는 점만 delete()와 다르고,
     // 댓글/답글/찜/신고 기록을 함께 정리하는 로직은 동일하게 공유한다.
+    @Transactional
     public void adminDelete(Long postId) {
         Post post = findPost(postId);
         deleteRelatedData(postId);
