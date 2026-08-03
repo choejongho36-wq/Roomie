@@ -61,4 +61,10 @@ public class Inquiry {
         this.category = category;
         this.content = content;
     }
+
+    public void answer(String answer) {
+        this.answer = answer;
+        this.status = "ANSWERED";
+        this.answeredAt = LocalDateTime.now();
+    }
 }

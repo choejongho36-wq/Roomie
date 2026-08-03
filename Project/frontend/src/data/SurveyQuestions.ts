@@ -39,14 +39,14 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 2,
     category: "화장실 사용",
-    situation: "다음 문항은 {name}님과 안 겹치는 룸메이트로 찾아드릴게요.",
+    situation: "안 겹치는 룸메이트로 찾아드릴게요.",
     question: "{name}님은 아침에 화장실을 몇 시쯤 쓰시나요?",
     options: [
       { score: 1, text: "6시 이전에 써." },
       { score: 2, text: "6~7시 사이에 써." },
       { score: 3, text: "7~8시 사이에 써." },
       { score: 4, text: "8~9시 사이에 써." },
-      { score: 5, text: "9시 이후에 쓰거나 정해진 시간이 없어." },
+      { score: 5, text: "상황에 따라 다르거나 정해진 시간이 없어." },
     ],
   },
   {
@@ -196,7 +196,7 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 15,
     category: "친구 초대",
-    question: "{name}님은 룸메이트의 친구초대, 괜찮나요",
+    question: "{name}님은 룸메이트의 친구초대, 괜찮나요?",
     options: [
       { score: 1, text: "허락없이 언제든 상관없어." },
       { score: 2, text: "말만 해주면 언제든 상관없어." },
@@ -220,8 +220,8 @@ export const surveyQuestions: SurveyQuestion[] = [
   {
     id: 17,
     category: "벌레",
-    situation: "못 잡아도 걱정말아요. 루미가 잘 잡는 사람으로 추천해줄게요.",
-    question: "{name}님은 벌레가 나오면 어떻게 하시나요?",
+    situation: "{name}님은 벌레가 나오면 어떻게 하시나요?",
+    question: "못 잡아도 걱정말아요. 루미가 잘 잡는 사람으로 추천해줄게요.",
     options: [
       { score: 1, text: "바로 잡아." },
       { score: 2, text: "대부분 직접 처리해." },

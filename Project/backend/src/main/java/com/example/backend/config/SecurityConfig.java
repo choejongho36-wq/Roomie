@@ -1,5 +1,6 @@
 package com.example.backend.config;
 
+import com.example.backend.security.AdminUserDetailsService;
 import com.example.backend.security.JwtAuthenticationFilter;
 import com.example.backend.security.oauth.CustomOAuth2UserService;
 import com.example.backend.security.oauth.CustomAuthorizationRequestResolver;
@@ -9,10 +10,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -30,11 +34,41 @@ public class SecurityConfig {
         private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
         private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
         private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+        private final AdminUserDetailsService adminUserDetailsService;
+        private final PasswordEncoder passwordEncoder;
 
         @Value("${cors.allowed-origins:http://localhost:5174}")
         private String[] allowedOrigins;
 
+        // /admin/** 전용 세션 기반 폼 로그인 체인. API용 체인보다 먼저 매칭되도록 @Order(1).
         @Bean
+        @Order(1)
+        public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
+                DaoAuthenticationProvider adminAuthProvider = new DaoAuthenticationProvider(adminUserDetailsService);
+                adminAuthProvider.setPasswordEncoder(passwordEncoder);
+
+                http
+                                .securityMatcher("/admin/**")
+                                .authenticationProvider(adminAuthProvider)
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/admin/login").permitAll()
+                                                .anyRequest().hasRole("ADMIN"))
+                                .formLogin(form -> form
+                                                .loginPage("/admin/login")
+                                                .loginProcessingUrl("/admin/login")
+                                                .usernameParameter("email")
+                                                .passwordParameter("password")
+                                                .defaultSuccessUrl("/admin", true)
+                                                .failureUrl("/admin/login?error"))
+                                .logout(logout -> logout
+                                                .logoutRequestMatcher(request -> "GET".equalsIgnoreCase(request.getMethod())
+                                                                && "/admin/logout".equals(request.getRequestURI()))
+                                                .logoutSuccessUrl("/admin/login?logout"));
+                return http.build();
+        }
+
+        @Bean
+        @Order(2)
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf.disable())
