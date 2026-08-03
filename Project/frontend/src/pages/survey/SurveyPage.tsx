@@ -79,7 +79,7 @@ function SurveyPage() {
     setSubmitError("");
     try {
       await submitSurvey(token, answers);
-      navigate("/survey/complete");
+      navigate("/survey/weights");
     } catch {
       setSubmitError("설문 제출에 실패했습니다. 다시 시도해주세요.");
     } finally {

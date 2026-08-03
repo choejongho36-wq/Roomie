@@ -3,6 +3,7 @@ package com.example.backend.service;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 설문 답변(1~5 리커트 척도) 두 벌을 받아 호환도 점수(0~100)를 계산한다.
@@ -10,6 +11,9 @@ import java.util.List;
  * 기존 코사인 유사도는 모든 값이 [0,1]인 양의 공간에 몰려 각도 차이가 작게 나와
  * "정반대인데 높은 점수"가 나오는 문제가 있었다. 여기서는 문항별 답변 거리를
  * 가중 평균해서 "얼마나 벌어져 있나"를 직접 점수화한다.
+ * <p>
+ * 가중치는 사용자가 설문 완료 후 문항별로 직접 설정할 수 있다({@link UserCategoryWeightService}).
+ * 설정하지 않은 문항은 아래 DEFAULT_WEIGHTS를 그대로 쓴다.
  */
 @Component
 public class CompatibilityCalculator {
@@ -18,10 +22,10 @@ public class CompatibilityCalculator {
     private static final int MAX_ANSWER = 5;
     private static final int MAX_DIFF = MAX_ANSWER - MIN_ANSWER; // 4
 
-    // 문항별 가중치 (index = 질문 id, 1-based). 0번 슬롯은 사용하지 않음.
-    // 3=높음, 2=보통, 1=낮음
+    // 문항별 기본 가중치 (index = 질문 id, 1-based). 0번 슬롯은 사용하지 않음.
+    // 3=높음, 2=보통, 1=낮음 — 사용자가 직접 고르는 3단계와 동일한 척도.
     // 2026-07-31: 프론트 설문 문항이 주제별로 재배열되면서 id 순서가 바뀜에 따라 함께 갱신.
-    private static final int[] WEIGHTS = {
+    private static final int[] DEFAULT_WEIGHTS = {
             0,
             3, // 1 취침 시간
             2, // 2 화장실 사용
@@ -34,7 +38,7 @@ public class CompatibilityCalculator {
             2, // 9 이어폰 사용
             2, // 10 실내 취식
             1, // 11 야식
-            12, // 12 흡연 — 유무가 갈리면 크게 벌어지도록 가중치를 확 높임
+            3, // 12 흡연 — 유무가 갈리면 이진 판정으로 크게 벌어지므로 다른 항목과 같은 최고 단계면 충분
             2, // 13 음주
             2, // 14 음주 후 행동
             2, // 15 친구 초대
@@ -50,12 +54,33 @@ public class CompatibilityCalculator {
     private static final int SMOKING_QUESTION_ID = 12;
     private static final int SMOKER_MAX_ANSWER = 1; // 1 흡연, 2 비흡연
 
+    // 화장실 사용 시간대는 "얼마나 다르냐"가 아니라 "겹치냐 안 겹치냐"의 문제다.
+    // 같은 시간대면 최대 페널티, 조금이라도 다르면(정도 무관) 페널티 없음.
+    // 단 "신경 안 씀"(정해진 시간이 없음)은 실제 시간대가 아니라 유연함 표시라,
+    // 둘 다 신경 안 씀이든 한쪽만 신경 안 씀이든 겹칠 시간대 자체가 없으니 항상 페널티 없음.
+    private static final int BATHROOM_QUESTION_ID = 2;
+    private static final int BATHROOM_FLEXIBLE_ANSWER = 5; // 상황에 따라 다르거나 정해진 시간이 없음
+
+    // 벌레는 둘 다 못 잡는 것보다 한쪽이 처리하고 한쪽이 못 하는(=답변이 반대일수록) 궁합이 좋다.
+    // 그래서 기본 공식(차이가 클수록 페널티↑)과 반대로 차이가 클수록 페널티가 작아지게 뒤집는다.
+    private static final int BUGS_QUESTION_ID = 17;
+
     /**
      * @param a 내 답변 목록 (각 원소 1~5)
      * @param b 상대 답변 목록 (각 원소 1~5)
      * @return 0~100 호환도 점수. 비교할 답변이 없으면 0.
      */
     public int score(List<Integer> a, List<Integer> b) {
+        return score(a, b, Map.of());
+    }
+
+    /**
+     * @param a 내 답변 목록 (각 원소 1~5)
+     * @param b 상대 답변 목록 (각 원소 1~5)
+     * @param customWeights 문항 id -> 가중치(1~3). 조회 기준 사용자가 직접 설정한 값 (없는 문항은 기본값 사용)
+     * @return 0~100 호환도 점수. 비교할 답변이 없으면 0.
+     */
+    public int score(List<Integer> a, List<Integer> b, Map<Integer, Integer> customWeights) {
         int count = Math.min(a.size(), b.size());
         if (count == 0) {
             return 0;
@@ -66,19 +91,29 @@ public class CompatibilityCalculator {
 
         for (int i = 0; i < count; i++) {
             int questionId = i + 1;
-            int weight = weightFor(questionId);
+            int weight = weightFor(questionId, customWeights);
 
-            int diff;
+            double penaltyRatio;
             if (questionId == SMOKING_QUESTION_ID) {
-                // 흡연 정도(1~4)의 차이는 무시하고, 흡연자/비흡연자 경계만 본다.
+                // 흡연자/비흡연자 경계만 본다 (선택지 자체가 2개뿐이라 세부 정도 차이가 없음).
                 boolean aSmokes = a.get(i) <= SMOKER_MAX_ANSWER;
                 boolean bSmokes = b.get(i) <= SMOKER_MAX_ANSWER;
-                diff = aSmokes == bSmokes ? 0 : MAX_DIFF;
+                penaltyRatio = aSmokes == bSmokes ? 0.0 : 1.0;
+            } else if (questionId == BATHROOM_QUESTION_ID) {
+                // 둘 중 하나라도 "신경 안 씀"이면 겹칠 고정 시간대가 없으니 페널티 없음.
+                // 둘 다 고정 시간대를 답했을 때만 같은 시간대인지를 본다.
+                boolean eitherFlexible = a.get(i) == BATHROOM_FLEXIBLE_ANSWER || b.get(i) == BATHROOM_FLEXIBLE_ANSWER;
+                boolean sameFixedSlot = !eitherFlexible && a.get(i).equals(b.get(i));
+                penaltyRatio = sameFixedSlot ? 1.0 : 0.0;
+            } else if (questionId == BUGS_QUESTION_ID) {
+                int diff = Math.abs(a.get(i) - b.get(i));
+                penaltyRatio = (double) (MAX_DIFF - diff) / MAX_DIFF;
             } else {
-                diff = Math.abs(a.get(i) - b.get(i));
+                int diff = Math.abs(a.get(i) - b.get(i));
+                penaltyRatio = (double) diff / MAX_DIFF;
             }
 
-            weightedPenalty += weight * ((double) diff / MAX_DIFF);
+            weightedPenalty += weight * penaltyRatio;
             totalWeight += weight;
         }
 
@@ -90,9 +125,13 @@ public class CompatibilityCalculator {
         return (int) Math.round(ratio * 100);
     }
 
-    private int weightFor(int questionId) {
-        if (questionId >= 0 && questionId < WEIGHTS.length) {
-            return WEIGHTS[questionId];
+    private int weightFor(int questionId, Map<Integer, Integer> customWeights) {
+        Integer custom = customWeights.get(questionId);
+        if (custom != null) {
+            return custom;
+        }
+        if (questionId >= 0 && questionId < DEFAULT_WEIGHTS.length) {
+            return DEFAULT_WEIGHTS[questionId];
         }
         return 1; // 알 수 없는 문항은 기본 가중치
     }

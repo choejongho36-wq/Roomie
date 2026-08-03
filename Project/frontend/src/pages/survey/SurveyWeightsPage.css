@@ -1,0 +1,69 @@
+.survey-weights-header {
+  text-align: center;
+}
+
+.survey-weights-header h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.survey-weights-header p {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
+}
+
+.survey-weights-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.survey-weights-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #faf7f2;
+}
+
+.survey-weights-category {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3e2c23;
+}
+
+.survey-weights-tiers {
+  display: flex;
+  gap: 6px;
+}
+
+.survey-weights-tier {
+  border: 1.5px solid #eee;
+  background: #fff;
+  color: #999;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.survey-weights-tier-selected {
+  border-color: #f16526;
+  background: #f16526;
+  color: #fff;
+}
+
+.survey-weights-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}

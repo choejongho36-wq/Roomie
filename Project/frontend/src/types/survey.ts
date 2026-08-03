@@ -9,6 +9,7 @@ export interface SurveyOption {
     situation?: string | string[];
     question: string;
     options: SurveyOption[];
+    defaultWeight: 1 | 2 | 3; // 1=낮음, 2=보통, 3=높음 — backend CompatibilityCalculator.DEFAULT_WEIGHTS와 동일하게 유지
   }
 
 export interface SurveyResult {

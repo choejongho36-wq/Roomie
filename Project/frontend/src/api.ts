@@ -277,6 +277,20 @@ export const getMySurveySummary = async (token: string): Promise<SurveySummaryRe
   return response.data;
 };
 
+// 설문 완료 후 가중치 설정 화면에서 기존 저장값을 불러올 때 사용. 문항 id -> 가중치(1~3)
+export const getCategoryWeights = async (token: string): Promise<Record<number, number>> => {
+  const response = await axios.get<Record<number, number>>(`${API_BASE_URL}/users/me/category-weights`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+export const saveCategoryWeights = async (token: string, weights: Record<number, number>): Promise<void> => {
+  await axios.put(`${API_BASE_URL}/users/me/category-weights`, weights, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
 export const checkEmailAvailability = async (email: string): Promise<boolean> => {
   const response = await axios.get<{ available: boolean }>(`${API_BASE_URL}/auth/check-email`, {
     params: { email },
