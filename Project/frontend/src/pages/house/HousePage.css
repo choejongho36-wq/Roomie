@@ -1,3 +1,4 @@
+/* 아직 확정된 하우스가 없을 때(HouseEntryPage)만 쓰는, 중앙 정렬된 단독 페이지 스타일 */
 .house-page {
   max-width: 640px;
   margin: 60px auto;
@@ -16,11 +17,16 @@
   font-size: 14px;
 }
 
+.house-home-card {
+  margin-bottom: 32px;
+}
+
 .house-menu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
-  margin-top: 32px;
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 .house-menu-card {
@@ -28,17 +34,19 @@
   flex-direction: column;
   gap: 6px;
   padding: 24px 20px;
+  background: #fff;
   border: 1px solid #eee;
   border-radius: 12px;
   text-align: left;
   text-decoration: none;
   color: inherit;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .house-menu-card:hover {
   border-color: #ff7a3d;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .house-menu-card strong {
