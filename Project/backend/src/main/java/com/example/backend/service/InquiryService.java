@@ -97,7 +97,8 @@ public class InquiryService {
     public InquiryResponse deleteAnswer(Long inquiryId) {
         Inquiry inquiry = findInquiry(inquiryId);
         inquiry.clearAnswer();
-        return toResponse(inquiry, authorOf(inquiry.getUserId()));
+        // 관리자만 호출 가능한 엔드포인트라 viewerIsAdmin=true로 항상 전체 내용을 반환한다.
+        return toResponse(inquiry, authorOf(inquiry.getUserId()), null, true);
     }
 
     private Inquiry findInquiry(Long inquiryId) {
