@@ -11,6 +11,11 @@ const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
 const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
+const SMOKING_TYPE_OPTIONS = [
+  { value: "CIGARETTE", label: "연초" },
+  { value: "HEATED", label: "궐련형" },
+  { value: "LIQUID", label: "액상" },
+];
 
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
@@ -27,6 +32,8 @@ function CompleteProfilePage() {
   const [phone, setPhone] = useState("");
   const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
   const [job, setJob] = useState("");
+  const [smoking, setSmoking] = useState("");
+  const [smokingType, setSmokingType] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -60,6 +67,14 @@ function CompleteProfilePage() {
       setError("직업을 선택해주세요.");
       return;
     }
+    if (!smoking) {
+      setError("흡연 여부를 선택해주세요.");
+      return;
+    }
+    if (smoking === "SMOKER" && !smokingType) {
+      setError("흡연 종류를 선택해주세요.");
+      return;
+    }
     if (!token) {
       setError("로그인 정보가 없습니다. 다시 로그인해주세요.");
       return;
@@ -75,7 +90,9 @@ function CompleteProfilePage() {
         birthDate,
         phone,
         regionTokens[0].label,
-        job
+        job,
+        smoking,
+        smoking === "SMOKER" ? smokingType : null
       );
       setUser(updatedUser);
       navigate("/", { replace: true });
@@ -192,6 +209,39 @@ function CompleteProfilePage() {
             ))}
           </select>
         </label>
+
+        <label>
+          흡연 여부
+          <select
+            value={smoking}
+            onChange={(e) => {
+              setSmoking(e.target.value);
+              if (e.target.value !== "SMOKER") setSmokingType("");
+            }}
+            required
+          >
+            <option value="" disabled>
+              선택해주세요
+            </option>
+            <option value="NON_SMOKER">비흡연자</option>
+            <option value="SMOKER">흡연자</option>
+          </select>
+        </label>
+        {smoking === "SMOKER" && (
+          <label>
+            흡연 종류
+            <select value={smokingType} onChange={(e) => setSmokingType(e.target.value)} required>
+              <option value="" disabled>
+                선택해주세요
+              </option>
+              {SMOKING_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         {error && <p className="complete-profile-error">{error}</p>}
 
