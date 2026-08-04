@@ -111,6 +111,17 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    // 관리자 전용 수정(공지/이벤트 관리에서 사용). 작성자 본인 여부를 따지지 않는다는 점만
+    // update()와 다르다. 엔티티 수정 내용이 트랜잭션 커밋 시점에 반영되도록 @Transactional 필수.
+    @Transactional
+    public void adminUpdate(Long postId, PostRequest request) {
+        validate(request);
+        Post post = findPost(postId);
+        post.update(request.title(), regionOrDefault(request), request.budgetMin(), request.budgetMax(),
+                request.moveInDate(), request.moveInMonthMin(), request.moveInMonthMax(), request.roomType(),
+                recruitCountOrDefault(request), request.description(), request.tags(), request.boardType());
+    }
+
     // 게시글을 지울 때 딸린 댓글/답글/찜/신고 기록까지 함께 정리해서 고아 데이터가 남지 않게 한다.
     // 회원 탈퇴 경로가 아니라 게시글 삭제 경로(본인 삭제 · 관리자 삭제) 양쪽에서 공용으로 쓴다.
     private void deleteRelatedData(Long postId) {

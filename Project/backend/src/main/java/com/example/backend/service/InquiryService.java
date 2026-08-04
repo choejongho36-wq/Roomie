@@ -8,6 +8,7 @@ import com.example.backend.repository.InquiryRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,23 @@ public class InquiryService {
         Inquiry inquiry = findInquiry(inquiryId);
         inquiry.answer(answer);
         return toResponse(inquiry, authorOf(inquiry.getUserId()));
+    }
+
+    // 관리자 전용 수정. 작성자 본인 여부를 따지지 않는다는 점만 update()와 다르다.
+    // 엔티티 수정 내용이 트랜잭션 커밋 시점에 반영되도록 @Transactional 필수.
+    @Transactional
+    public InquiryResponse adminUpdate(Long inquiryId, InquiryRequest request) {
+        validate(request);
+        Inquiry inquiry = findInquiry(inquiryId);
+        inquiry.update(request.title(), request.category(), request.content());
+        return toResponse(inquiry, authorOf(inquiry.getUserId()));
+    }
+
+    // 관리자 전용 삭제. 작성자 본인 여부를 따지지 않는다는 점만 delete()와 다르다.
+    @Transactional
+    public void adminDelete(Long inquiryId) {
+        Inquiry inquiry = findInquiry(inquiryId);
+        inquiryRepository.delete(inquiry);
     }
 
     private Inquiry findInquiry(Long inquiryId) {

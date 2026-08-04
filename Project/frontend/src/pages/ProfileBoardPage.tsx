@@ -11,6 +11,7 @@ import {
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
 import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
+import RentRangeDropdown from "../components/RentRangeDropdown";
 import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
@@ -28,6 +29,9 @@ function ProfileBoardPage() {
   const [error, setError] = useState("");
 
   const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
+  const RENT_MIN = 50;
+  const RENT_MAX = 100;
+  const [rentRange, setRentRange] = useState<[number, number]>([RENT_MIN, RENT_MAX]);
   const [selectedBoardUserId, setSelectedBoardUserId] = useState<number | null>(null);
 
   const [selectedProfile, setSelectedProfile] = useState<RecommendationResult | null>(null);
@@ -38,6 +42,17 @@ function ProfileBoardPage() {
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
   const [aiExplanationError, setAiExplanationError] = useState("");
+
+  // 이 페이지에 있는 동안만 페이지 전체 스크롤을 막고 뷰포트 높이에 레이아웃을 맞춰서,
+  // 헤더~푸터가 한 화면에 다 보이고 프로필 목록만 자체 스크롤되게 한다.
+  // (CSS는 ProfileBoardPage.css의 #root.profile-board-viewport-lock 규칙 참고)
+  useEffect(() => {
+    const root = document.getElementById("root");
+    root?.classList.add("profile-board-viewport-lock");
+    return () => {
+      root?.classList.remove("profile-board-viewport-lock");
+    };
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -60,19 +75,37 @@ function ProfileBoardPage() {
     };
   }, [token]);
 
+  const isRentFiltered = rentRange[0] !== RENT_MIN || rentRange[1] !== RENT_MAX;
+
   const filteredProfiles = useMemo(() => {
     if (!profiles) return [];
-    if (selectedRegions.length === 0) return profiles;
-    return profiles.filter((item) =>
-      selectedRegions.some((regionToken) =>
-        regionToken.dong
-          ? regionMatchesDong(item.region, regionToken.dong)
-          : regionMatchesDistrict(item.region, regionToken.district)
-      )
-    );
-  }, [profiles, selectedRegions]);
+    let result = profiles;
+    if (selectedRegions.length > 0) {
+      result = result.filter((item) =>
+        selectedRegions.some((regionToken) =>
+          regionToken.dong
+            ? regionMatchesDong(item.region, regionToken.dong)
+            : regionMatchesDistrict(item.region, regionToken.district)
+        )
+      );
+    }
+    if (isRentFiltered) {
+      // 단일 값이 아니라 "구간이 겹치는지"로 판단한다. 예) 슬라이더를 60~70으로 좁혀도
+      // 설문에서 70~100을 답한 사람은 70에서 겹치므로 포함된다.
+      // 전세·년세 응답이거나 설문에 이 문항 응답이 없는(min/max가 null인) 사람은
+      // 월세 범위를 실제로 좁혀서 찾는 중이라는 뜻이므로 자연스럽게 결과에서 제외한다.
+      result = result.filter(
+        (item) =>
+          item.desiredRentMin != null &&
+          item.desiredRentMax != null &&
+          item.desiredRentMin <= rentRange[1] &&
+          item.desiredRentMax >= rentRange[0]
+      );
+    }
+    return result;
+  }, [profiles, selectedRegions, isRentFiltered, rentRange]);
 
-  const isFiltered = selectedRegions.length > 0;
+  const isFiltered = selectedRegions.length > 0 || isRentFiltered;
 
   useEffect(() => {
     if (filteredProfiles.length === 0) {
@@ -132,6 +165,7 @@ function ProfileBoardPage() {
 
         <div className="profile-board-region-field">
           <RegionPicker selected={selectedRegions} onChange={setSelectedRegions} hideBadge />
+          <RentRangeDropdown min={RENT_MIN} max={RENT_MAX} value={rentRange} onChange={setRentRange} />
         </div>
       </div>
 
@@ -141,7 +175,7 @@ function ProfileBoardPage() {
         <p className="profile-board-empty">로딩 중...</p>
       ) : filteredProfiles.length === 0 ? (
         <p className="profile-board-empty">
-          {isFiltered ? "해당 지역의 프로필이 없습니다." : "추천 프로필이 없습니다."}
+          {isFiltered ? "조건에 맞는 프로필이 없습니다." : "추천 프로필이 없습니다."}
         </p>
       ) : (
         <div className="profile-board-layout">
