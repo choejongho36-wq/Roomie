@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { API_ORIGIN, answerInquiry, deleteInquiry, getInquiries } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import type { Inquiry } from "../../types/inquiry";
-import { renderRichText } from "../../utils/richText";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../board/BoardListPage.css";
 import "./InquiryListPage.css";
@@ -128,6 +127,7 @@ function InquiryListPage() {
                 const isOpen = openId === inquiry.inquiryId;
                 const isAnswered = inquiry.status === "ANSWERED";
                 const isAuthor = Boolean(user) && user!.userId === inquiry.userId;
+                const isLocked = inquiry.secret && inquiry.content === null;
                 return (
                   <Fragment key={inquiry.inquiryId}>
                     <tr
@@ -140,7 +140,10 @@ function InquiryListPage() {
                         <span className="inquiry-category-badge">{inquiry.category}</span>
                       </td>
                       <td className="board-table-title-cell">
-                        <span>{inquiry.title}</span>
+                        <span>
+                          {inquiry.secret && <span aria-label="비밀글" title="비밀글">🔒 </span>}
+                          {inquiry.title}
+                        </span>
                       </td>
                       <td className="board-table-author-cell">
                         <span className="board-table-author">
@@ -165,17 +168,23 @@ function InquiryListPage() {
                     {isOpen && (
                       <tr className="inquiry-detail-row">
                         <td colSpan={6}>
-                          <div
-                            className="inquiry-content-box"
-                            dangerouslySetInnerHTML={{ __html: renderRichText(inquiry.content) }}
-                          />
-                          {isAnswered && !isAdmin && (
+                          {isLocked ? (
+                            <p className="inquiry-content-box inquiry-content-locked">
+                              🔒 비밀글이에요. 작성자 본인과 관리자만 볼 수 있어요.
+                            </p>
+                          ) : (
+                            <div
+                              className="inquiry-content-box"
+                              dangerouslySetInnerHTML={{ __html: inquiry.content ?? "" }}
+                            />
+                          )}
+                          {!isLocked && isAnswered && !isAdmin && (
                             <div className="inquiry-answer">
                               <span className="inquiry-answer-label">답변</span>
                               <p>{inquiry.answer}</p>
                             </div>
                           )}
-                          {!isAnswered && !isAdmin && (
+                          {!isLocked && !isAnswered && !isAdmin && (
                             <p className="inquiry-answer-pending">아직 답변이 등록되지 않았어요.</p>
                           )}
                           {isAdmin && (

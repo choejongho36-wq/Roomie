@@ -21,13 +21,15 @@ public class InquiryController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public List<InquiryResponse> getInquiries() {
-        return inquiryService.getInquiries();
+    public List<InquiryResponse> getInquiries(Authentication authentication) {
+        User viewer = findUser(authentication);
+        return inquiryService.getInquiries(viewer.getUserId(), viewer.isAdmin());
     }
 
     @GetMapping("/{inquiryId}")
-    public InquiryResponse getInquiry(@PathVariable Long inquiryId) {
-        return inquiryService.getInquiry(inquiryId);
+    public InquiryResponse getInquiry(Authentication authentication, @PathVariable Long inquiryId) {
+        User viewer = findUser(authentication);
+        return inquiryService.getInquiry(inquiryId, viewer.getUserId(), viewer.isAdmin());
     }
 
     @PostMapping

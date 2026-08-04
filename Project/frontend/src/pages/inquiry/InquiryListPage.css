@@ -73,6 +73,11 @@
   margin: 0 0 16px;
 }
 
+.inquiry-content-locked {
+  color: #999;
+  background: #fafafa;
+}
+
 .inquiry-answer {
   background: #f8f8f8;
   border-radius: 12px;

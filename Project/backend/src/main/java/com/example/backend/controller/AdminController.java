@@ -298,7 +298,8 @@ public class AdminController {
             @RequestParam String title,
             @RequestParam String category,
             @RequestParam String content) {
-        inquiryService.adminUpdate(id, new InquiryRequest(title, category, content));
+        // 관리자 편집 화면엔 비밀글 체크박스가 없어 4번째 값은 쓰이지 않는다 (adminUpdate가 기존 값을 그대로 유지함).
+        inquiryService.adminUpdate(id, new InquiryRequest(title, category, content, false));
         return "redirect:/admin/inquiries/" + id;
     }
 
