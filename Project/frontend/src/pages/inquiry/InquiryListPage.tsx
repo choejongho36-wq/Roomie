@@ -4,9 +4,13 @@ import { API_ORIGIN, answerInquiry, deleteInquiry, getInquiries } from "../../ap
 import { useAuth } from "../../context/AuthContext";
 import type { Inquiry } from "../../types/inquiry";
 import { renderRichText } from "../../utils/richText";
+import Pagination from "../../components/Pagination";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../board/BoardListPage.css";
 import "./InquiryListPage.css";
+
+// 한 화면에서 스크롤 없이 다 보이도록, 목록에 한 번에 보여주는 문의 개수를 제한한다.
+const PAGE_SIZE = 6;
 
 const formatShortDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -29,6 +33,7 @@ function InquiryListPage() {
   const [error, setError] = useState("");
   const [answerDraft, setAnswerDraft] = useState("");
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [page, setPage] = useState(0);
   const isAdmin = Boolean(user?.isAdmin);
 
   const loadInquiries = () => {
@@ -86,6 +91,11 @@ function InquiryListPage() {
     loadInquiries();
   };
 
+  const totalPages = Math.max(1, Math.ceil(inquiries.length / PAGE_SIZE));
+  // 문의를 삭제하는 등 목록이 줄어들어 지금 페이지가 범위를 벗어나면 마지막 유효 페이지로 되돌린다.
+  const safePage = Math.min(page, totalPages - 1);
+  const pagedInquiries = inquiries.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
   return (
     <div className="page board-list-page">
       <div className="board-list-header">
@@ -124,10 +134,11 @@ function InquiryListPage() {
               </tr>
             </thead>
             <tbody>
-              {inquiries.map((inquiry, index) => {
+              {pagedInquiries.map((inquiry, index) => {
                 const isOpen = openId === inquiry.inquiryId;
                 const isAnswered = inquiry.status === "ANSWERED";
                 const isAuthor = Boolean(user) && user!.userId === inquiry.userId;
+                const displayNumber = inquiries.length - (safePage * PAGE_SIZE + index);
                 return (
                   <Fragment key={inquiry.inquiryId}>
                     <tr
@@ -135,7 +146,7 @@ function InquiryListPage() {
                       onClick={() => toggle(inquiry.inquiryId)}
                       aria-expanded={isOpen}
                     >
-                      <td className="board-table-number-cell">{inquiries.length - index}</td>
+                      <td className="board-table-number-cell">{displayNumber}</td>
                       <td>
                         <span className="inquiry-category-badge">{inquiry.category}</span>
                       </td>
@@ -232,6 +243,7 @@ function InquiryListPage() {
               })}
             </tbody>
           </table>
+          <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
         </div>
       )}
     </div>
