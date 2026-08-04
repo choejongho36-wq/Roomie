@@ -136,6 +136,24 @@ public class User {
         this.nickname = "탈퇴회원" + this.userId;
     }
 
+    // 탈퇴했던 계정이 같은 소셜 계정으로 다시 로그인을 시도하면, 영구 차단하는 대신
+    // 이 행을 재활용해서 신규가입처럼 다시 시작하게 해줌 (user_id는 유지되지만 겉보기엔 새 계정)
+    public void reactivateAsSocialUser(String loginId, String email, String nickname, String profileImageUrl) {
+        this.status = "ACTIVE";
+        this.loginId = loginId;
+        this.email = email;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        // 예전 정보가 남아있으면 "추가정보 입력"을 건너뛰게 되니, 전부 비워서 새로 입력받게 함
+        this.gender = null;
+        this.birthDate = null;
+        this.phone = null;
+        this.region = null;
+        this.job = null;
+        this.isVerified = false;
+        this.emailVerified = true; // 소셜 서비스가 이미 검증해준 이메일이므로
+    }
+
     /**
      * @param until 정지 해제 예정 일시. null이면 영구정지.
      */
