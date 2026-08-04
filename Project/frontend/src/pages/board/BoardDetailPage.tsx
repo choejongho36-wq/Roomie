@@ -331,7 +331,7 @@ function BoardDetailPage() {
       message: "게시글을 삭제할까요?",
       onConfirm: async () => {
         await deletePost(token, post.postId);
-        navigate("/board");
+        handleGoToList();
       },
     });
   };

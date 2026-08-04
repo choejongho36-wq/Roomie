@@ -1,22 +1,26 @@
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import "./MainPage.css";
 import logo from "../assets/Roomie_logo2.png";
+import sampleAvatar from "../assets/Roomie_logo.png";
 import { useAuth } from "../context/AuthContext";
 import LoginModal from "../components/LoginModal";
 import MatchingLoadingOverlay from "../components/MatchingLoadingOverlay";
 import { useInView } from "../hooks/useInView";
 import { useMatchingRedirect } from "../hooks/useMatchingRedirect";
 
-const matchStats = [
-  { label: "생활 패턴", percent: 95 },
-  { label: "청결도", percent: 90 },
-  { label: "성격 유형", percent: 88 },
-  { label: "가치관", percent: 87 },
-  { label: "취미", percent: 85 },
-];
-
 const overallMatch = 92;
-const ringCircumference = 2 * Math.PI * 40;
+const matchingPoints = ["생활 패턴", "청결도", "가치관"];
+const differingPoints = ["취침 시간", "흡연 여부"];
+const sampleProfile = {
+  name: "지민",
+  meta: "27세 · 직장인",
+  bio: "평온한 환경에서 함께 지내는 걸 선호해요.",
+  tags: ["영화감상", "산책", "요리"],
+};
+const sampleAiExplanation =
+  "지민 님과 상대방은 생활 패턴, 청결도, 가치관에서 좋은 호흡을 보여 92점의 높은 궁합을 기록했어요. " +
+  "취침 시간과 흡연 여부는 다소 차이가 있으니, 서로의 습관을 미리 공유하면 더욱 편안한 생활이 될 거예요.";
 
 const steps = [
   {
@@ -55,17 +59,14 @@ const steps = [
 const features = [
   {
     icon: (
-      <path d="M4 13a8 8 0 1 0 8-8 6 6 0 0 0 0 8 8 8 0 0 1-8 0z" />
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     ),
     title: "생활 패턴 매칭",
     body: "수면 시간, 기상 시간 등\n일상 패턴을 분석해요.",
   },
   {
     icon: (
-      <>
-        <path d="M6 20l6-14M12 6l4 4" />
-        <path d="M9 20h10" />
-      </>
+      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
     ),
     title: "청결도 & 공간관리",
     body: "청결도 기준과 정리 습관까지\n세심하게 맞춰드려요.",
@@ -74,7 +75,7 @@ const features = [
     icon: (
       <>
         <circle cx="12" cy="12" r="9" />
-        <path d="M8 8l8 8M16 8l-8 8" />
+        <path d="M5.64 5.64l12.72 12.72" />
       </>
     ),
     title: "흡연·음주 성향",
@@ -82,11 +83,7 @@ const features = [
   },
   {
     icon: (
-      <>
-        <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
-        <rect x="2" y="14" width="5" height="6" rx="2" />
-        <rect x="17" y="14" width="5" height="6" rx="2" />
-      </>
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
     ),
     title: "선호하는 분위기",
     body: "조용한 환경, 함께하는 시간 등\n분위기까지 고려해요.",
@@ -171,45 +168,69 @@ function MainPage() {
             ref={aiMatchRef}
             className={`ai-match-card${aiMatchInView ? " in-view" : ""}`}
           >
-            <h3>매칭 분석 결과</h3>
-            <div className="ai-match-body">
-              <div className="ai-match-bars">
-                {matchStats.map((stat) => (
-                  <div key={stat.label} className="ai-match-bar-row">
-                    <span className="ai-match-bar-label">{stat.label}</span>
-                    <div className="ai-match-bar-track">
-                      <div
-                        className="ai-match-bar-fill"
-                        style={{ width: `${stat.percent}%` }}
-                      />
+            <div className="ai-match-grid">
+              <div className="ai-match-panel ai-match-panel-compare">
+                <div className="ai-match-panel-header">
+                  <p className="ai-match-panel-title">지민님과의 궁합</p>
+                  <div
+                    className="ai-match-gauge"
+                    style={{ "--gauge-percent": `${overallMatch}%` } as CSSProperties}
+                  >
+                    <div className="ai-match-gauge-ring">
+                      <div className="ai-match-gauge-center">
+                        <div className="ai-match-gauge-score">
+                          <span className="ai-match-gauge-score-value">{overallMatch}</span>
+                          <span className="ai-match-gauge-score-unit">점</span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="ai-match-bar-percent">{stat.percent}%</span>
                   </div>
-                ))}
+                </div>
+
+                <div className="ai-match-points-grid">
+                  <div>
+                    <p className="ai-match-points-label">맞는 포인트</p>
+                    <div className="ai-match-points-list">
+                      {matchingPoints.map((label) => (
+                        <span key={label} className="ai-match-point-chip">
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="ai-match-points-label">다른 포인트</p>
+                    <div className="ai-match-points-list">
+                      {differingPoints.map((label) => (
+                        <span key={label} className="ai-match-point-chip ai-match-point-chip-diff">
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="ai-match-ring">
-                <svg viewBox="0 0 100 100">
-                  <circle className="ai-match-ring-track" cx="50" cy="50" r="40" />
-                  <circle
-                    className="ai-match-ring-fill"
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    strokeDasharray={ringCircumference}
-                    strokeDashoffset={
-                      ringCircumference - (overallMatch / 100) * ringCircumference
-                    }
-                  />
-                </svg>
-                <div className="ai-match-ring-label">
-                  <span className="ai-match-ring-title">종합 매칭률</span>
-                  <span className="ai-match-ring-percent">{overallMatch}%</span>
+              <div className="ai-match-panel ai-match-panel-profile">
+                <img className="ai-match-profile-avatar" src={sampleAvatar} alt={sampleProfile.name} />
+                <p className="ai-match-profile-name">{sampleProfile.name}</p>
+                <p className="ai-match-profile-meta">{sampleProfile.meta}</p>
+                <p className="ai-match-profile-bio">{sampleProfile.bio}</p>
+                <div className="ai-match-profile-tags">
+                  {sampleProfile.tags.map((tag) => (
+                    <span key={tag} className="ai-match-profile-tag">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
-            <span className="ai-match-badge">매우 높음</span>
-            <p className="ai-match-note">★ 당신과 정말 잘 맞는 룸메이트예요!</p>
+
+            <div className="ai-match-ai-explanation">
+              <p className="ai-match-ai-label">AI 궁합 설명</p>
+              <p className="ai-match-ai-text">{sampleAiExplanation}</p>
+            </div>
+     
           </div>
         </div>
       </section>
