@@ -22,6 +22,12 @@ public class CompatibilityCalculator {
     private static final int MAX_ANSWER = 5;
     private static final int MAX_DIFF = MAX_ANSWER - MIN_ANSWER; // 4
 
+    // 대부분의 문항 차이가 1~2점 정도라 결과 점수가 60~90점대에 몰리는 문제 완화용.
+    // 일반 문항의 페널티에 1보다 큰 지수를 씌워서, 작은 차이는 원래보다 덜 깎이고
+    // 큰 차이는 상대적으로 더 크게 벌점을 받도록 곡선을 준다 (선형 평균보다 점수가 넓게 퍼짐).
+    // 실사용 데이터가 쌓이면 percentile 기반 보정으로 교체하는 게 더 정확하다.
+    private static final double PENALTY_SPREAD_EXPONENT = 1.5;
+
     // 문항별 기본 가중치 (index = 질문 id, 1-based). 0번 슬롯은 사용하지 않음.
     // 3=높음, 2=보통, 1=낮음 — 사용자가 직접 고르는 3단계와 동일한 척도.
     // 2026-07-31: 프론트 설문 문항이 주제별로 재배열되면서 id 순서가 바뀜에 따라 함께 갱신.
@@ -54,7 +60,7 @@ public class CompatibilityCalculator {
     // 그래서 흡연자/비흡연자가 갈리면 다른 항목이 아무리 잘 맞아도 점수 상한을 씌운다.
     private static final int SMOKING_QUESTION_ID = 12;
     private static final int SMOKER_MAX_ANSWER = 1; // 1 흡연, 2 비흡연
-    private static final int SMOKING_MISMATCH_SCORE_CAP = 40;
+    private static final int SMOKING_MISMATCH_SCORE_CAP = 50;
 
     // 화장실 사용 시간대는 "얼마나 다르냐"가 아니라 "겹치냐 안 겹치냐"의 문제다.
     // 같은 시간대면 최대 페널티, 조금이라도 다르면(정도 무관) 페널티 없음.
@@ -115,7 +121,7 @@ public class CompatibilityCalculator {
                 penaltyRatio = neitherHandles ? 1.0 : 0.0;
             } else {
                 int diff = Math.abs(a.get(i) - b.get(i));
-                penaltyRatio = (double) diff / MAX_DIFF;
+                penaltyRatio = Math.pow((double) diff / MAX_DIFF, PENALTY_SPREAD_EXPONENT);
             }
 
             weightedPenalty += weight * penaltyRatio;

@@ -61,7 +61,7 @@ class CompatibilityCalculatorTest {
         List<Integer> b = idealBaseB();
         b.set(11, 1); // 흡연 (나머지는 전부 이상적)
 
-        assertTrue(calculator.score(a, b) <= 40, "다른 문항이 전부 맞아도 흡연 여부가 다르면 40점을 넘으면 안 됨");
+        assertTrue(calculator.score(a, b) <= 50, "다른 문항이 전부 맞아도 흡연 여부가 다르면 50점을 넘으면 안 됨");
     }
 
     @Test
@@ -95,6 +95,31 @@ class CompatibilityCalculatorTest {
         b.set(1, 5); // 신경 안 씀 (a와 값은 같지만 "겹치는 고정 시간대"가 아님)
 
         assertEquals(100, calculator.score(a, b), "둘 다 신경 안 씀이면 답이 같아도 페널티가 없어야 함");
+    }
+
+    @Test
+    void penaltySpreadExponentPenalizesLargerDifferencesDisproportionatelyMore() {
+        // 모든 일반 문항(화장실/벌레/흡연 제외)에 같은 크기의 차이를 줘서, 문항 하나의 차이가
+        // 전체 가중치(44)에 묻히지 않고 점수에 뚜렷하게 드러나게 한다.
+        List<Integer> base = idealBaseA();
+
+        List<Integer> diffOneEverywhere = idealBaseB();
+        List<Integer> diffTwoEverywhere = idealBaseB();
+        for (int i = 0; i < 20; i++) {
+            if (i == 1 || i == 11 || i == 16) continue; // 화장실/흡연/벌레는 특수 로직이라 제외
+            diffOneEverywhere.set(i, base.get(i) + 1);
+            diffTwoEverywhere.set(i, base.get(i) + 2);
+        }
+
+        int diffOneScore = calculator.score(base, diffOneEverywhere);
+        int diffTwoScore = calculator.score(base, diffTwoEverywhere);
+
+        assertTrue(diffOneScore > diffTwoScore, "차이가 작을수록 점수가 더 높아야 함");
+        // 선형이면 diff=2가 diff=1보다 정확히 2배 깎여야 하지만(100-diffOneScore)*2,
+        // 지수(1.5) 보정이 들어가면 그보다 더 크게 깎여야 한다.
+        int linearDrop = (100 - diffOneScore) * 2;
+        int actualDrop = 100 - diffTwoScore;
+        assertTrue(actualDrop > linearDrop, "지수 보정이 적용되면 diff=2의 감점이 선형 2배보다 더 커야 함");
     }
 
     @Test
