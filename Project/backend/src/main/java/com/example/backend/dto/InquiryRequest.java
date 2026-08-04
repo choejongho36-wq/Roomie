@@ -3,5 +3,6 @@ package com.example.backend.dto;
 public record InquiryRequest(
         String title,
         String category,
-        String content
+        String content,
+        boolean secret
 ) {}

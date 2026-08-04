@@ -1,8 +1,10 @@
 package com.example.backend.service;
 
+import com.example.backend.domain.MatchedPair;
 import com.example.backend.domain.SurveyResult;
 import com.example.backend.domain.User;
 import com.example.backend.dto.RecommendationResponse;
+import com.example.backend.repository.MatchedPairRepository;
 import com.example.backend.repository.SurveyResultRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class CompatibilityService {
     private final UserRepository userRepository;
     private final CompatibilityCalculator compatibilityCalculator;
     private final UserCategoryWeightService userCategoryWeightService;
+    private final MatchedPairRepository matchedPairRepository;
 
     // SurveyQuestions.ts의 문항 id 19("희망 월세")는 0-base로 answers 배열의 19번째(index 18)에 해당한다.
     private static final int RENT_QUESTION_INDEX = 18;
@@ -44,7 +47,14 @@ public class CompatibilityService {
                 .collect(Collectors.toMap(SurveyResult::getUserId, r -> r,
                         BinaryOperator.maxBy(Comparator.comparing(SurveyResult::getCompletedAt))));
 
+        // 이미 하우스가 확정된(매칭 확정) 상대는 더 이상 추천 후보로 보여줄 필요가 없음
+        Set<Long> confirmedPartnerIds = matchedPairRepository
+                .findByUserIdAndStatus(userId, MatchedPair.STATUS_CONFIRMED).stream()
+                .map(pair -> pair.getUserAId().equals(userId) ? pair.getUserBId() : pair.getUserAId())
+                .collect(Collectors.toSet());
+
         return latestByUser.values().stream()
+                .filter(result -> !confirmedPartnerIds.contains(result.getUserId()))
                 .map(result -> buildRecommendation(result, myAnswers, myWeights))
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(RecommendationResponse::compatibilityScore).reversed())
@@ -61,9 +71,14 @@ public class CompatibilityService {
         if (userOpt.isEmpty()) {
             return null;
         }
+        User user = userOpt.get();
+        // 탈퇴 시 설문결과도 같이 지우고 있지만, 그 로직이 생기기 전에 이미 탈퇴한 계정처럼
+        // 남아있을 수 있는 예외 케이스를 위해 여기서도 한 번 더 확실히 걸러냄
+        if ("WITHDRAWN".equals(user.getStatus())) {
+            return null;
+        }
 
         int score = compatibilityCalculator.score(myAnswers, otherAnswers, myWeights);
-        User user = userOpt.get();
         List<String> tags = toTags(user.getTags());
 
         RentRange rentRange = extractRentRange(otherAnswers);

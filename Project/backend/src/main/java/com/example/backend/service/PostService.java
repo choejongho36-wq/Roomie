@@ -32,7 +32,7 @@ public class PostService {
     private final CommentService commentService;
 
     public Page<PostResponse> getPosts(Pageable pageable) {
-        Page<Post> posts = postRepository.findAll(pageable);
+        Page<Post> posts = postRepository.findAllActive(pageable);
         List<Long> postIds = posts.getContent().stream().map(Post::getPostId).toList();
         Map<Long, User> authors = authorsOf(posts.getContent().stream().map(Post::getUserId).toList());
         Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
@@ -41,6 +41,11 @@ public class PostService {
 
     public PostResponse getPost(Long postId, Long viewerUserId) {
         Post post = findPost(postId);
+        User author = authorOf(post.getUserId());
+        // 목록에서 숨긴 것과 똑같이, 주소를 직접 알고 들어와도 탈퇴 작성자의 글은 못 보게 막음
+        if (author == null || "WITHDRAWN".equals(author.getStatus())) {
+            throw new IllegalArgumentException("게시글을 찾을 수 없습니다.");
+        }
         // 작성자 본인이 자기 글을 보는 경우는 조회수에 아예 반영하지 않는다.
         boolean isAuthor = viewerUserId != null && viewerUserId.equals(post.getUserId());
         // 로그인한 사용자(작성자 제외)가 이 글을 이미 조회한 적이 없을 때만 조회수를 올린다.
@@ -54,7 +59,7 @@ public class PostService {
         }
         long bookmarkCount = postBookmarkService.countFor(postId);
         boolean bookmarked = postBookmarkService.isBookmarked(postId, viewerUserId);
-        return toResponse(post, authorOf(post.getUserId()), bookmarkCount, bookmarked);
+        return toResponse(post, author, bookmarkCount, bookmarked);
     }
 
     public PostResponse create(Long userId, PostRequest request) {
@@ -145,10 +150,14 @@ public class PostService {
         Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
 
         // postRepository.findAllById는 순서를 보장하지 않아서, 찜한 순서(postIds)를 기준으로 다시 나열한다.
-        // 찜한 뒤 글이 삭제됐을 수 있으니 postsById에 없는 건 건너뛴다.
+        // 찜한 뒤 글이 삭제됐거나, 그 글 작성자가 탈퇴했으면 건너뛴다.
         return postIds.stream()
                 .map(postsById::get)
                 .filter(Objects::nonNull)
+                .filter(p -> {
+                    User author = authors.get(p.getUserId());
+                    return author != null && !"WITHDRAWN".equals(author.getStatus());
+                })
                 .map(p -> toResponse(p, authors.get(p.getUserId()), bookmarkCounts.getOrDefault(p.getPostId(), 0L), true))
                 .toList();
     }

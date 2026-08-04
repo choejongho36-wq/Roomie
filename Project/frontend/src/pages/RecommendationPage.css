@@ -23,6 +23,7 @@
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   animation: recommendation-summary-in 380ms ease;
 }
 
@@ -371,7 +372,7 @@
 }
 
 .recommendation-more-cta {
-  margin-top: 24px;
+  grid-column: 1 / -1;
   background: #ffffff;
   border: 1px solid #f0ece8;
   border-radius: 8px;
@@ -412,10 +413,12 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(16, 13, 10, 0.48);
+  font-family: "Pretendard", var(--sans);
+  background: rgba(16, 13, 10, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   padding: 32px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -426,17 +429,77 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin: auto;
+}
+
+.comparison-nav-arrow {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.comparison-nav-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.comparison-nav-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.send-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(16, 13, 10, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.send-confirm-box {
+  width: min(320px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.send-confirm-text {
+  margin: 0 0 20px;
+  color: #222;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.send-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.send-confirm-actions .btn {
+  flex: 1;
 }
 
 .comparison-modal-header {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   padding: 0 4px;
 }
 
-.comparison-modal-close {
+.comparison-modal-close,
+.comparison-preference-toggle {
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.12);
@@ -445,6 +508,22 @@
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.comparison-preference-panel {
+  margin: 0 4px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comparison-preference-panel p {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
 }
 
 .comparison-modal-state,
@@ -755,10 +834,6 @@
     width: 100%;
     box-sizing: border-box;
   }
-
-  .recommendation-more-cta {
-    margin-top: 0;
-  }
 }
 
 @media (max-width: 640px) {
@@ -796,6 +871,10 @@
 
   .comparison-modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .comparison-panel-compare {
+    border-right: none;
   }
 
   .comparison-panel-profile {

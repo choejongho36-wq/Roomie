@@ -13,5 +13,6 @@ public record InquiryResponse(
         String status,
         String answer,
         LocalDateTime createdAt,
-        LocalDateTime answeredAt
+        LocalDateTime answeredAt,
+        boolean secret
 ) {}

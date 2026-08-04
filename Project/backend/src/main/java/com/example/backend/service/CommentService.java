@@ -116,11 +116,18 @@ public class CommentService {
     }
 
     private static final String DELETED_CONTENT_PLACEHOLDER = "삭제된 댓글입니다.";
+    private static final String WITHDRAWN_AUTHOR_CONTENT_PLACEHOLDER = "탈퇴한 사용자의 댓글입니다.";
 
     private CommentResponse toResponse(Comment c, User author) {
-        String nickname = author != null ? author.getNickname() : "알 수 없음";
-        String profileImageUrl = author != null ? author.getProfileImageUrl() : null;
-        String content = c.isDeleted() ? DELETED_CONTENT_PLACEHOLDER : c.getContent();
+        boolean authorWithdrawn = author == null || "WITHDRAWN".equals(author.getStatus());
+        String nickname = authorWithdrawn ? "탈퇴한 사용자" : author.getNickname();
+        String profileImageUrl = authorWithdrawn ? null : author.getProfileImageUrl();
+        // 우선순위: 댓글 자체를 지운 경우가 더 강한 상태라 그것부터 확인
+        String content = c.isDeleted()
+                ? DELETED_CONTENT_PLACEHOLDER
+                : authorWithdrawn
+                        ? WITHDRAWN_AUTHOR_CONTENT_PLACEHOLDER
+                        : c.getContent();
         return new CommentResponse(c.getCommentId(), c.getUserId(), nickname, profileImageUrl, c.getParentCommentId(),
                 content, c.isDeleted(), c.getCreatedAt());
     }
