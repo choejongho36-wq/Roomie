@@ -141,7 +141,7 @@ public class UserController {
                 .toList();
     }
 
-    // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰을 채워 넣을 때 사용
+    // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰/지역/직업을 채워 넣을 때 사용
     @PutMapping("/me/additional-info")
     public UserResponse completeAdditionalInfo(Authentication authentication, @RequestBody AdditionalInfoRequest request) {
         if (request.gender() == null || request.gender().isBlank()) {
@@ -150,9 +150,15 @@ public class UserController {
         if (request.birthDate() == null) {
             throw new IllegalArgumentException("생년월일을 입력해주세요.");
         }
+        if (request.region() == null || request.region().isBlank()) {
+            throw new IllegalArgumentException("지역을 선택해주세요.");
+        }
+        if (request.job() == null || request.job().isBlank()) {
+            throw new IllegalArgumentException("직업을 선택해주세요.");
+        }
 
         User user = findUser(authentication);
-        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone());
+        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), request.region(), request.job());
         userRepository.save(user);
         return toResponse(user);
     }

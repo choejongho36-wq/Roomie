@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { completeAdditionalInfo } from "../api";
 import { useAuth } from "../context/AuthContext";
+import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import "./CompleteProfilePage.css";
 
 const currentYear = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
+const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
 
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
@@ -23,6 +25,8 @@ function CompleteProfilePage() {
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay] = useState("");
   const [phone, setPhone] = useState("");
+  const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
+  const [job, setJob] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,6 +52,14 @@ function CompleteProfilePage() {
       setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
       return;
     }
+    if (regionTokens.length === 0) {
+      setError("거주(희망) 지역을 선택해주세요.");
+      return;
+    }
+    if (!job) {
+      setError("직업을 선택해주세요.");
+      return;
+    }
     if (!token) {
       setError("로그인 정보가 없습니다. 다시 로그인해주세요.");
       return;
@@ -57,7 +69,14 @@ function CompleteProfilePage() {
 
     try {
       setSubmitting(true);
-      const updatedUser = await completeAdditionalInfo(token, gender, birthDate, phone);
+      const updatedUser = await completeAdditionalInfo(
+        token,
+        gender,
+        birthDate,
+        phone,
+        regionTokens[0].label,
+        job
+      );
       setUser(updatedUser);
       navigate("/", { replace: true });
     } catch (err) {
@@ -139,6 +158,32 @@ function CompleteProfilePage() {
             placeholder="숫자만 입력"
             maxLength={11}
           />
+        </label>
+
+        <label>
+          거주(희망) 지역
+          <RegionPicker
+            selected={regionTokens}
+            onChange={setRegionTokens}
+            multiple={false}
+            variant="inline"
+            triggerLabel="지역 선택"
+            emptyHint="지역을 선택해주세요."
+          />
+        </label>
+
+        <label>
+          직업
+          <select value={job} onChange={(e) => setJob(e.target.value)} required>
+            <option value="" disabled>
+              선택해주세요
+            </option>
+            {JOB_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </label>
 
         {error && <p className="complete-profile-error">{error}</p>}

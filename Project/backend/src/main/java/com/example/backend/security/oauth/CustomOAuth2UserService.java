@@ -38,11 +38,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // 일반 로그인(AuthService.login)과 동일하게, 정지/탈퇴 계정은 소셜 로그인으로도 우회 못 하게 막는다.
         if ("SUSPENDED".equals(user.getStatus())) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("account_suspended"), "정지된 계정입니다. 고객센터에 문의해주세요.");
+                    new OAuth2Error("account_suspended", "정지된 계정입니다. 고객센터에 문의해주세요.", null));
         }
         if ("WITHDRAWN".equals(user.getStatus())) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("account_withdrawn"), "탈퇴한 계정입니다.");
+                    new OAuth2Error("account_withdrawn", "탈퇴한 계정입니다.", null));
         }
 
         return new CustomOAuth2User(user, oAuth2User.getAttributes());
@@ -64,8 +64,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // 자동으로 계정을 합치지 않고 명확히 에러로 알림 (계정 도용/혼선 방지)
         if (email != null && userRepository.existsByEmail(email)) {
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("email_already_exists"),
-                    "이미 가입된 이메일입니다. 일반 로그인으로 시도해주세요."
+                    new OAuth2Error("email_already_exists", "이미 가입된 이메일입니다. 일반 로그인으로 시도해주세요.", null)
             );
         }
 
