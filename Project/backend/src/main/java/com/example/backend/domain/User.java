@@ -166,11 +166,17 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
-    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {
+    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone, String region, String job) {
         this.gender = gender;
         this.birthDate = birthDate;
         if (phone != null && !phone.isBlank()) {
             this.phone = phone;
+        }
+        if (region != null && !region.isBlank()) {
+            this.region = region;
+        }
+        if (job != null && !job.isBlank()) {
+            this.job = job;
         }
     }
 
@@ -219,6 +225,6 @@ public class User {
     }
 
     public boolean needsAdditionalInfo() {
-        return this.gender == null || this.birthDate == null;
+        return this.gender == null || this.birthDate == null || this.region == null || this.job == null;
     }
 }

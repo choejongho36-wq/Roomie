@@ -27,10 +27,16 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        String message = (exception instanceof OAuth2AuthenticationException oAuth2Exception
-                && oAuth2Exception.getError().getDescription() != null)
-                ? oAuth2Exception.getError().getDescription()
-                : "소셜 로그인에 실패했습니다.";
+        String message;
+        if (exception instanceof OAuth2AuthenticationException oAuth2Exception
+                && oAuth2Exception.getError().getDescription() != null) {
+            message = oAuth2Exception.getError().getDescription();
+        } else if (exception.getMessage() != null && !exception.getMessage().isBlank()) {
+            // OAuth2Error에 description을 안 넣고 예외 메시지로만 넘긴 경우를 위한 보험
+            message = exception.getMessage();
+        } else {
+            message = "소셜 로그인에 실패했습니다.";
+        }
 
         String targetUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/redirect")
                 .queryParam("error", URLEncoder.encode(message, StandardCharsets.UTF_8))

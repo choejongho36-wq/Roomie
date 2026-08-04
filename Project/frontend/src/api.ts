@@ -180,11 +180,13 @@ export const completeAdditionalInfo = async (
   token: string,
   gender: string,
   birthDate: string,
-  phone: string
+  phone: string,
+  region: string,
+  job: string
 ): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/additional-info`,
-    { gender, birthDate, phone: phone || null },
+    { gender, birthDate, phone: phone || null, region, job },
     authHeader(token)
   );
   return response.data;
