@@ -54,6 +54,17 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
+    void smokingMismatchIsHardCappedEvenWhenEverythingElseIsIdeal() {
+        List<Integer> a = idealBaseA();
+        a.set(11, 2); // 비흡연
+
+        List<Integer> b = idealBaseB();
+        b.set(11, 1); // 흡연 (나머지는 전부 이상적)
+
+        assertTrue(calculator.score(a, b) <= 40, "다른 문항이 전부 맞아도 흡연 여부가 다르면 40점을 넘으면 안 됨");
+    }
+
+    @Test
     void bathroomSameSlotIsWorseThanAnyDifferentSlot() {
         List<Integer> base = idealBaseA();
         base.set(1, 1); // 6시 이전
@@ -112,19 +123,27 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
-    void bugsOppositeAnswersScoreHigherThanSameAnswers() {
+    void bugsPenalizedOnlyWhenNeitherCanHandleIt() {
         List<Integer> handlesAlone = idealBaseA();
         handlesAlone.set(16, 1); // 바로 잡음
 
         List<Integer> alsoHandlesAlone = idealBaseB();
-        alsoHandlesAlone.set(16, 1); // 바로 잡음 (동일 성향)
+        alsoHandlesAlone.set(16, 1); // 바로 잡음 (둘 다 처리 가능)
 
         List<Integer> cannotHandle = idealBaseB();
-        cannotHandle.set(16, 5); // 혼자 처리 못함 (정반대 성향)
+        cannotHandle.set(16, 5); // 혼자 처리 못함 (한쪽만 처리 가능, 반대 성향)
 
-        int sameScore = calculator.score(handlesAlone, alsoHandlesAlone);
-        int oppositeScore = calculator.score(handlesAlone, cannotHandle);
+        List<Integer> partnerCannotHandleEither = idealBaseA();
+        partnerCannotHandleEither.set(16, 4); // 부탁하는 편 (둘 다 사실상 처리 못함)
+        List<Integer> otherCannotHandle = idealBaseB();
+        otherCannotHandle.set(16, 5); // 혼자 처리 못함
 
-        assertTrue(oppositeScore > sameScore, "벌레 처리 성향은 반대일수록 궁합 점수가 높아야 함");
+        int bothCapableScore = calculator.score(handlesAlone, alsoHandlesAlone);
+        int oneCapableScore = calculator.score(handlesAlone, cannotHandle);
+        int neitherCapableScore = calculator.score(partnerCannotHandleEither, otherCannotHandle);
+
+        assertEquals(100, bothCapableScore, "둘 다 처리 가능하면 페널티가 없어야 함");
+        assertEquals(100, oneCapableScore, "한 명이라도 처리 가능하면 성향이 반대여도 페널티가 없어야 함");
+        assertTrue(neitherCapableScore < bothCapableScore, "둘 다 처리 못하면 그때만 페널티가 있어야 함");
     }
 }
