@@ -209,7 +209,10 @@ public class AdminController {
     }
 
     @GetMapping("/admin/notices/write")
-    public String noticeWriteForm() {
+    public String noticeWriteForm(@RequestParam(required = false) String type, Model model) {
+        // 공지사항/이벤트 목록에서 필터를 걸어둔 채로 "새 글쓰기"를 누르면, 그 카테고리가
+        // 미리 선택된 채로 글쓰기 폼이 열리게 한다.
+        model.addAttribute("presetBoardType", type == null ? "" : type);
         return "notice-write";
     }
 

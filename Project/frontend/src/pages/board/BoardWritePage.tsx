@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { createPost, getPost, updatePost } from "../../api";
-import { FREE_BOARD_CATEGORIES } from "../../data/BoardCategories";
+import { FREE_BOARD_CATEGORIES, SPECIAL_BOARDS } from "../../data/BoardCategories";
 import "./BoardWritePage.css";
-
-const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
 
 // 서버 에러 응답이 문자열이 아니라 객체({timestamp, status, error, path} 같은 스프링 기본 에러
 // 포맷 등)로 올 수 있어서, 그걸 그대로 화면에 렌더링하면 "Objects are not valid as a React
@@ -33,14 +31,20 @@ function BoardWritePage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const { postId } = useParams();
+  const [searchParams] = useSearchParams();
   const isEdit = Boolean(postId);
 
-  const [selectedBoard, setSelectedBoard] = useState<string | null>(null);
+  // 공지사항/이벤트 게시판 목록에서 "글쓰기"로 들어온 경우 ?type=공지사항 처럼 넘어온다.
+  // 이 값이 있으면 자유게시판 카테고리 대신 공지사항/이벤트 드롭다운을 보여준다.
+  const presetBoardType = searchParams.get("type");
+
+  const [selectedBoard, setSelectedBoard] = useState<string | null>(
+    presetBoardType && SPECIAL_BOARDS.includes(presetBoardType) ? presetBoardType : null
+  );
   const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
@@ -99,6 +103,11 @@ function BoardWritePage() {
     );
   }
 
+  // 수정 중이면 불러온 글의 boardType, 새 글이면 선택된(혹은 URL로 넘어온) 카테고리 기준으로
+  // 지금 쓰고 있는 게 공지사항/이벤트 글인지 판단해서 드롭다운 목록과 안내 문구를 바꾼다.
+  const isSpecialBoard = SPECIAL_BOARDS.includes(selectedBoard ?? presetBoardType ?? "");
+  const boardOptions = isSpecialBoard ? SPECIAL_BOARDS : FREE_BOARD_CATEGORIES;
+
   const showError = (message: string) => {
     setError(message);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -140,22 +149,8 @@ function BoardWritePage() {
     setTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  const getPayload = () => ({
-    board: selectedBoard,
-    title,
-    content: contentRef.current?.innerHTML ?? "",
-    tags,
-  });
-
-  const handleSaveDraft = () => {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(getPayload()));
-    setError("");
-    setStatusMessage("임시저장되었습니다. (이 브라우저에만 저장돼요)");
-  };
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setStatusMessage("");
 
     if (!selectedBoard) {
       showError("카테고리를 선택해주세요.");
@@ -204,8 +199,12 @@ function BoardWritePage() {
     <div className="page board-write-page">
       <div className="board-write-header">
         <div>
-          <h1>글쓰기</h1>
-          <p className="board-write-subtitle">카테고리를 선택하고 자유롭게 글을 남겨보세요.</p>
+          <h1>{isSpecialBoard ? "공지/이벤트 작성" : "글쓰기"}</h1>
+          <p className="board-write-subtitle">
+            {isSpecialBoard
+              ? "공지사항 또는 이벤트 카테고리를 선택하고 작성해주세요."
+              : "카테고리를 선택하고 자유롭게 글을 남겨보세요."}
+          </p>
         </div>
 
         <div className="board-write-board-select" ref={boardMenuRef}>
@@ -219,7 +218,7 @@ function BoardWritePage() {
           </button>
           {isBoardMenuOpen && (
             <div className="board-write-board-menu">
-              {FREE_BOARD_CATEGORIES.map((board) => (
+              {boardOptions.map((board) => (
                 <button
                   key={board}
                   type="button"
@@ -238,7 +237,6 @@ function BoardWritePage() {
       </div>
 
       {error && <p className="mypage-error">{error}</p>}
-      {statusMessage && <p className="board-write-status">{statusMessage}</p>}
 
       <form onSubmit={handleSubmit} className="board-write-form">
         <input
@@ -305,9 +303,6 @@ function BoardWritePage() {
         </div>
 
         <div className="board-write-actions">
-          <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
-            임시저장
-          </button>
           <button type="submit" className="btn btn-primary">
             등록
           </button>

@@ -127,6 +127,10 @@
   margin-top: 16px;
 }
 
+.inquiry-item-actions-right {
+  justify-content: flex-end;
+}
+
 .inquiry-item-actions .btn {
   padding: 6px 16px;
   font-size: 13px;

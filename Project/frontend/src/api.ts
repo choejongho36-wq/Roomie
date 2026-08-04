@@ -168,6 +168,11 @@ export const answerInquiry = async (token: string, inquiryId: number, answer: st
   return response.data;
 };
 
+export const deleteInquiryAnswer = async (token: string, inquiryId: number): Promise<Inquiry> => {
+  const response = await axios.delete<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}/answer`, authHeader(token));
+  return response.data;
+};
+
 export const login = async (loginId: string, password: string): Promise<string> => {
   const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/login`, {
     loginId,

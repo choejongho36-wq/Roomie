@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types/board";
-import { FREE_BOARD_CATEGORIES } from "../../data/BoardCategories";
+import { FREE_BOARD_CATEGORIES, SPECIAL_BOARDS } from "../../data/BoardCategories";
 import { useAuth } from "../../context/AuthContext";
+import Pagination from "../../components/Pagination";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardListPage.css";
 
 const FREE_BOARD_LABEL = "자유 게시판";
-const ADMIN_ONLY_WRITE_BOARDS = ["공지사항", "이벤트"];
+// 한 화면에서 스크롤 없이 다 보이도록, 목록에 한 번에 보여주는 글 개수를 제한한다.
+const PAGE_SIZE = 20;
 
 const getProfileImageSrc = (url: string | null | undefined) => {
   if (!url) return null;
@@ -34,10 +36,11 @@ function BoardListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const canWrite = Boolean(user?.isAdmin) || !ADMIN_ONLY_WRITE_BOARDS.includes(boardType ?? "");
+  const canWrite = Boolean(user?.isAdmin) || !SPECIAL_BOARDS.includes(boardType ?? "");
 
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -80,6 +83,17 @@ function BoardListPage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [posts, boardType]);
 
+  // 게시판(필터)을 바꾸면 이전 게시판에서 보던 페이지 번호가 아니라 1페이지부터 다시 보여준다.
+  useEffect(() => {
+    setPage(0);
+  }, [boardType]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
+  // 필터링 결과가 줄어들어 지금 페이지가 범위를 벗어나면(예: 마지막 페이지를 보다가
+  // 다른 게시판으로 바꾼 경우) 마지막 유효 페이지로 되돌린다.
+  const safePage = Math.min(page, totalPages - 1);
+  const pagedPosts = filteredPosts.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
   return (
     <div className="page board-list-page">
       <div className="board-list-header">
@@ -94,7 +108,10 @@ function BoardListPage() {
           </p>
         </div>
         {canWrite && (
-          <Link to="/board/write" className="btn btn-primary">
+          <Link
+            to={boardType && SPECIAL_BOARDS.includes(boardType) ? `/board/write?type=${encodeURIComponent(boardType)}` : "/board/write"}
+            className="btn btn-primary"
+          >
             글쓰기
           </Link>
         )}
@@ -130,7 +147,7 @@ function BoardListPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredPosts.map((post) => (
+              {pagedPosts.map((post) => (
                 <tr
                   key={post.postId}
                   className="board-table-row"
@@ -157,6 +174,7 @@ function BoardListPage() {
               ))}
             </tbody>
           </table>
+          <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
         </div>
       )}
     </div>

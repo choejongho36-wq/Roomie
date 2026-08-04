@@ -203,7 +203,7 @@ function InquiryWritePage() {
 
         <div className="board-write-actions">
           <button type="submit" className="btn btn-primary">
-            {isEdit ? "수정하기" : "등록하기"}
+            등록
           </button>
         </div>
       </form>
