@@ -99,7 +99,7 @@ function Navbar() {
                 <Link to={`/house/${houseId}/bills`} className="navbar-dropdown-item">
                   관리비정산
                 </Link>
-                <Link to={`/house/${houseId}/chores`} className="navbar-dropdown-item">
+                <Link to={`/house/${houseId}/cleaning`} className="navbar-dropdown-item">
                   청소당번
                 </Link>
               </div>
