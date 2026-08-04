@@ -4,12 +4,14 @@ import com.example.backend.domain.Inquiry;
 import com.example.backend.domain.Post;
 import com.example.backend.domain.PostReport;
 import com.example.backend.domain.User;
+import com.example.backend.dto.InquiryRequest;
 import com.example.backend.dto.PostRequest;
 import com.example.backend.repository.CommentRepository;
 import com.example.backend.repository.InquiryRepository;
 import com.example.backend.repository.PostReportRepository;
 import com.example.backend.repository.PostRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.service.InquiryService;
 import com.example.backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -48,6 +50,7 @@ public class AdminController {
     private final InquiryRepository inquiryRepository;
     private final PostReportRepository postReportRepository;
     private final PostService postService;
+    private final InquiryService inquiryService;
 
     // ===== 대시보드 =====
 
@@ -231,6 +234,27 @@ public class AdminController {
         return "redirect:/admin/notices";
     }
 
+    @GetMapping("/admin/notices/{id}/edit")
+    public String noticeEditForm(@PathVariable("id") Long id, Model model) {
+        Post notice = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지입니다."));
+        model.addAttribute("notice", notice);
+        return "notice-write";
+    }
+
+    @PostMapping("/admin/notices/{id}/edit")
+    public String updateNotice(@PathVariable("id") Long id,
+            @RequestParam String title,
+            @RequestParam String boardType,
+            @RequestParam String content,
+            @RequestParam(required = false) String tags) {
+        PostRequest request = new PostRequest(
+                title, null, null, null, null, null, null, null, null,
+                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
+        postService.adminUpdate(id, request);
+        return "redirect:/admin/notices";
+    }
+
     // ===== 문의 관리 =====
 
     @GetMapping("/admin/inquiries")
@@ -267,6 +291,21 @@ public class AdminController {
         inquiry.answer(answer);
         inquiryRepository.save(inquiry);
         return "redirect:/admin/inquiries/" + id;
+    }
+
+    @PostMapping("/admin/inquiries/{id}/edit")
+    public String updateInquiry(@PathVariable("id") Long id,
+            @RequestParam String title,
+            @RequestParam String category,
+            @RequestParam String content) {
+        inquiryService.adminUpdate(id, new InquiryRequest(title, category, content));
+        return "redirect:/admin/inquiries/" + id;
+    }
+
+    @PostMapping("/admin/inquiries/{id}/delete")
+    public String deleteInquiry(@PathVariable("id") Long id) {
+        inquiryService.adminDelete(id);
+        return "redirect:/admin/inquiries";
     }
 
     // ===== SB Admin 데모 페이지 =====
