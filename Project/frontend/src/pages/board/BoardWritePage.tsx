@@ -6,8 +6,6 @@ import { createPost, getPost, updatePost } from "../../api";
 import { FREE_BOARD_CATEGORIES, SPECIAL_BOARDS } from "../../data/BoardCategories";
 import "./BoardWritePage.css";
 
-const DRAFT_STORAGE_KEY = "roomie_board_write_draft";
-
 // 서버 에러 응답이 문자열이 아니라 객체({timestamp, status, error, path} 같은 스프링 기본 에러
 // 포맷 등)로 올 수 있어서, 그걸 그대로 화면에 렌더링하면 "Objects are not valid as a React
 // child" 에러로 페이지 전체가 하얗게 죽어버린다. 항상 안전하게 문자열로 변환한다.
@@ -47,7 +45,6 @@ function BoardWritePage() {
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
@@ -152,22 +149,8 @@ function BoardWritePage() {
     setTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  const getPayload = () => ({
-    board: selectedBoard,
-    title,
-    content: contentRef.current?.innerHTML ?? "",
-    tags,
-  });
-
-  const handleSaveDraft = () => {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(getPayload()));
-    setError("");
-    setStatusMessage("임시저장되었습니다. (이 브라우저에만 저장돼요)");
-  };
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setStatusMessage("");
 
     if (!selectedBoard) {
       showError("카테고리를 선택해주세요.");
@@ -254,7 +237,6 @@ function BoardWritePage() {
       </div>
 
       {error && <p className="mypage-error">{error}</p>}
-      {statusMessage && <p className="board-write-status">{statusMessage}</p>}
 
       <form onSubmit={handleSubmit} className="board-write-form">
         <input
@@ -321,9 +303,6 @@ function BoardWritePage() {
         </div>
 
         <div className="board-write-actions">
-          <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
-            임시저장
-          </button>
           <button type="submit" className="btn btn-primary">
             등록
           </button>

@@ -100,16 +100,6 @@
   font-weight: 800;
 }
 
-.board-write-status {
-  color: #2e7d32;
-  background: #edf7ed;
-  border: 1px solid #cdeacd;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
 .board-write-form {
   width: 100%;
   min-width: 0;

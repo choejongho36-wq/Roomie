@@ -4,8 +4,6 @@ import { useAuth } from "../../context/AuthContext";
 import { createInquiry, getInquiry, updateInquiry } from "../../api";
 import "../board/BoardWritePage.css";
 
-const DRAFT_STORAGE_KEY = "roomie_inquiry_write_draft";
-
 const CATEGORY_OPTIONS = ["버그", "신고", "문의", "제안"];
 
 const FORMAT_BUTTONS = [
@@ -28,7 +26,6 @@ function InquiryWritePage() {
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -78,15 +75,8 @@ function InquiryWritePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSaveDraft = () => {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ title, category: selectedCategory, content }));
-    setError("");
-    setStatusMessage("임시저장되었습니다. (이 브라우저에만 저장돼요)");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatusMessage("");
 
     if (!selectedCategory) {
       showError("분류를 선택해주세요.");
@@ -144,7 +134,6 @@ function InquiryWritePage() {
       </div>
 
       {error && <p className="mypage-error">{error}</p>}
-      {statusMessage && <p className="board-write-status">{statusMessage}</p>}
 
       <form onSubmit={handleSubmit} className="board-write-form">
         <input
@@ -183,11 +172,8 @@ function InquiryWritePage() {
         />
 
         <div className="board-write-actions">
-          <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
-            임시저장
-          </button>
           <button type="submit" className="btn btn-primary">
-            {isEdit ? "수정하기" : "등록하기"}
+            등록
           </button>
         </div>
       </form>
