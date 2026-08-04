@@ -58,6 +58,15 @@ public class InquiryController {
         return inquiryService.answer(inquiryId, request.answer());
     }
 
+    @DeleteMapping("/{inquiryId}/answer")
+    public InquiryResponse deleteAnswer(Authentication authentication, @PathVariable Long inquiryId) {
+        User user = findUser(authentication);
+        if (!user.isAdmin()) {
+            throw new IllegalArgumentException("관리자만 답변을 삭제할 수 있습니다.");
+        }
+        return inquiryService.deleteAnswer(inquiryId);
+    }
+
     private User findUser(Authentication authentication) {
         return userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_ORIGIN, answerInquiry, deleteInquiry, getInquiries } from "../../api";
+import { API_ORIGIN, answerInquiry, deleteInquiry, deleteInquiryAnswer, getInquiries } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import type { Inquiry } from "../../types/inquiry";
 import { renderRichText } from "../../utils/richText";
@@ -10,7 +10,7 @@ import "../board/BoardListPage.css";
 import "./InquiryListPage.css";
 
 // 한 화면에서 스크롤 없이 다 보이도록, 목록에 한 번에 보여주는 문의 개수를 제한한다.
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 20;
 
 const formatShortDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -33,6 +33,8 @@ function InquiryListPage() {
   const [error, setError] = useState("");
   const [answerDraft, setAnswerDraft] = useState("");
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  // 관리자용: 이미 등록된 답변을 보여줄지(false), 입력/수정 칸을 보여줄지(true)
+  const [isEditingAnswer, setIsEditingAnswer] = useState(false);
   const [page, setPage] = useState(0);
   const isAdmin = Boolean(user?.isAdmin);
 
@@ -62,6 +64,8 @@ function InquiryListPage() {
       if (next !== null) {
         const target = inquiries.find((i) => i.inquiryId === next);
         setAnswerDraft(target?.answer ?? "");
+        // 이미 답변이 있으면 읽기 모드로, 없으면 바로 입력 칸을 보여준다.
+        setIsEditingAnswer(target?.status !== "ANSWERED");
       }
       return next;
     });
@@ -71,12 +75,27 @@ function InquiryListPage() {
     if (!token || !answerDraft.trim()) return;
     setIsSubmittingAnswer(true);
     try {
-      await answerInquiry(token, inquiryId, answerDraft.trim());
+      const updated = await answerInquiry(token, inquiryId, answerDraft.trim());
+      setAnswerDraft(updated.answer ?? "");
+      setIsEditingAnswer(false);
       loadInquiries();
     } catch {
       setError("답변 등록에 실패했습니다.");
     } finally {
       setIsSubmittingAnswer(false);
+    }
+  };
+
+  const handleAnswerDelete = async (inquiryId: number) => {
+    if (!token) return;
+    if (!confirm("등록된 답변을 삭제할까요?")) return;
+    try {
+      await deleteInquiryAnswer(token, inquiryId);
+      setAnswerDraft("");
+      setIsEditingAnswer(true);
+      loadInquiries();
+    } catch {
+      setError("답변 삭제에 실패했습니다.");
     }
   };
 
@@ -189,10 +208,35 @@ function InquiryListPage() {
                           {!isAnswered && !isAdmin && (
                             <p className="inquiry-answer-pending">아직 답변이 등록되지 않았어요.</p>
                           )}
-                          {isAdmin && (
+                          {isAdmin && isAnswered && !isEditingAnswer && (
+                            <div className="inquiry-answer" onClick={(e) => e.stopPropagation()}>
+                              <span className="inquiry-answer-label">답변 (관리자)</span>
+                              <p>{inquiry.answer}</p>
+                              <div className="inquiry-item-actions inquiry-item-actions-right">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  onClick={() => {
+                                    setAnswerDraft(inquiry.answer ?? "");
+                                    setIsEditingAnswer(true);
+                                  }}
+                                >
+                                  답변 수정
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline"
+                                  onClick={() => handleAnswerDelete(inquiry.inquiryId)}
+                                >
+                                  답변 삭제
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {isAdmin && (!isAnswered || isEditingAnswer) && (
                             <div className="inquiry-answer" onClick={(e) => e.stopPropagation()}>
                               <span className="inquiry-answer-label">
-                                {isAnswered ? "답변 (관리자)" : "답변 작성 (관리자)"}
+                                {isAnswered ? "답변 수정 (관리자)" : "답변 작성 (관리자)"}
                               </span>
                               <textarea
                                 className="inquiry-answer-textarea"
@@ -201,14 +245,28 @@ function InquiryListPage() {
                                 rows={4}
                                 placeholder="답변을 입력해주세요."
                               />
-                              <button
-                                type="button"
-                                className="btn btn-primary"
-                                disabled={isSubmittingAnswer || !answerDraft.trim()}
-                                onClick={() => handleAnswerSubmit(inquiry.inquiryId)}
-                              >
-                                {isAnswered ? "답변 수정" : "답변 등록"}
-                              </button>
+                              <div className="inquiry-item-actions">
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  disabled={isSubmittingAnswer || !answerDraft.trim()}
+                                  onClick={() => handleAnswerSubmit(inquiry.inquiryId)}
+                                >
+                                  {isAnswered ? "답변 수정 완료" : "답변 등록"}
+                                </button>
+                                {isAnswered && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline"
+                                    onClick={() => {
+                                      setAnswerDraft(inquiry.answer ?? "");
+                                      setIsEditingAnswer(false);
+                                    }}
+                                  >
+                                    취소
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           )}
                           {isAuthor && (

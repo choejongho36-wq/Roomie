@@ -10,7 +10,7 @@ import "./BoardListPage.css";
 
 const FREE_BOARD_LABEL = "자유 게시판";
 // 한 화면에서 스크롤 없이 다 보이도록, 목록에 한 번에 보여주는 글 개수를 제한한다.
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 20;
 
 const getProfileImageSrc = (url: string | null | undefined) => {
   if (!url) return null;

@@ -67,4 +67,10 @@ public class Inquiry {
         this.status = "ANSWERED";
         this.answeredAt = LocalDateTime.now();
     }
+
+    public void clearAnswer() {
+        this.answer = null;
+        this.status = "PENDING";
+        this.answeredAt = null;
+    }
 }
