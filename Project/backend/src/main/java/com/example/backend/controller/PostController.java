@@ -72,6 +72,11 @@ public class PostController {
         return postService.toggleBookmark(postId, findUser(authentication).getUserId());
     }
 
+    @PostMapping("/{postId}/recommend")
+    public PostResponse toggleRecommend(Authentication authentication, @PathVariable Long postId) {
+        return postService.toggleRecommend(postId, findUser(authentication).getUserId());
+    }
+
     @PostMapping("/{postId}/report")
     public void reportPost(Authentication authentication, @PathVariable Long postId,
             @RequestBody(required = false) PostReportRequest request) {

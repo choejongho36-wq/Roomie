@@ -230,6 +230,18 @@
   max-width: 420px;
 }
 
+.board-table-pinned-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #ff6600;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .board-table-number-cell {
   color: #999;
   font-weight: 600;

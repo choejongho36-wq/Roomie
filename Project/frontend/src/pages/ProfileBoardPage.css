@@ -69,8 +69,17 @@
   display: flex;
   gap: 20px;
   align-items: stretch;
-  flex: 1;
-  min-height: 0;
+  /* 남는 뷰포트 공간을 억지로 채우지 않고, 목록(항목 6개 + 페이지 버튼) 내용 높이에
+     맞춰 이 줄 자체의 높이가 정해지도록 한다. align-items:stretch 덕분에 오른쪽
+     프로필 카드도 이 높이에 자동으로 맞춰진다. */
+  flex: 0 0 auto;
+}
+
+.profile-board-list-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .profile-board-list {
@@ -80,9 +89,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 0;
+  flex: 0 1 auto;
+  /* 항목(68px) 6개 + gap(8px) 5개 기준 높이를 최소 높이로 고정해서, 마지막 페이지처럼
+     항목이 6개보다 적게 남았을 때도 목록 높이가 줄어들지 않고 페이지 번호 위치가
+     항상 같은 자리에 오도록 한다. (PAGE_SIZE를 바꾸면 이 값도 같이 조정 필요) */
+  min-height: 448px;
   overflow-y: auto;
   padding-right: 2px;
 }
