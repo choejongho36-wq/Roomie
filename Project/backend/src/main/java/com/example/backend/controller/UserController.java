@@ -10,6 +10,7 @@ import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.dto.WithdrawRequest;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.SurveyResultRepository;
 import com.example.backend.service.UserCategoryWeightService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -105,6 +106,7 @@ public class UserController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserCategoryWeightService userCategoryWeightService;
+    private final SurveyResultRepository surveyResultRepository;
 
     @Value("${file.upload-dir:uploads/profile}")
     private String uploadDir;
@@ -294,8 +296,14 @@ public class UserController {
                 throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
             }
         }
-        user.withdraw();
+        String oldProfileImageUrl = user.withdraw();
         userRepository.save(user);
+
+        // 설문 답변은 성향/생활패턴 등 민감한 개인정보라, 탈퇴 시 진짜로 삭제함
+        // (채팅/게시글처럼 "다른 사람과 얽힌" 데이터가 아니라 온전히 본인 것이라 남겨둘 이유가 없음)
+        surveyResultRepository.deleteByUserId(user.getUserId());
+        deleteImageFile(oldProfileImageUrl);
+
         return ResponseEntity.ok().build();
     }
 
@@ -333,7 +341,8 @@ public class UserController {
                 user.getBio(),
                 user.getProvider(),
                 user.getEmailVerified(),
-                user.isAdmin()
+                user.isAdmin(),
+                user.needsAdditionalInfo()
         );
     }
 }
