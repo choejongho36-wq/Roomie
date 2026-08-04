@@ -8,6 +8,8 @@
   justify-content: center;
   gap: 24px;
   background: linear-gradient(135deg, #f16526 0%, #f4834f 45%, #ffc79b 100%);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .matching-loading-stack {

@@ -54,6 +54,17 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
+    void smokingMismatchIsHardCappedEvenWhenEverythingElseIsIdeal() {
+        List<Integer> a = idealBaseA();
+        a.set(11, 2); // 비흡연
+
+        List<Integer> b = idealBaseB();
+        b.set(11, 1); // 흡연 (나머지는 전부 이상적)
+
+        assertTrue(calculator.score(a, b) <= 50, "다른 문항이 전부 맞아도 흡연 여부가 다르면 50점을 넘으면 안 됨");
+    }
+
+    @Test
     void bathroomSameSlotIsWorseThanAnyDifferentSlot() {
         List<Integer> base = idealBaseA();
         base.set(1, 1); // 6시 이전
@@ -87,6 +98,31 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
+    void penaltySpreadExponentPenalizesLargerDifferencesDisproportionatelyMore() {
+        // 모든 일반 문항(화장실/벌레/흡연 제외)에 같은 크기의 차이를 줘서, 문항 하나의 차이가
+        // 전체 가중치(44)에 묻히지 않고 점수에 뚜렷하게 드러나게 한다.
+        List<Integer> base = idealBaseA();
+
+        List<Integer> diffOneEverywhere = idealBaseB();
+        List<Integer> diffTwoEverywhere = idealBaseB();
+        for (int i = 0; i < 20; i++) {
+            if (i == 1 || i == 11 || i == 16) continue; // 화장실/흡연/벌레는 특수 로직이라 제외
+            diffOneEverywhere.set(i, base.get(i) + 1);
+            diffTwoEverywhere.set(i, base.get(i) + 2);
+        }
+
+        int diffOneScore = calculator.score(base, diffOneEverywhere);
+        int diffTwoScore = calculator.score(base, diffTwoEverywhere);
+
+        assertTrue(diffOneScore > diffTwoScore, "차이가 작을수록 점수가 더 높아야 함");
+        // 선형이면 diff=2가 diff=1보다 정확히 2배 깎여야 하지만(100-diffOneScore)*2,
+        // 지수(1.5) 보정이 들어가면 그보다 더 크게 깎여야 한다.
+        int linearDrop = (100 - diffOneScore) * 2;
+        int actualDrop = 100 - diffTwoScore;
+        assertTrue(actualDrop > linearDrop, "지수 보정이 적용되면 diff=2의 감점이 선형 2배보다 더 커야 함");
+    }
+
+    @Test
     void customWeightOverridesDefaultForThatQuestionOnly() {
         // 취침 시간(1번, 기본 가중치 3)에서만 차이를 주고, 나머지는 이상적으로 맞춘다.
         List<Integer> a = idealBaseA();
@@ -112,19 +148,27 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
-    void bugsOppositeAnswersScoreHigherThanSameAnswers() {
+    void bugsPenalizedOnlyWhenNeitherCanHandleIt() {
         List<Integer> handlesAlone = idealBaseA();
         handlesAlone.set(16, 1); // 바로 잡음
 
         List<Integer> alsoHandlesAlone = idealBaseB();
-        alsoHandlesAlone.set(16, 1); // 바로 잡음 (동일 성향)
+        alsoHandlesAlone.set(16, 1); // 바로 잡음 (둘 다 처리 가능)
 
         List<Integer> cannotHandle = idealBaseB();
-        cannotHandle.set(16, 5); // 혼자 처리 못함 (정반대 성향)
+        cannotHandle.set(16, 5); // 혼자 처리 못함 (한쪽만 처리 가능, 반대 성향)
 
-        int sameScore = calculator.score(handlesAlone, alsoHandlesAlone);
-        int oppositeScore = calculator.score(handlesAlone, cannotHandle);
+        List<Integer> partnerCannotHandleEither = idealBaseA();
+        partnerCannotHandleEither.set(16, 4); // 부탁하는 편 (둘 다 사실상 처리 못함)
+        List<Integer> otherCannotHandle = idealBaseB();
+        otherCannotHandle.set(16, 5); // 혼자 처리 못함
 
-        assertTrue(oppositeScore > sameScore, "벌레 처리 성향은 반대일수록 궁합 점수가 높아야 함");
+        int bothCapableScore = calculator.score(handlesAlone, alsoHandlesAlone);
+        int oneCapableScore = calculator.score(handlesAlone, cannotHandle);
+        int neitherCapableScore = calculator.score(partnerCannotHandleEither, otherCannotHandle);
+
+        assertEquals(100, bothCapableScore, "둘 다 처리 가능하면 페널티가 없어야 함");
+        assertEquals(100, oneCapableScore, "한 명이라도 처리 가능하면 성향이 반대여도 페널티가 없어야 함");
+        assertTrue(neitherCapableScore < bothCapableScore, "둘 다 처리 못하면 그때만 페널티가 있어야 함");
     }
 }
