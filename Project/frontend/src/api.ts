@@ -13,6 +13,7 @@ import type {
 import type { ChatMessage, Conversation, NotificationItem } from "./types/chat";
 import type { MatchedPair } from "./types/matchedPair";
 
+const authHeader = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api";
 export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
@@ -31,43 +32,31 @@ export const getPost = async (postId: number, token?: string | null): Promise<Po
 };
 
 export const createPost = async (token: string, request: PostRequest): Promise<Post> => {
-  const response = await axios.post<Post>(`${API_BASE_URL}/posts`, request, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.post<Post>(`${API_BASE_URL}/posts`, request, authHeader(token));
   return response.data;
 };
 
 export const updatePost = async (token: string, postId: number, request: PostRequest): Promise<Post> => {
-  const response = await axios.put<Post>(`${API_BASE_URL}/posts/${postId}`, request, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.put<Post>(`${API_BASE_URL}/posts/${postId}`, request, authHeader(token));
   return response.data;
 };
 
 export const deletePost = async (token: string, postId: number): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/posts/${postId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.delete(`${API_BASE_URL}/posts/${postId}`, authHeader(token));
 };
 
 export const getBookmarkedPosts = async (token: string): Promise<Post[]> => {
-  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/bookmarked`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/bookmarked`, authHeader(token));
   return response.data;
 };
 
 export const getMyPosts = async (token: string): Promise<Post[]> => {
-  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/mine`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<Post[]>(`${API_BASE_URL}/posts/mine`, authHeader(token));
   return response.data;
 };
 
 export const getMyComments = async (token: string): Promise<MyComment[]> => {
-  const response = await axios.get<MyComment[]>(`${API_BASE_URL}/comments/mine`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<MyComment[]>(`${API_BASE_URL}/comments/mine`, authHeader(token));
   return response.data;
 };
 
@@ -75,7 +64,7 @@ export const toggleBookmark = async (token: string, postId: number): Promise<Pos
   const response = await axios.post<Post>(
     `${API_BASE_URL}/posts/${postId}/bookmark`,
     {},
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -84,7 +73,7 @@ export const reportPost = async (token: string, postId: number, reason: string):
   await axios.post(
     `${API_BASE_URL}/posts/${postId}/report`,
     { reason },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
 };
 
@@ -102,7 +91,7 @@ export const createComment = async (
   const response = await axios.post<Comment>(
     `${API_BASE_URL}/posts/${postId}/comments`,
     { content, parentCommentId },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -111,35 +100,27 @@ export const updateComment = async (token: string, commentId: number, content: s
   const response = await axios.put<Comment>(
     `${API_BASE_URL}/comments/${commentId}`,
     { content },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
 
 export const deleteComment = async (token: string, commentId: number): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/comments/${commentId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.delete(`${API_BASE_URL}/comments/${commentId}`, authHeader(token));
 };
 
 export const getInquiries = async (token: string): Promise<Inquiry[]> => {
-  const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/inquiries`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<Inquiry[]>(`${API_BASE_URL}/inquiries`, authHeader(token));
   return response.data;
 };
 
 export const getInquiry = async (token: string, inquiryId: number): Promise<Inquiry> => {
-  const response = await axios.get<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, authHeader(token));
   return response.data;
 };
 
 export const createInquiry = async (token: string, request: InquiryRequest): Promise<Inquiry> => {
-  const response = await axios.post<Inquiry>(`${API_BASE_URL}/inquiries`, request, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.post<Inquiry>(`${API_BASE_URL}/inquiries`, request, authHeader(token));
   return response.data;
 };
 
@@ -148,23 +129,19 @@ export const updateInquiry = async (
   inquiryId: number,
   request: InquiryRequest
 ): Promise<Inquiry> => {
-  const response = await axios.put<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, request, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.put<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}`, request, authHeader(token));
   return response.data;
 };
 
 export const deleteInquiry = async (token: string, inquiryId: number): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/inquiries/${inquiryId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.delete(`${API_BASE_URL}/inquiries/${inquiryId}`, authHeader(token));
 };
 
 export const answerInquiry = async (token: string, inquiryId: number, answer: string): Promise<Inquiry> => {
   const response = await axios.post<Inquiry>(
     `${API_BASE_URL}/inquiries/${inquiryId}/answer`,
     { answer },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -195,9 +172,7 @@ export const signup = async (
 };
 
 export const getMyProfile = async (token: string): Promise<User> => {
-  const response = await axios.get<User>(`${API_BASE_URL}/users/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<User>(`${API_BASE_URL}/users/me`, authHeader(token));
   return response.data;
 };
 
@@ -210,7 +185,7 @@ export const completeAdditionalInfo = async (
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/additional-info`,
     { gender, birthDate, phone: phone || null },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -218,16 +193,12 @@ export const completeAdditionalInfo = async (
 export const uploadProfileImage = async (token: string, file: File): Promise<User> => {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await axios.post<User>(`${API_BASE_URL}/users/me/profile-image`, formData, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.post<User>(`${API_BASE_URL}/users/me/profile-image`, formData, authHeader(token));
   return response.data;
 };
 
 export const deleteProfileImage = async (token: string): Promise<User> => {
-  const response = await axios.delete<User>(`${API_BASE_URL}/users/me/profile-image`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.delete<User>(`${API_BASE_URL}/users/me/profile-image`, authHeader(token));
   return response.data;
 };
 
@@ -235,7 +206,7 @@ export const updateTags = async (token: string, tags: string[]): Promise<User> =
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/tags`,
     { tags },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -244,7 +215,7 @@ export const updateBio = async (token: string, bio: string): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/bio`,
     { bio },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -253,7 +224,7 @@ export const updateNickname = async (token: string, nickname: string): Promise<U
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/nickname`,
     { nickname },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -266,7 +237,7 @@ export const changePassword = async (
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/password`,
     { currentPassword, newPassword },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -275,37 +246,29 @@ export const submitSurvey = async (token: string, answers: number[]): Promise<Su
   const response = await axios.post<SurveyResult>(
     `${API_BASE_URL}/surveys`,
     { answers },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
 
 export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
-  const response = await axios.get<SurveyResult[]>(`${API_BASE_URL}/surveys/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<SurveyResult[]>(`${API_BASE_URL}/surveys/me`, authHeader(token));
   return response.data;
 };
 
 export const getMySurveySummary = async (token: string): Promise<SurveySummaryResult> => {
-  const response = await axios.get<SurveySummaryResult>(`${API_BASE_URL}/surveys/me/summary`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<SurveySummaryResult>(`${API_BASE_URL}/surveys/me/summary`, authHeader(token));
   return response.data;
 };
 
 // 설문 완료 후 가중치 설정 화면에서 기존 저장값을 불러올 때 사용. 문항 id -> 가중치(1~3)
 export const getCategoryWeights = async (token: string): Promise<Record<number, number>> => {
-  const response = await axios.get<Record<number, number>>(`${API_BASE_URL}/users/me/category-weights`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<Record<number, number>>(`${API_BASE_URL}/users/me/category-weights`, authHeader(token));
   return response.data;
 };
 
 export const saveCategoryWeights = async (token: string, weights: Record<number, number>): Promise<void> => {
-  await axios.put(`${API_BASE_URL}/users/me/category-weights`, weights, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.put(`${API_BASE_URL}/users/me/category-weights`, weights, authHeader(token));
 };
 
 export const checkEmailAvailability = async (email: string): Promise<boolean> => {
@@ -338,9 +301,7 @@ export const checkNicknameAvailability = async (nickname: string): Promise<boole
 };
 
 export const getRecommendations = async (token: string): Promise<RecommendationResult[]> => {
-  const response = await axios.get<RecommendationResult[]>(`${API_BASE_URL}/recommendations`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<RecommendationResult[]>(`${API_BASE_URL}/recommendations`, authHeader(token));
   return response.data;
 };
 
@@ -350,7 +311,7 @@ export const getSurveyComparison = async (
 ): Promise<SurveyComparisonResult> => {
   const response = await axios.get<SurveyComparisonResult>(
     `${API_BASE_URL}/recommendations/${userId}/comparison`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -361,68 +322,50 @@ export const getSurveyComparisonAiExplanation = async (
 ): Promise<SurveyComparisonExplanationResult> => {
   const response = await axios.get<SurveyComparisonExplanationResult>(
     `${API_BASE_URL}/recommendations/${userId}/comparison/ai-explanation`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
 
 export const getConversations = async (token: string): Promise<Conversation[]> => {
-  const response = await axios.get<Conversation[]>(`${API_BASE_URL}/chat/conversations`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<Conversation[]>(`${API_BASE_URL}/chat/conversations`, authHeader(token));
   return response.data;
 };
 
 export const getChatMessages = async (token: string, otherUserId: number): Promise<ChatMessage[]> => {
-  const response = await axios.get<ChatMessage[]>(`${API_BASE_URL}/chat/${otherUserId}/messages`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<ChatMessage[]>(`${API_BASE_URL}/chat/${otherUserId}/messages`, authHeader(token));
   return response.data;
 };
 
 export const getChatUnreadCount = async (token: string): Promise<number> => {
-  const response = await axios.get<{ count: number }>(`${API_BASE_URL}/chat/unread-count`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<{ count: number }>(`${API_BASE_URL}/chat/unread-count`, authHeader(token));
   return response.data.count;
 };
 
 export const getChatStatus = async (token: string, otherUserId: number): Promise<{ leftByPartner: boolean }> => {
-  const response = await axios.get<{ leftByPartner: boolean }>(`${API_BASE_URL}/chat/${otherUserId}/status`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<{ leftByPartner: boolean }>(`${API_BASE_URL}/chat/${otherUserId}/status`, authHeader(token));
   return response.data;
 };
 
 export const leaveChat = async (token: string, otherUserId: number): Promise<void> => {
-  await axios.post(`${API_BASE_URL}/chat/${otherUserId}/leave`, null, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.post(`${API_BASE_URL}/chat/${otherUserId}/leave`, null, authHeader(token));
 };
 
 export const getNotifications = async (token: string): Promise<NotificationItem[]> => {
-  const response = await axios.get<NotificationItem[]>(`${API_BASE_URL}/notifications`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<NotificationItem[]>(`${API_BASE_URL}/notifications`, authHeader(token));
   return response.data;
 };
 
 export const markNotificationRead = async (token: string, notificationId: number): Promise<void> => {
-  await axios.patch(`${API_BASE_URL}/notifications/${notificationId}/read`, null, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.patch(`${API_BASE_URL}/notifications/${notificationId}/read`, null, authHeader(token));
 };
 
 export const deleteNotification = async (token: string, notificationId: number): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, authHeader(token));
 };
 
 export const clearNotifications = async (token: string): Promise<void> => {
-  await axios.delete(`${API_BASE_URL}/notifications`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  await axios.delete(`${API_BASE_URL}/notifications`, authHeader(token));
 };
 
 // 채팅방에서 "룸메이트 확정" 버튼을 누르면 호출 (이미 있으면 기존 페어를 그대로 돌려줌)
@@ -430,15 +373,13 @@ export const createOrGetMatchedPair = async (token: string, partnerUserId: numbe
   const response = await axios.post<MatchedPair>(
     `${API_BASE_URL}/matched-pairs`,
     { partnerUserId },
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
 
 export const getMatchedPair = async (token: string, pairId: number): Promise<MatchedPair> => {
-  const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/${pairId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/${pairId}`, authHeader(token));
   return response.data;
 };
 
@@ -450,7 +391,7 @@ export const updateMatchedPairConditions = async (
   const response = await axios.put<MatchedPair>(
     `${API_BASE_URL}/matched-pairs/${pairId}/conditions`,
     conditions,
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
@@ -460,16 +401,14 @@ export const confirmMatchedPair = async (token: string, pairId: number): Promise
   const response = await axios.put<MatchedPair>(
     `${API_BASE_URL}/matched-pairs/${pairId}/confirm`,
     null,
-    { headers: { Authorization: `Bearer ${token}` } }
+    authHeader(token)
   );
   return response.data;
 };
 
 // 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 400)
 export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair> => {
-  const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/me/confirmed`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/me/confirmed`, authHeader(token));
   return response.data;
 };
 
@@ -503,6 +442,6 @@ export const resetPassword = async (loginId: string, email: string, newPassword:
 export const withdraw = async (token: string, password: string): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/users/me`, {
     data: { password },
-    headers: { Authorization: `Bearer ${token}` },
+    ...authHeader(token),
   });
 };
