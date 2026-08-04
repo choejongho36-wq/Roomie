@@ -14,6 +14,8 @@ public record UserResponse(
         String phone,
         String region,
         String job,
+        String smoking,
+        String smokingType,
         LocalDateTime createdAt,
         String profileImageUrl,
         List<String> tags,

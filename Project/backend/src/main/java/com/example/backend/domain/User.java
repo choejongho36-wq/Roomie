@@ -50,6 +50,12 @@ public class User {
     @Column(length = 100)
     private String job;
 
+    @Column(length = 20)
+    private String smoking; // "SMOKER" / "NON_SMOKER"
+
+    @Column(name = "smoking_type", length = 20)
+    private String smokingType; // 흡연자일 때만: "CIGARETTE"(연초) / "HEATED"(궐련형) / "LIQUID"(액상)
+
     @Column(name = "profile_image_url", length = 255)
     private String profileImageUrl;
 
@@ -150,6 +156,8 @@ public class User {
         this.phone = null;
         this.region = null;
         this.job = null;
+        this.smoking = null;
+        this.smokingType = null;
         this.tags = null;
         this.bio = null;
         this.profileImageUrl = null;
@@ -186,7 +194,8 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
-    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone, String region, String job) {
+    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone, String region, String job,
+            String smoking, String smokingType) {
         this.gender = gender;
         this.birthDate = birthDate;
         if (phone != null && !phone.isBlank()) {
@@ -198,6 +207,16 @@ public class User {
         if (job != null && !job.isBlank()) {
             this.job = job;
         }
+        if (smoking != null && !smoking.isBlank()) {
+            this.smoking = smoking;
+            // 비흡연자로 바뀌면 예전에 골랐던 흡연 종류는 의미가 없어지니 같이 비워줌
+            this.smokingType = "SMOKER".equals(smoking) ? smokingType : null;
+        }
+    }
+
+    public void updateSmoking(String smoking, String smokingType) {
+        this.smoking = smoking;
+        this.smokingType = "SMOKER".equals(smoking) ? smokingType : null;
     }
 
     public void updateRegionAndJob(String region, String job) {
@@ -218,12 +237,14 @@ public class User {
     }
 
     public User(String loginId, String email, String password, String nickname, String gender,
-            LocalDate birthDate, String phone, String region, String job) {
+            LocalDate birthDate, String phone, String region, String job, String smoking, String smokingType) {
         this(email, password, nickname, gender, birthDate);
         this.loginId = loginId;
         this.phone = phone;
         this.region = region;
         this.job = job;
+        this.smoking = smoking;
+        this.smokingType = "SMOKER".equals(smoking) ? smokingType : null;
     }
 
     public User(String provider, String providerId, String loginId, String email,
@@ -245,6 +266,7 @@ public class User {
     }
 
     public boolean needsAdditionalInfo() {
-        return this.gender == null || this.birthDate == null || this.region == null || this.job == null;
+        return this.gender == null || this.birthDate == null || this.region == null || this.job == null
+                || this.smoking == null;
     }
 }

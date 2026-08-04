@@ -6,6 +6,8 @@ export interface User {
   birthDate: string;
   region: string | null;
   job: string | null;
+  smoking: string | null;
+  smokingType: string | null;
   createdAt: string;
   profileImageUrl: string | null;
   tags: string[];

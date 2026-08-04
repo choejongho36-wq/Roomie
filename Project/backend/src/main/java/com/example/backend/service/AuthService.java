@@ -40,6 +40,13 @@ public class AuthService {
         if (!emailVerificationService.isVerified(request.email())) {
             throw new IllegalArgumentException("이메일 인증을 완료해주세요.");
         }
+        if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
+            throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
+        }
+        if ("SMOKER".equals(request.smoking())
+                && (request.smokingType() == null || request.smokingType().isBlank())) {
+            throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
+        }
         User user = new User(
                 request.loginId(),
                 request.email(),
@@ -49,7 +56,9 @@ public class AuthService {
                 request.birthDate(),
                 request.phone(),
                 request.region(),
-                request.job()
+                request.job(),
+                request.smoking(),
+                request.smokingType()
         );
         userRepository.save(user);
     }

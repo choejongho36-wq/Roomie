@@ -185,11 +185,13 @@ export const signup = async (
   birthDate: string,
   phone: string,
   region: string,
-  job: string
+  job: string,
+  smoking: string,
+  smokingType: string | null
 ): Promise<void> => {
   await axios.post(`${API_BASE_URL}/auth/signup`, {
     loginId, email, password, nickname,
-    gender, birthDate, phone, region, job,
+    gender, birthDate, phone, region, job, smoking, smokingType,
   });
 };
 
@@ -204,11 +206,13 @@ export const completeAdditionalInfo = async (
   birthDate: string,
   phone: string,
   region: string,
-  job: string
+  job: string,
+  smoking: string,
+  smokingType: string | null
 ): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/additional-info`,
-    { gender, birthDate, phone: phone || null, region, job },
+    { gender, birthDate, phone: phone || null, region, job, smoking, smokingType },
     authHeader(token)
   );
   return response.data;
