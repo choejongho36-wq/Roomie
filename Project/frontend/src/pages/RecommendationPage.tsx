@@ -1,17 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
-  getMySurveySummary,
-  getMySurveys,
   getRecommendations,
   getSurveyComparison,
   getSurveyComparisonAiExplanation,
 } from "../api";
-import { surveyQuestions } from "../data/SurveyQuestions";
-import type { RecommendationResult, SurveyComparisonResult, SurveyResult } from "../types/survey";
+import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
 import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 
@@ -23,47 +20,11 @@ const getProfileImageSrc = (url: string | null) => {
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
-const getSurveyScore = (survey: SurveyResult, questionId: number) => {
-  const questionIndex = surveyQuestions.findIndex((question) => question.id === questionId);
-  return questionIndex >= 0 ? survey.answers[questionIndex] : undefined;
-};
-
-const createSurveyInsight = (survey: SurveyResult | null) => {
-  if (!survey) return "설문을 완료하면 AI가 생활 성향을 한 줄로 요약해드려요.";
-
-  const cleanliness = getSurveyScore(survey, 1);
-  const sleepTime = getSurveyScore(survey, 2);
-  const noise = getSurveyScore(survey, 5);
-  const smoking = getSurveyScore(survey, 13);
-
-  const traits: string[] = [];
-
-  if (cleanliness && cleanliness >= 4) traits.push("정돈된 공간을 선호하는");
-  else if (cleanliness && cleanliness <= 2) traits.push("편안한 생활감을 중요하게 여기는");
-
-  if (sleepTime && sleepTime <= 2) traits.push("늦은 시간대에 생활하는");
-  else if (sleepTime && sleepTime >= 4) traits.push("규칙적인 수면 리듬을 가진");
-
-  if (noise && noise >= 4) traits.push("조용한 환경에서 안정감을 느끼는");
-  else if (noise && noise <= 2) traits.push("생활 소음에 비교적 유연한");
-
-  if (smoking && smoking >= 5) traits.push("비흡연 환경을 선호하는");
-
-  if (traits.length === 0) {
-    return "AI 요약: 상황에 맞춰 생활 방식을 조율하는 균형형 룸메이트 성향이에요.";
-  }
-
-  return `AI 요약: ${traits.slice(0, 3).join(", ")} 룸메이트 성향이에요.`;
-};
-
 function RecommendationPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
-  const [surveys, setSurveys] = useState<SurveyResult[] | null>(null);
-  const [aiSurveyInsight, setAiSurveyInsight] = useState<string | null>(null);
-  const [aiSurveyInsightError, setAiSurveyInsightError] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
@@ -75,11 +36,8 @@ function RecommendationPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setAiSurveyInsight(null);
-    setAiSurveyInsightError("");
     if (!token) {
       setRecommendations(null);
-      setSurveys(null);
       setSelectedUserId(null);
       setComparison(null);
       setIsComparisonOpen(false);
@@ -94,22 +52,6 @@ function RecommendationPage() {
       })
       .catch(() => {
         if (isMounted) setError("추천 데이터를 불러오지 못했습니다.");
-      });
-
-    getMySurveys(token)
-      .then((result) => {
-        if (isMounted) setSurveys(result);
-      })
-      .catch(() => {
-        if (isMounted) setSurveys([]);
-      });
-
-    getMySurveySummary(token)
-      .then((result) => {
-        if (isMounted) setAiSurveyInsight(result.summary);
-      })
-      .catch(() => {
-        if (isMounted) setAiSurveyInsightError("AI 설문 요약을 불러오지 못했어요.");
       });
 
     return () => {
@@ -168,9 +110,6 @@ function RecommendationPage() {
   }, [selectedScore]);
 
   const gaugePercent = Math.max(0, Math.min(displayedScore, 100));
-  const latestSurvey = surveys?.[0] ?? null;
-  const localSurveyInsight = useMemo(() => createSurveyInsight(latestSurvey), [latestSurvey]);
-  const surveyInsight = aiSurveyInsight ?? localSurveyInsight;
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>, userId: number) => {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -236,20 +175,6 @@ function RecommendationPage() {
           >
             {selectedRecommendation.nickname}님과 자세히 비교
           </button>
-
-          <div className="recommendation-my-survey-summary">
-            <div className="recommendation-my-survey-header">
-              <h3>AI 설문 요약</h3>
-            </div>
-
-            {surveys === null && aiSurveyInsight === null && !aiSurveyInsightError ? (
-              <p className="recommendation-survey-summary-empty">설문 답변을 불러오는 중...</p>
-            ) : aiSurveyInsightError ? (
-              <p className="recommendation-survey-error">{aiSurveyInsightError}</p>
-            ) : (
-              <p className="recommendation-survey-insight">{surveyInsight}</p>
-            )}
-          </div>
         </section>
       )}
 
