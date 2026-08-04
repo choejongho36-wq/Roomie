@@ -300,6 +300,20 @@
   cursor: default;
 }
 
+/* 저장 */
+.house-clean-save {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.house-clean-save-hint {
+  font-size: 12px;
+  color: #aaa;
+}
+
 /* 달력 */
 .house-clean-calendar {
   align-self: start;
