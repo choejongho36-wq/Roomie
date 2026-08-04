@@ -36,55 +36,39 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
-    void smokingMismatchIsPenalizedRegardlessOfDegree() {
+    void smokingQuestionNeverAffectsScoreAnymore() {
+        // 흡연(12번)은 이제 "허용도" 문항이라 답변끼리 비교해 채점하지 않는다.
+        // 실제 흡연 여부 기반 필터링은 CompatibilityService가 담당하므로,
+        // 여기서는 답이 무엇이든 점수에 전혀 영향을 주면 안 된다.
         List<Integer> a = idealBaseA();
-        a.set(11, 2); // 비흡연
+        a.set(11, 1);
 
-        List<Integer> smokerB = idealBaseB();
-        smokerB.set(11, 1); // 흡연
+        List<Integer> sameAnswer = idealBaseB();
+        sameAnswer.set(11, 1);
 
-        List<Integer> nonSmokerB = idealBaseB();
-        nonSmokerB.set(11, 2); // 비흡연
+        List<Integer> differentAnswer = idealBaseB();
+        differentAnswer.set(11, 4);
 
-        int mismatchScore = calculator.score(a, smokerB);
-        int matchScore = calculator.score(a, nonSmokerB);
-
-        assertTrue(mismatchScore < matchScore, "흡연 여부가 다르면 점수가 더 낮아야 함");
-        assertEquals(100, matchScore, "흡연 여부가 같고 나머지가 이상적이면 만점");
+        assertEquals(100, calculator.score(a, sameAnswer));
+        assertEquals(100, calculator.score(a, differentAnswer),
+                "흡연 허용도 답변이 달라도 채점에는 영향이 없어야 함");
     }
 
     @Test
-    void smokingMismatchDeductsFixedPointsEvenWhenEverythingElseIsIdeal() {
-        List<Integer> a = idealBaseA();
-        a.set(11, 2); // 비흡연
-
-        List<Integer> b = idealBaseB();
-        b.set(11, 1); // 흡연 (나머지는 전부 이상적)
-
-        // 다른 문항이 전부 이상적이면 100점인데, 흡연 불일치로 45점을 깎아 55점이 된다.
-        assertEquals(55, calculator.score(a, b), "흡연 불일치는 상한이 아니라 고정 점수 차감이어야 함");
+    void smokingSeverityRanksNonSmokerBelowEveryTypeOfSmoker() {
+        assertEquals(0, calculator.smokingSeverity("NON_SMOKER", null), "비흡연자는 항상 심각도 0");
+        assertEquals(1, calculator.smokingSeverity("SMOKER", "LIQUID"), "액상형이 흡연자 중 가장 낮은 심각도");
+        assertEquals(2, calculator.smokingSeverity("SMOKER", "HEATED"));
+        assertEquals(3, calculator.smokingSeverity("SMOKER", "CIGARETTE"), "연초가 가장 높은 심각도");
+        assertEquals(3, calculator.smokingSeverity("SMOKER", null), "흡연자인데 종류를 모르면 가장 엄격하게 취급");
     }
 
     @Test
-    void smokingMismatchPenaltyPreservesDifferenceBetweenOtherwiseUnequalMatches() {
-        // 흡연 불일치는 둘 다 있지만, 하나는 나머지 문항도 이상적이고 다른 하나는 청결에서
-        // 추가로 어긋난다. 상한(cap) 방식이면 둘 다 같은 값으로 뭉개지지만, 차감 방식이면
-        // 원점수 차이가 그대로 유지돼야 한다.
-        List<Integer> a = idealBaseA();
-        a.set(11, 2); // 비흡연
-
-        List<Integer> onlySmokingMismatch = idealBaseB();
-        onlySmokingMismatch.set(11, 1); // 흡연
-
-        List<Integer> smokingAndCleanlinessMismatch = idealBaseB();
-        smokingAndCleanlinessMismatch.set(11, 1); // 흡연
-        smokingAndCleanlinessMismatch.set(4, 5); // 청결도 추가로 어긋남 (diff=2)
-
-        int betterScore = calculator.score(a, onlySmokingMismatch);
-        int worseScore = calculator.score(a, smokingAndCleanlinessMismatch);
-
-        assertTrue(betterScore > worseScore,
-                "흡연 불일치가 똑같이 있어도 다른 문항 궁합 차이가 점수에 그대로 반영돼야 함 (상한이면 둘 다 같아짐)");
+    void maxAcceptedSmokingSeverityMatchesToleranceAnswerOrder() {
+        assertEquals(3, calculator.maxAcceptedSmokingSeverity(1), "연초도 괜찮으면 전부 허용");
+        assertEquals(2, calculator.maxAcceptedSmokingSeverity(2), "궐련형까지 허용이면 연초만 제외");
+        assertEquals(1, calculator.maxAcceptedSmokingSeverity(3), "액상형까지 허용이면 궐련형·연초 제외");
+        assertEquals(0, calculator.maxAcceptedSmokingSeverity(4), "흡연자가 싫으면 비흡연자만 허용");
     }
 
     @Test
