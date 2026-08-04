@@ -30,9 +30,17 @@
 .profile-board-region-field {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .profile-board-region-field .region-picker-panel {
+  left: auto;
+  right: 0;
+}
+
+.profile-board-region-field .rent-range-panel {
   left: auto;
   right: 0;
 }
@@ -245,6 +253,11 @@
   }
 
   .profile-board-region-field .region-picker-panel {
+    left: 0;
+    right: auto;
+  }
+
+  .profile-board-region-field .rent-range-panel {
     left: 0;
     right: auto;
   }
