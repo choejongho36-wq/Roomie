@@ -28,6 +28,9 @@ public class CompatibilityService {
     // SurveyQuestions.ts의 문항 id 19("희망 월세")는 0-base로 answers 배열의 19번째(index 18)에 해당한다.
     private static final int RENT_QUESTION_INDEX = 18;
 
+    // SurveyQuestions.ts의 문항 id 12("흡연 허용도")는 0-base로 answers 배열의 12번째(index 11)에 해당한다.
+    private static final int SMOKING_TOLERANCE_QUESTION_INDEX = 11;
+
     public List<RecommendationResponse> recommendForUser(Long userId) {
         List<SurveyResult> ownSurveys = surveyResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
         if (ownSurveys.isEmpty()) {
@@ -43,6 +46,11 @@ public class CompatibilityService {
         // 호환도는 "내가 볼 때" 기준이라 내가 설정한 가중치로 상대방들을 채점한다.
         Map<Integer, Integer> myWeights = userCategoryWeightService.getWeights(userId);
 
+        // 흡연 허용도(설문 12번)도 "내가 볼 때" 기준 — 내가 어디까지 허용하는지로 상대를 거른다.
+        int myMaxSmokingSeverity = myAnswers.size() > SMOKING_TOLERANCE_QUESTION_INDEX
+                ? compatibilityCalculator.maxAcceptedSmokingSeverity(myAnswers.get(SMOKING_TOLERANCE_QUESTION_INDEX))
+                : 0;
+
         Map<Long, SurveyResult> latestByUser = surveyResultRepository.findByUserIdNot(userId).stream()
                 .collect(Collectors.toMap(SurveyResult::getUserId, r -> r,
                         BinaryOperator.maxBy(Comparator.comparing(SurveyResult::getCompletedAt))));
@@ -55,13 +63,14 @@ public class CompatibilityService {
 
         return latestByUser.values().stream()
                 .filter(result -> !confirmedPartnerIds.contains(result.getUserId()))
-                .map(result -> buildRecommendation(result, myAnswers, myWeights))
+                .map(result -> buildRecommendation(result, myAnswers, myWeights, myMaxSmokingSeverity))
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(RecommendationResponse::compatibilityScore).reversed())
                 .toList();
     }
 
-    private RecommendationResponse buildRecommendation(SurveyResult result, List<Integer> myAnswers, Map<Integer, Integer> myWeights) {
+    private RecommendationResponse buildRecommendation(
+            SurveyResult result, List<Integer> myAnswers, Map<Integer, Integer> myWeights, int myMaxSmokingSeverity) {
         List<Integer> otherAnswers = parseAnswers(result.getAnswers());
         if (otherAnswers.isEmpty()) {
             return null;
@@ -75,6 +84,12 @@ public class CompatibilityService {
         // 탈퇴 시 설문결과도 같이 지우고 있지만, 그 로직이 생기기 전에 이미 탈퇴한 계정처럼
         // 남아있을 수 있는 예외 케이스를 위해 여기서도 한 번 더 확실히 걸러냄
         if ("WITHDRAWN".equals(user.getStatus())) {
+            return null;
+        }
+
+        // 내가 허용하는 흡연 수준을 넘는 상대는 점수 볼 것도 없이 추천 목록에서 제외한다.
+        int candidateSmokingSeverity = compatibilityCalculator.smokingSeverity(user.getSmoking(), user.getSmokingType());
+        if (candidateSmokingSeverity > myMaxSmokingSeverity) {
             return null;
         }
 

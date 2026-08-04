@@ -54,7 +54,7 @@ public class CompatibilityCalculator {
             2, // 9 이어폰 사용
             2, // 10 실내 취식
             1, // 11 야식
-            3, // 12 흡연 — 아래 SMOKING_MISMATCH_PENALTY_POINTS로 별도 처리하므로 이 가중치 자체는 안 쓰임
+            3, // 12 흡연 — 채점에서 제외되는 문항이라 이 가중치 자체는 안 쓰임 (아래 SMOKING_QUESTION_ID 참고)
             2, // 13 음주
             2, // 14 음주 후 행동
             2, // 15 친구 초대
@@ -65,11 +65,11 @@ public class CompatibilityCalculator {
             2  // 20 방 크기
     };
 
-    // 흡연은 "얼마나 피우냐"의 정도가 아니라 "피우냐 / 아예 안 피우냐"의 범주 문제라,
-    // 사용자가 설정한 가중치 단계를 따르지 않고 항상 고정 점수를 차감하는 별도 규칙을 쓴다.
+    // 흡연(12번)은 더 이상 "답변 거리"로 채점하지 않는다. 이 문항은 이제 "상대방의 흡연을
+    // 내가 어디까지 허용하는지"를 묻는 허용도 문항이라 두 사람의 답을 서로 비교하는 게 의미가
+    // 없고, 실제 흡연 여부/종류(User.smoking, smokingType)와 비교해 추천 목록 자체에서
+    // 거르는 필터로 CompatibilityService에서 처리한다. 그래서 점수 계산 루프에서는 건너뛴다.
     private static final int SMOKING_QUESTION_ID = 12;
-    private static final int SMOKER_MAX_ANSWER = 1; // 1 흡연, 2 비흡연
-    private static final int SMOKING_MISMATCH_PENALTY_POINTS = 45;
 
     // 화장실 사용 시간대는 "얼마나 다르냐"가 아니라 "겹치냐 안 겹치냐"의 문제다.
     // 같은 시간대면 최대 페널티, 조금이라도 다르면(정도 무관) 페널티 없음.
@@ -105,27 +105,18 @@ public class CompatibilityCalculator {
         }
 
         double totalDeduction = 0.0;
-        boolean smokingMismatch = false;
 
         for (int i = 0; i < count; i++) {
             int questionId = i + 1;
 
             if (questionId == SMOKING_QUESTION_ID) {
-                // 흡연자/비흡연자 경계만 본다 (선택지 자체가 2개뿐이라 세부 정도 차이가 없음).
-                // 가중치 슬라이더와 무관하게 아래에서 고정 점수로만 차감하므로 weight는 쓰지 않는다.
-                boolean aSmokes = a.get(i) <= SMOKER_MAX_ANSWER;
-                boolean bSmokes = b.get(i) <= SMOKER_MAX_ANSWER;
-                smokingMismatch = aSmokes != bSmokes;
+                // 실제 흡연 여부/종류 기반 필터링은 CompatibilityService에서 처리하므로 채점에서 제외.
                 continue;
             }
 
             int weight = weightFor(questionId, customWeights);
             double penaltyRatio = penaltyRatioFor(questionId, a.get(i), b.get(i));
             totalDeduction += WEIGHT_MAX_DEDUCTION[weight] * penaltyRatio;
-        }
-
-        if (smokingMismatch) {
-            totalDeduction += SMOKING_MISMATCH_PENALTY_POINTS;
         }
 
         int score = (int) Math.round(100 - totalDeduction);
@@ -163,5 +154,32 @@ public class CompatibilityCalculator {
     // 커스텀 가중치는 프론트에서 1~3 중 하나로 저장되지만, API로 범위 밖 값이 들어와도 계산이 깨지지 않도록 방어한다.
     private int clampWeight(int weight) {
         return Math.max(1, Math.min(3, weight));
+    }
+
+    // 회원가입 시 입력하는 실제 흡연 여부/종류(User.smoking, smokingType)의 심각도.
+    // 비흡연(0) < 액상형 전자담배(1) < 궐련형 전자담배(2) < 연초(3).
+    // CompatibilityService가 추천 목록에서 이 값과 상대의 허용도를 비교해 걸러낸다.
+    public int smokingSeverity(String smoking, String smokingType) {
+        if (!"SMOKER".equals(smoking)) {
+            return 0;
+        }
+        return switch (smokingType) {
+            case "LIQUID" -> 1;
+            case "HEATED" -> 2;
+            case "CIGARETTE" -> 3;
+            default -> 3;
+        };
+    }
+
+    // 설문 12번(흡연 허용도) 답변이 받아들이는 최대 심각도.
+    // 1=연초도 괜찮음(전부 허용) ~ 4=흡연자 싫음(비흡연자만 허용).
+    public int maxAcceptedSmokingSeverity(int toleranceAnswer) {
+        return switch (toleranceAnswer) {
+            case 1 -> 3;
+            case 2 -> 2;
+            case 3 -> 1;
+            case 4 -> 0;
+            default -> 0; // 알 수 없는 답변은 안전하게 가장 엄격한 기준
+        };
     }
 }
