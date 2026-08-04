@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ProfileCompletionGuard from "./components/ProfileCompletionGuard";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import FindIdPage from "./pages/FindIdPage";
@@ -45,7 +46,8 @@ function App() {
         <ChatProvider>
           <Navbar />
           <main className="app-main">
-            <Routes>
+            <ProfileCompletionGuard>
+              <Routes>
               <Route path="/" element={<MainPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/find-id" element={<FindIdPage />} />
@@ -85,6 +87,7 @@ function App() {
               </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </ProfileCompletionGuard>
           </main>
           <Footer />
         </ChatProvider>
