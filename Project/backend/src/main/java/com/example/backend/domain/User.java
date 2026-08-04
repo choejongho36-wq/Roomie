@@ -128,6 +128,12 @@ public class User {
 
     public void withdraw() {
         this.status = "WITHDRAWN";
+        // 탈퇴해도 행은 남겨야 다른 테이블(채팅/게시글/매칭 등)의 참조가 안 깨지지만,
+        // login_id/email/nickname은 UNIQUE 제약이라 그대로 두면 원래 값으로 재가입이 영영 불가능해짐.
+        // 그래서 이 시점에 아무도 안 쓸 값으로 바꿔서, 원래 아이디/이메일/닉네임을 다시 쓸 수 있게 풀어줌.
+        this.loginId = "withdrawn_" + this.userId;
+        this.email = "withdrawn_" + this.userId + "@roomie.local";
+        this.nickname = "탈퇴회원" + this.userId;
     }
 
     /**
@@ -160,11 +166,17 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
-    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone) {
+    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone, String region, String job) {
         this.gender = gender;
         this.birthDate = birthDate;
         if (phone != null && !phone.isBlank()) {
             this.phone = phone;
+        }
+        if (region != null && !region.isBlank()) {
+            this.region = region;
+        }
+        if (job != null && !job.isBlank()) {
+            this.job = job;
         }
     }
 
@@ -213,6 +225,6 @@ public class User {
     }
 
     public boolean needsAdditionalInfo() {
-        return this.gender == null || this.birthDate == null;
+        return this.gender == null || this.birthDate == null || this.region == null || this.job == null;
     }
 }

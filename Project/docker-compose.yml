@@ -13,6 +13,8 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
       GROQ_API_KEY: ${GROQ_API_KEY}
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-20b}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     volumes:
       - backend_uploads:/app/uploads
     restart: unless-stopped
