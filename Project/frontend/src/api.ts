@@ -12,6 +12,28 @@ import type {
 } from "./types/survey";
 import type { ChatMessage, Conversation, NotificationItem } from "./types/chat";
 import type { MatchedPair } from "./types/matchedPair";
+import { showToast } from "./components/Toast";
+
+// 세션 만료 처리가 짧은 시간에 중복으로 여러 번 실행되는 걸 막는 플래그
+// (401이 한꺼번에 여러 요청에서 터질 수 있어서, 토스트/리다이렉트가 여러 번 안 뜨게 함)
+let handlingSessionExpiry = false;
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const hadToken = Boolean(sessionStorage.getItem("token"));
+    if (axios.isAxiosError(error) && error.response?.status === 401 && hadToken && !handlingSessionExpiry) {
+      handlingSessionExpiry = true;
+      showToast("로그인이 만료됐어요. 다시 로그인해주세요.");
+      // 실제 로그아웃 처리(토큰/유저 상태 정리)는 AuthContext가, 모달/리다이렉트는 Navbar가 이 이벤트를 듣고 처리함
+      window.dispatchEvent(new CustomEvent("session-expired"));
+      setTimeout(() => {
+        handlingSessionExpiry = false;
+      }, 3000);
+    }
+    return Promise.reject(error);
+  }
+);
 
 const authHeader = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 

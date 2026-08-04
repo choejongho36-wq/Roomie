@@ -29,6 +29,16 @@ function Navbar() {
 
   const isOnVividBackground = VIVID_BACKGROUND_PATHS.has(location.pathname);
 
+  // api.ts 인터셉터가 401(세션 만료)을 감지하면, 홈으로 보내고 로그인 모달을 자동으로 띄움
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      navigate("/");
+      setIsLoginOpen(true);
+    };
+    window.addEventListener("session-expired", handleSessionExpired);
+    return () => window.removeEventListener("session-expired", handleSessionExpired);
+  }, [navigate]);
+
   // 하우스 드롭다운(관리비정산/청소당번)은 매칭이 확정돼 실제 하우스가 있는 사람에게만 보여준다.
   useEffect(() => {
     if (!token) {

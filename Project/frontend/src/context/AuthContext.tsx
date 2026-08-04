@@ -13,7 +13,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
+  const [token, setToken] = useState<string | null>(() => sessionStorage.getItem("token"));
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -26,13 +26,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => setUser(null));
   }, [token]);
 
+  // api.ts의 axios 인터셉터가 401(세션 만료)을 감지하면 이 이벤트를 쏨 -> 여기서 로그인 상태를 정리
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      sessionStorage.removeItem("token");
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener("session-expired", handleSessionExpired);
+    return () => window.removeEventListener("session-expired", handleSessionExpired);
+  }, []);
+
   const login = (newToken: string) => {
-    localStorage.setItem("token", newToken);
+    sessionStorage.setItem("token", newToken);
     setToken(newToken);
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     setToken(null);
     setUser(null);
   };
