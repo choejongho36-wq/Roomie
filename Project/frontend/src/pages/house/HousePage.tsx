@@ -3,16 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, getMatchedPair } from "../../api";
 import type { MatchedPair } from "../../types/matchedPair";
+import { HOUSE_MENU } from "./HouseSidebar";
 import "../mypage/MyPageContent.css";
 import "../MatchedPairPage.css";
 import "./HousePage.css";
 
 const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : null);
-
-const HOUSE_MENU_ITEMS = [
-  { to: "bills", label: "관리비 정산", description: "함께 낸 관리비를 정산해요." },
-  { to: "chores", label: "청소당번", description: "이번 주 청소 담당을 확인해요." },
-];
 
 function HousePage() {
   const { id } = useParams<{ id: string }>();
@@ -49,8 +45,8 @@ function HousePage() {
       )}
 
       <div className="house-menu">
-        {HOUSE_MENU_ITEMS.map((item) => (
-          <Link key={item.to} to={`/house/${id}/${item.to}`} className="house-menu-card">
+        {HOUSE_MENU.map((item) => (
+          <Link key={item.path} to={`/house/${id}/${item.path}`} className="house-menu-card">
             <strong>{item.label}</strong>
             <span>{item.description}</span>
           </Link>

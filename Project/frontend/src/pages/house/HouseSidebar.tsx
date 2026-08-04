@@ -2,6 +2,13 @@ import { NavLink, useParams } from "react-router-dom";
 import { Icon } from "../../components/mypage/MyPageSidebar";
 import "../../components/mypage/MyPageSidebar.css";
 
+// 사이드바와 하우스 홈의 메뉴 카드가 같은 목록을 쓰도록 여기서 한 번만 정의한다.
+export const HOUSE_MENU = [
+  { path: "bills", label: "관리비 정산", icon: "sliders", description: "함께 낸 관리비를 정산해요." },
+  { path: "chores", label: "청소당번", icon: "clock", description: "이번 주 청소 담당을 확인해요." },
+  { path: "cleaning", label: "청소 구역", icon: "gear", description: "누가 어디를 치울지 나눠요." },
+];
+
 // 마이페이지 사이드바(components/mypage/MyPageSidebar)와 완전히 같은 클래스를 써서
 // 갖다 대면 펼쳐지는 동작과 크기를 그대로 맞춘다.
 function HouseSidebar() {
@@ -9,8 +16,7 @@ function HouseSidebar() {
 
   const navItems = [
     { to: `/house/${id}`, label: "하우스 홈", icon: "home", end: true },
-    { to: `/house/${id}/bills`, label: "관리비 정산", icon: "sliders", end: false },
-    { to: `/house/${id}/chores`, label: "청소당번", icon: "clock", end: false },
+    ...HOUSE_MENU.map((item) => ({ ...item, to: `/house/${id}/${item.path}`, end: false })),
   ];
 
   return (
