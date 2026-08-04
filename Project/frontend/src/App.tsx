@@ -35,7 +35,6 @@ import HouseEntryPage from "./pages/house/HouseEntryPage";
 import HouseLayout from "./pages/house/HouseLayout";
 import HousePage from "./pages/house/HousePage";
 import HouseBillsPage from "./pages/house/HouseBillsPage";
-import HouseChoresPage from "./pages/house/HouseChoresPage";
 import HouseCleaningPage from "./pages/house/HouseCleaningPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -73,7 +72,6 @@ function App() {
               <Route path="/house/:id" element={<HouseLayout />}>
                 <Route index element={<HousePage />} />
                 <Route path="bills" element={<HouseBillsPage />} />
-                <Route path="chores" element={<HouseChoresPage />} />
                 <Route path="cleaning" element={<HouseCleaningPage />} />
               </Route>
               <Route path="/mypage" element={<MyPageLayout />}>

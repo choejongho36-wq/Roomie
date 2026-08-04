@@ -175,10 +175,12 @@ export const surveyQuestions: SurveyQuestion[] = [
     id: 12,
     category: "흡연",
     defaultWeight: 3,
-    question: "{name}님은 흡연 하시나요?",
+    question: "{name}님은 룸메이트의 흡연, 어디까지 괜찮나요?",
     options: [
-      { score: 1, text: "흡연해." },
-      { score: 2, text: "흡연하지 않아." },
+      { score: 1, text: "흡연 괜찮아." },
+      { score: 2, text: "전담(궐련형)은 괜찮아." },
+      { score: 3, text: "전담(액상형)까진 괜찮아." },
+      { score: 4, text: "흡연자는 싫어." },
     ],
   },
   {

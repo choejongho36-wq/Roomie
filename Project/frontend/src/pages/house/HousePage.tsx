@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, getMatchedPair } from "../../api";
 import type { MatchedPair } from "../../types/matchedPair";
 import { HOUSE_MENU } from "./HouseSidebar";
+import defaultAvatar from "../../assets/Roomie_logo.png";
 import "../mypage/MyPageContent.css";
 import "../MatchedPairPage.css";
 import "./HousePage.css";
@@ -30,11 +31,7 @@ function HousePage() {
           <div className="matched-pair-avatars">
             {[pair.me, pair.partner].map((person) => (
               <div key={person.userId} className="matched-pair-avatar-item">
-                {getAvatarSrc(person.profileImageUrl) ? (
-                  <img src={getAvatarSrc(person.profileImageUrl)!} alt="" />
-                ) : (
-                  <div className="matched-pair-avatar-placeholder">{person.nickname.slice(0, 1)}</div>
-                )}
+                <img src={getAvatarSrc(person.profileImageUrl) ?? defaultAvatar} alt="" />
                 <span>{person.nickname}</span>
               </div>
             ))}

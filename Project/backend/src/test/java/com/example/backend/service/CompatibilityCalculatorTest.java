@@ -54,14 +54,37 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
-    void smokingMismatchIsHardCappedEvenWhenEverythingElseIsIdeal() {
+    void smokingMismatchDeductsFixedPointsEvenWhenEverythingElseIsIdeal() {
         List<Integer> a = idealBaseA();
         a.set(11, 2); // 비흡연
 
         List<Integer> b = idealBaseB();
         b.set(11, 1); // 흡연 (나머지는 전부 이상적)
 
-        assertTrue(calculator.score(a, b) <= 50, "다른 문항이 전부 맞아도 흡연 여부가 다르면 50점을 넘으면 안 됨");
+        // 다른 문항이 전부 이상적이면 100점인데, 흡연 불일치로 45점을 깎아 55점이 된다.
+        assertEquals(55, calculator.score(a, b), "흡연 불일치는 상한이 아니라 고정 점수 차감이어야 함");
+    }
+
+    @Test
+    void smokingMismatchPenaltyPreservesDifferenceBetweenOtherwiseUnequalMatches() {
+        // 흡연 불일치는 둘 다 있지만, 하나는 나머지 문항도 이상적이고 다른 하나는 청결에서
+        // 추가로 어긋난다. 상한(cap) 방식이면 둘 다 같은 값으로 뭉개지지만, 차감 방식이면
+        // 원점수 차이가 그대로 유지돼야 한다.
+        List<Integer> a = idealBaseA();
+        a.set(11, 2); // 비흡연
+
+        List<Integer> onlySmokingMismatch = idealBaseB();
+        onlySmokingMismatch.set(11, 1); // 흡연
+
+        List<Integer> smokingAndCleanlinessMismatch = idealBaseB();
+        smokingAndCleanlinessMismatch.set(11, 1); // 흡연
+        smokingAndCleanlinessMismatch.set(4, 5); // 청결도 추가로 어긋남 (diff=2)
+
+        int betterScore = calculator.score(a, onlySmokingMismatch);
+        int worseScore = calculator.score(a, smokingAndCleanlinessMismatch);
+
+        assertTrue(betterScore > worseScore,
+                "흡연 불일치가 똑같이 있어도 다른 문항 궁합 차이가 점수에 그대로 반영돼야 함 (상한이면 둘 다 같아짐)");
     }
 
     @Test
@@ -99,8 +122,8 @@ class CompatibilityCalculatorTest {
 
     @Test
     void penaltySpreadExponentPenalizesLargerDifferencesDisproportionatelyMore() {
-        // 모든 일반 문항(화장실/벌레/흡연 제외)에 같은 크기의 차이를 줘서, 문항 하나의 차이가
-        // 전체 가중치(44)에 묻히지 않고 점수에 뚜렷하게 드러나게 한다.
+        // 모든 일반 문항(화장실/벌레/흡연 제외)에 같은 크기의 차이를 줘서, 지수 보정 효과가
+        // 점수에 뚜렷하게 드러나게 한다.
         List<Integer> base = idealBaseA();
 
         List<Integer> diffOneEverywhere = idealBaseB();
@@ -136,6 +159,25 @@ class CompatibilityCalculatorTest {
 
         assertTrue(loweredWeightScore > defaultWeightScore, "가중치를 낮추면 그 문항의 불일치가 전체 점수에 덜 반영돼야 함");
         assertEquals(defaultWeightScore, raisedWeightScore, "기본값과 같은 커스텀 가중치는 점수에 변화가 없어야 함");
+    }
+
+    @Test
+    void weightLevelDeductsPointsDirectlyInsteadOfBeingDilutedByAverage() {
+        // 청결(5번)에서 완전히 어긋난 상황을 낮음/높음으로 각각 설정했을 때, 가중 평균 방식이었던
+        // 예전엔 문항 하나의 가중치를 아무리 바꿔도 최대 4~5점밖에 안 움직였다. 지금은 가중치 단계별로
+        // 정해진 점수를 직접 빼는 방식이라 두 자릿수 차이가 나야 한다.
+        List<Integer> a = idealBaseA();
+        a.set(4, 1);
+        List<Integer> b = idealBaseB();
+        b.set(4, 5); // 청결 완전 불일치 (diff=4)
+
+        int lowWeightScore = calculator.score(a, b, Map.of(5, 1)); // 낮음
+        int highWeightScore = calculator.score(a, b, Map.of(5, 3)); // 높음
+
+        assertEquals(98, lowWeightScore, "낮음이면 완전히 어긋나도 최대 2점만 깎여야 함");
+        assertEquals(85, highWeightScore, "높음이면 완전히 어긋났을 때 15점 깎여야 함");
+        assertTrue(lowWeightScore - highWeightScore >= 10,
+                "가중치 차이가 두 자릿수 점수 차이로 체감돼야 함 (예전 가중 평균 방식은 최대 4~5점 차이였음)");
     }
 
     @Test

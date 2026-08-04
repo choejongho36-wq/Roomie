@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getMatchedPair } from "../../api";
+import { API_ORIGIN, getMatchedPair } from "../../api";
 import type { MatchedPair } from "../../types/matchedPair";
 import "../mypage/MyPageContent.css";
 import "./HouseCard.css";
 import "./HouseCleaningPage.css";
+
+const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : null);
 
 const DAYS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 type Day = (typeof DAYS)[number];
@@ -76,6 +78,11 @@ function HouseCleaningPage() {
     partner: pair?.partner.nickname ?? "룸메이트",
   };
 
+  const avatars: Record<Assignee, string | null> = {
+    me: getAvatarSrc(pair?.me.profileImageUrl ?? null),
+    partner: getAvatarSrc(pair?.partner.profileImageUrl ?? null),
+  };
+
   const plan = plans[selected];
   const updatePlan = (patch: Partial<Plan>) =>
     setPlans((prev) => ({ ...prev, [selected]: { ...prev[selected], ...patch } }));
@@ -128,7 +135,7 @@ function HouseCleaningPage() {
 
   return (
     <div className="mypage-panel">
-      <h1 className="mypage-panel-title">청소 구역</h1>
+      <h1 className="mypage-panel-title">청소당번</h1>
       <p className="mypage-panel-desc">누가 어디를, 무슨 요일에 치울지 나눠보세요.</p>
 
       <div className="house-card house-clean-members">
@@ -139,7 +146,11 @@ function HouseCleaningPage() {
             className={`house-clean-member${selected === who ? " house-clean-member-active" : ""}`}
             onClick={() => setSelected(who)}
           >
-            <span className={`house-clean-avatar house-clean-avatar-${who}`}>{names[who][0]}</span>
+            {avatars[who] ? (
+              <img className="house-clean-avatar" src={avatars[who]!} alt="" />
+            ) : (
+              <span className={`house-clean-avatar house-clean-avatar-${who}`}>{names[who][0]}</span>
+            )}
             <span className="house-clean-member-text">
               <span className="house-clean-member-name">{names[who]}</span>
               <span className="house-clean-member-rooms">
