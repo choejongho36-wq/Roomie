@@ -43,6 +43,17 @@ function ProfileBoardPage() {
   const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
   const [aiExplanationError, setAiExplanationError] = useState("");
 
+  // 이 페이지에 있는 동안만 페이지 전체 스크롤을 막고 뷰포트 높이에 레이아웃을 맞춰서,
+  // 헤더~푸터가 한 화면에 다 보이고 프로필 목록만 자체 스크롤되게 한다.
+  // (CSS는 ProfileBoardPage.css의 #root.profile-board-viewport-lock 규칙 참고)
+  useEffect(() => {
+    const root = document.getElementById("root");
+    root?.classList.add("profile-board-viewport-lock");
+    return () => {
+      root?.classList.remove("profile-board-viewport-lock");
+    };
+  }, []);
+
   useEffect(() => {
     if (!token) {
       setProfiles(null);
