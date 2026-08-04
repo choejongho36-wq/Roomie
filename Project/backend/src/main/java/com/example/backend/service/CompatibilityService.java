@@ -58,9 +58,14 @@ public class CompatibilityService {
         if (userOpt.isEmpty()) {
             return null;
         }
+        User user = userOpt.get();
+        // 탈퇴 시 설문결과도 같이 지우고 있지만, 그 로직이 생기기 전에 이미 탈퇴한 계정처럼
+        // 남아있을 수 있는 예외 케이스를 위해 여기서도 한 번 더 확실히 걸러냄
+        if ("WITHDRAWN".equals(user.getStatus())) {
+            return null;
+        }
 
         int score = compatibilityCalculator.score(myAnswers, otherAnswers, myWeights);
-        User user = userOpt.get();
         List<String> tags = toTags(user.getTags());
 
         return new RecommendationResponse(
