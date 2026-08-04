@@ -40,7 +40,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("account_suspended", "정지된 계정입니다. 고객센터에 문의해주세요.", null));
         }
-        // 탈퇴 계정은 findOrCreateUser 안에서 이미 재활성화 처리가 끝난 상태로 넘어옴
 
         return new CustomOAuth2User(user, oAuth2User.getAttributes());
     }
@@ -49,39 +48,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String provider = userInfo.getProvider(); // "KAKAO"
         String providerId = userInfo.getProviderId();
 
+        // 탈퇴한 계정은 withdraw() 시점에 provider_id가 익명화돼서 여기서 다시 안 잡힘
+        // -> 같은 소셜 계정으로 다시 로그인하면 완전히 새로운 계정으로 가입됨 (탈퇴 전 활동과 무관)
         return userRepository.findByProviderAndProviderId(provider, providerId)
-                .map(existing -> "WITHDRAWN".equals(existing.getStatus())
-                        ? reactivateUser(existing, provider, userInfo)
-                        : existing)
                 .orElseGet(() -> registerNewSocialUser(provider, providerId, userInfo));
-    }
-
-    // 탈퇴했던 계정이 같은 소셜 계정으로 다시 로그인하면, 차단하지 않고 신규가입처럼 다시 시작하게 해줌
-    private User reactivateUser(User user, String provider, OAuth2UserInfo userInfo) {
-        String email = userInfo.getEmail();
-
-        // registerNewSocialUser와 동일하게, 다른 활성 계정이 이미 쓰고 있는 이메일이면 막음
-        if (email != null && userRepository.existsByEmail(email)) {
-            throw new OAuth2AuthenticationException(
-                    new OAuth2Error("email_already_exists", "이미 가입된 이메일입니다. 일반 로그인으로 시도해주세요.", null)
-            );
-        }
-
-        String loginId = generateUniqueLoginId(provider);
-        String rawNickname = (userInfo.getNickname() != null && !userInfo.getNickname().isBlank())
-                ? userInfo.getNickname()
-                : provider + "유저";
-        if (rawNickname.length() > 25) {
-            rawNickname = rawNickname.substring(0, 25);
-        }
-        String nickname = generateUniqueNickname(rawNickname);
-
-        String finalEmail = (email != null && !email.isBlank())
-                ? email
-                : provider.toLowerCase() + "_" + userInfo.getProviderId() + "@social.roomie.local";
-
-        user.reactivateAsSocialUser(loginId, finalEmail, nickname, userInfo.getProfileImageUrl());
-        return userRepository.save(user);
     }
 
     private User registerNewSocialUser(String provider, String providerId, OAuth2UserInfo userInfo) {

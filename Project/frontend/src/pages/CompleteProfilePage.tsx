@@ -18,7 +18,7 @@ const getDaysInMonth = (year: number, month: number): number => {
 
 function CompleteProfilePage() {
   const navigate = useNavigate();
-  const { token, setUser } = useAuth();
+  const { token, setUser, logout } = useAuth();
 
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -87,6 +87,13 @@ function CompleteProfilePage() {
       setError(message);
       setSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    // 여기서 만든 계정 자체는 DB에 남지만(다음에 같은 소셜 계정으로 로그인하면 이어서 계속할 수 있음),
+    // 지금 로그인 상태만 끊어서 "가입 중" 상태로 사이트를 돌아다니는 걸 막음
+    logout();
+    navigate("/", { replace: true });
   };
 
   return (
@@ -190,6 +197,14 @@ function CompleteProfilePage() {
 
         <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? "저장 중..." : "완료"}
+        </button>
+        <button
+          type="button"
+          className="complete-profile-cancel-btn"
+          onClick={handleCancel}
+          disabled={submitting}
+        >
+          취소하고 홈으로
         </button>
       </form>
     </div>

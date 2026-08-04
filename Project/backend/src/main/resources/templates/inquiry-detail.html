@@ -62,7 +62,7 @@
                     </div>
                     <div class="sb-sidenav-footer">
                         <div class="small">Logged in as:</div>
-                        관리자
+                        <span th:text="${adminNickname}">관리자</span>
                     </div>
                 </nav>
             </div>
@@ -76,14 +76,60 @@
                             <li class="breadcrumb-item active" th:text="${inquiry.title}">제목</li>
                         </ol>
                         <div class="card mb-4">
-                            <div class="card-header">
-                                <span th:text="${inquiry.category}">분류</span> ·
-                                <span th:text="${authorName} ?: '알 수 없음'">작성자</span> ·
-                                <span th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                            <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <span th:text="${inquiry.category}">분류</span> ·
+                                    <span th:text="${authorName} ?: '알 수 없음'">작성자</span> ·
+                                    <span th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-roomie-warning me-1" data-bs-toggle="modal" data-bs-target="#editInquiryModal">수정</button>
+                                    <form th:action="@{'/admin/inquiries/' + ${inquiry.inquiryId} + '/delete'}" method="post" class="d-inline">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('이 문의를 삭제할까요?');">삭제</button>
+                                    </form>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <h5 th:text="${inquiry.title}">제목</h5>
                                 <p style="white-space: pre-wrap;" th:text="${inquiry.content}">내용</p>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="editInquiryModal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form th:action="@{'/admin/inquiries/' + ${inquiry.inquiryId} + '/edit'}" method="post">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">문의 수정</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">제목</label>
+                                                <input type="text" name="title" class="form-control" th:value="${inquiry.title}" required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">분류</label>
+                                                <select name="category" class="form-select" required>
+                                                    <option value="버그" th:selected="${inquiry.category == '버그'}">버그</option>
+                                                    <option value="신고" th:selected="${inquiry.category == '신고'}">신고</option>
+                                                    <option value="제안" th:selected="${inquiry.category == '제안'}">제안</option>
+                                                    <option value="문의" th:selected="${inquiry.category == '문의'}">문의</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">내용</label>
+                                                <textarea name="content" class="form-control" rows="6" required th:text="${inquiry.content}"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">취소</button>
+                                            <button type="submit" class="btn btn-primary">저장</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                         <div class="card mb-4">

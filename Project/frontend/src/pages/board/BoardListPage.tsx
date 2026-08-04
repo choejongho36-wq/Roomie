@@ -130,17 +130,15 @@ function BoardListPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredPosts.map((post, index) => (
+              {filteredPosts.map((post) => (
                 <tr
                   key={post.postId}
                   className="board-table-row"
                   onClick={() => navigate(`/board/${post.postId}`)}
                 >
-                  {/* 게시글 고유 id(postId)는 게시판 구분 없이 전체 글에 걸쳐 매겨지는 값이라
-                      그대로 쓰면 모집/고민 게시판 번호가 섞이고, 삭제해도 auto-increment라
-                      숫자가 줄어들지 않고 구멍이 남는다. 그래서 지금 이 목록(현재 게시판/필터
-                      기준)에서의 순서로 매번 다시 계산해서 보여준다. */}
-                  <td className="board-table-number-cell">{filteredPosts.length - index}</td>
+                  {/* 관리자 페이지(게시글 관리)의 ID 열과 값을 일치시키기 위해, 화면에 다시 계산한
+                      순번이 아니라 실제 게시글 고유 id(postId)를 그대로 보여준다. */}
+                  <td className="board-table-number-cell">{post.postId}</td>
                   <td className="board-table-title-cell">
                     <Link to={`/board/${post.postId}`} onClick={(e) => e.stopPropagation()}>
                       {post.title || post.region || "제목 없음"}

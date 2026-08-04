@@ -25,6 +25,9 @@ public class CompatibilityService {
     private final UserCategoryWeightService userCategoryWeightService;
     private final MatchedPairRepository matchedPairRepository;
 
+    // SurveyQuestions.ts의 문항 id 19("희망 월세")는 0-base로 answers 배열의 19번째(index 18)에 해당한다.
+    private static final int RENT_QUESTION_INDEX = 18;
+
     public List<RecommendationResponse> recommendForUser(Long userId) {
         List<SurveyResult> ownSurveys = surveyResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
         if (ownSurveys.isEmpty()) {
@@ -73,6 +76,8 @@ public class CompatibilityService {
         User user = userOpt.get();
         List<String> tags = toTags(user.getTags());
 
+        RentRange rentRange = extractRentRange(otherAnswers);
+
         return new RecommendationResponse(
                 result.getUserId(),
                 user.getNickname(),
@@ -83,8 +88,36 @@ public class CompatibilityService {
                 calculateAge(user.getBirthDate()),
                 user.getJob(),
                 user.getRegion(),
-                user.getEmailVerified()
+                user.getEmailVerified(),
+                rentRange.min(),
+                rentRange.max()
         );
+    }
+
+    private record RentRange(Integer min, Integer max) {
+        private static final RentRange NONE = new RentRange(null, null);
+    }
+
+    // "희망 월세" 문항 응답(1~5점)을 실제 보기 문구가 가리키는 구간(만원)으로 환산한다.
+    // 단일 대표값 대신 구간 자체를 내려줘서, 프론트에서 선택한 슬라이더 범위와 "겹치기만
+    // 해도" 매칭되게 한다(예: 슬라이더 60~70과 응답 구간 70~100은 70에서 겹치므로 포함).
+    // 전세·년세(1번) 응답이거나 응답이 없으면 (null, null)로 반환해 필터에서 제외한다.
+    private RentRange extractRentRange(List<Integer> answers) {
+        if (answers.size() <= RENT_QUESTION_INDEX) {
+            return RentRange.NONE;
+        }
+        Integer score = answers.get(RENT_QUESTION_INDEX);
+        if (score == null) {
+            return RentRange.NONE;
+        }
+        return switch (score) {
+            case 1 -> RentRange.NONE;       // 전세·년세라 월세 없음
+            case 2 -> new RentRange(100, 9999); // 100만 원 이상 (사실상 상한 없음)
+            case 3 -> new RentRange(70, 100);   // 70~100만 원
+            case 4 -> new RentRange(50, 70);    // 50~70만 원
+            case 5 -> new RentRange(0, 50);     // 50만 원 미만
+            default -> RentRange.NONE;
+        };
     }
 
     private List<Integer> parseAnswers(String answersJson) {

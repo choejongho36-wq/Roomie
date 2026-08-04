@@ -20,6 +20,6 @@ public record UserResponse(
         String bio,
         String provider,
         Boolean emailVerified,
-        Boolean isAdmin
+        Boolean isAdmin,
+        Boolean needsAdditionalInfo
 ) {}
-
