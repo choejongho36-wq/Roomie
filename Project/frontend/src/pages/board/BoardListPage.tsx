@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types/board";
-import { FREE_BOARD_CATEGORIES } from "../../data/BoardCategories";
+import { FREE_BOARD_CATEGORIES, SPECIAL_BOARDS } from "../../data/BoardCategories";
 import { useAuth } from "../../context/AuthContext";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardListPage.css";
 
 const FREE_BOARD_LABEL = "자유 게시판";
-const ADMIN_ONLY_WRITE_BOARDS = ["공지사항", "이벤트"];
 
 const getProfileImageSrc = (url: string | null | undefined) => {
   if (!url) return null;
@@ -34,7 +33,7 @@ function BoardListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const canWrite = Boolean(user?.isAdmin) || !ADMIN_ONLY_WRITE_BOARDS.includes(boardType ?? "");
+  const canWrite = Boolean(user?.isAdmin) || !SPECIAL_BOARDS.includes(boardType ?? "");
 
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState("");
@@ -94,7 +93,10 @@ function BoardListPage() {
           </p>
         </div>
         {canWrite && (
-          <Link to="/board/write" className="btn btn-primary">
+          <Link
+            to={boardType && SPECIAL_BOARDS.includes(boardType) ? `/board/write?type=${encodeURIComponent(boardType)}` : "/board/write"}
+            className="btn btn-primary"
+          >
             글쓰기
           </Link>
         )}
