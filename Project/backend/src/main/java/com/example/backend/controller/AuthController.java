@@ -17,7 +17,10 @@ import com.example.backend.service.EmailVerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -103,5 +106,11 @@ public class AuthController {
     @PostMapping("/link-account")
     public ResponseEntity<LoginResponse> linkAccount(@Valid @RequestBody AccountLinkRequest request) {
         return ResponseEntity.ok(authService.linkAccount(request));
+    }
+
+    @PostMapping("/link-intent")
+    public ResponseEntity<Map<String, String>> createLinkIntent(Authentication authentication) {
+        String ticket = authService.createLinkIntent(authentication.getName());
+        return ResponseEntity.ok(Map.of("ticket", ticket));
     }
 }

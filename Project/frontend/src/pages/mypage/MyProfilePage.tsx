@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, updateBio, updateSmoking, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
+import { updateTags, updateBio, updateSmoking, changePassword, getMySurveys, withdraw, createLinkIntent, API_ORIGIN } from "../../api";
 import {
   PROFILE_TAG_GROUPS,
   PROFILE_TAGS,
@@ -248,6 +248,17 @@ function MyProfilePage() {
 
   const isSocialAccount = Boolean(user?.provider && user.provider !== "LOCAL");
 
+  const handleLinkKakao = async () => {
+    if (!token) return;
+    setWithdrawError("");
+    try {
+      const ticket = await createLinkIntent(token);
+      window.location.href = `${API_ORIGIN}/oauth2/authorization/kakao?intent=${encodeURIComponent(ticket)}`;
+    } catch (err) {
+      setWithdrawError(extractErrorMessage(err, "연동 시작에 실패했습니다."));
+    }
+  };
+
   const handleConfirmWithdraw = async () => {
     if (!token) return;
     setWithdrawError("");
@@ -436,161 +447,165 @@ function MyProfilePage() {
           )}
         </div>
 
-        {!editingTags ? (
-          <div className="profile-tags-view">
-            {savedTags.length > 0 && (
-              <div className="profile-tags">
-                {savedTags.map((tag) => {
-                  const variant = tagVariant(tag);
-                  return (
-                    <span
-                      key={tag}
-                      className={`profile-tag${variant !== "interest" ? ` profile-tag-${variant}` : ""}`}
-                    >
-                      {tag}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-            <button type="button" className="profile-tags-edit" onClick={startEditTags}>
-              태그 편집
-            </button>
-          </div>
-        ) : (
-          <div className="profile-tags-editor">
-            <p className="profile-tag-hint">
-              태그를 최대 {MAX_PROFILE_TAGS}개까지 넣을 수 있어요.
-              <span className="profile-tag-hint-count">
-                ({draftTags.length}/{MAX_PROFILE_TAGS})
-              </span>
-            </p>
-
-            <p className="profile-tag-group-title">MBTI</p>
-            <div className="profile-tag-row profile-tag-row-mbti">
-              {MBTI_TAGS.map((tag) => (
-                <button
-                  type="button"
-                  key={tag}
-                  className={`profile-tag profile-tag-selectable${draftMbti === tag ? " profile-tag-selected profile-tag-mbti" : ""
-                    }`}
-                  onClick={() => pickMbti(tag)}
-                >
-                  {tag}
+            {!editingTags ? (
+              <div className="profile-tags-view">
+                {savedTags.length > 0 && (
+                  <div className="profile-tags">
+                    {savedTags.map((tag) => {
+                      const variant = tagVariant(tag);
+                      return (
+                        <span
+                          key={tag}
+                          className={`profile-tag${variant !== "interest" ? ` profile-tag-${variant}` : ""}`}
+                        >
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                <button type="button" className="profile-tags-edit" onClick={startEditTags}>
+                  태그 편집
                 </button>
-              ))}
-            </div>
-
-            <p className="profile-tag-group-title">관심사</p>
-            <div className="profile-tag-row">
-              {PROFILE_TAG_GROUPS.map((group) => {
-                const picked = group.tags.filter((t) => draftTags.includes(t)).length;
-                return (
-                  <button
-                    type="button"
-                    key={group.label}
-                    className={`profile-tag profile-tag-selectable profile-tag-group-btn${activeGroup === group ? " profile-tag-selected" : ""
-                      }`}
-                    onClick={() => setActiveGroup(activeGroup === group ? null : group)}
-                  >
-                    {group.label}
-                    {picked > 0 && <span className="profile-tag-check">✓ {picked}</span>}
-                  </button>
-                );
-              })}
-            </div>
-
-            {activeGroup && (
-              <div className="profile-tag-row profile-tag-row-options">
-                {activeGroup.tags.map((tag) => (
-                  <button
-                    type="button"
-                    key={tag}
-                    className={`profile-tag profile-tag-selectable${draftTags.includes(tag) ? " profile-tag-selected" : ""
-                      }`}
-                    onClick={() => toggleDraftTag(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
               </div>
-            )}
+            ) : (
+              <div className="profile-tags-editor">
+                <p className="profile-tag-hint">
+                 태그를 최대 {MAX_PROFILE_TAGS}개까지 넣을 수 있어요.
+                  <span className="profile-tag-hint-count">
+                    ({draftTags.length}/{MAX_PROFILE_TAGS})
+                  </span>
+                </p>
 
-            <p className="profile-tag-group-title">직접 입력</p>
-            <div className="profile-tag-custom">
-              <input
-                className="profile-tag-custom-input"
-                value={customTagInput}
-                onChange={(e) => setCustomTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addCustomTag();
-                  }
-                }}
-                maxLength={MAX_CUSTOM_TAG_LENGTH}
-                placeholder={draftCustom ?? `나만의 태그 (${MAX_CUSTOM_TAG_LENGTH}자 이내)`}
-              />
-              <button
-                type="button"
-                className="profile-tag profile-tag-selectable"
-                onClick={addCustomTag}
-                disabled={!customTagInput.trim()}
-              >
-                {draftCustom ? "변경" : "추가"}
-              </button>
-            </div>
-
-            {draftTags.length > 0 && (
-              <div className="profile-tag-row profile-tag-row-picked">
-                {draftTags.map((tag) => {
-                  const variant = tagVariant(tag);
-                  return (
+                <p className="profile-tag-group-title">MBTI</p>
+                <div className="profile-tag-row profile-tag-row-mbti">
+                  {MBTI_TAGS.map((tag) => (
                     <button
                       type="button"
                       key={tag}
-                      className={`profile-tag profile-tag-selected${variant !== "interest" ? ` profile-tag-${variant}` : ""
-                        }`}
-                      onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
+                      className={`profile-tag profile-tag-selectable${
+                        draftMbti === tag ? " profile-tag-selected profile-tag-mbti" : ""
+                      }`}
+                      onClick={() => pickMbti(tag)}
                     >
-                      {tag} ×
+                      {tag}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+
+                <p className="profile-tag-group-title">관심사</p>
+                <div className="profile-tag-row">
+                  {PROFILE_TAG_GROUPS.map((group) => {
+                    const picked = group.tags.filter((t) => draftTags.includes(t)).length;
+                    return (
+                      <button
+                        type="button"
+                        key={group.label}
+                        className={`profile-tag profile-tag-selectable profile-tag-group-btn${
+                          activeGroup === group ? " profile-tag-selected" : ""
+                        }`}
+                        onClick={() => setActiveGroup(activeGroup === group ? null : group)}
+                      >
+                        {group.label}
+                        {picked > 0 && <span className="profile-tag-check">✓ {picked}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {activeGroup && (
+                  <div className="profile-tag-row profile-tag-row-options">
+                    {activeGroup.tags.map((tag) => (
+                      <button
+                        type="button"
+                        key={tag}
+                        className={`profile-tag profile-tag-selectable${
+                          draftTags.includes(tag) ? " profile-tag-selected" : ""
+                        }`}
+                        onClick={() => toggleDraftTag(tag)}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="profile-tag-group-title">직접 입력</p>
+                <div className="profile-tag-custom">
+                  <input
+                    className="profile-tag-custom-input"
+                    value={customTagInput}
+                    onChange={(e) => setCustomTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addCustomTag();
+                      }
+                    }}
+                    maxLength={MAX_CUSTOM_TAG_LENGTH}
+                    placeholder={draftCustom ?? `나만의 태그 (${MAX_CUSTOM_TAG_LENGTH}자 이내)`}
+                  />
+                  <button
+                    type="button"
+                    className="profile-tag profile-tag-selectable"
+                    onClick={addCustomTag}
+                    disabled={!customTagInput.trim()}
+                  >
+                    {draftCustom ? "변경" : "추가"}
+                  </button>
+                </div>
+
+                {draftTags.length > 0 && (
+                  <div className="profile-tag-row profile-tag-row-picked">
+                    {draftTags.map((tag) => {
+                      const variant = tagVariant(tag);
+                      return (
+                        <button
+                          type="button"
+                          key={tag}
+                          className={`profile-tag profile-tag-selected${
+                            variant !== "interest" ? ` profile-tag-${variant}` : ""
+                          }`}
+                          onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
+                        >
+                          {tag} ×
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {tagsError && <p className="mypage-error">{tagsError}</p>}
+                <div className="profile-tags-actions">
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-change"
+                    onClick={handleSaveTags}
+                    disabled={tagsSaving}
+                  >
+                    {tagsSaving ? "저장 중..." : "저장"}
+                  </button>
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-delete"
+                    onClick={() => {
+                      setDraftTags([]);
+                      setTagsError("");
+                    }}
+                    disabled={tagsSaving || draftTags.length === 0}
+                  >
+                    초기화
+                  </button>
+                  <button
+                    type="button"
+                    className="mypage-avatar-btn mypage-avatar-btn-delete"
+                    onClick={() => setEditingTags(false)}
+                    disabled={tagsSaving}
+                  >
+                    취소
+                  </button>
+                </div>
               </div>
             )}
-            {tagsError && <p className="mypage-error">{tagsError}</p>}
-            <div className="profile-tags-actions">
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-change"
-                onClick={handleSaveTags}
-                disabled={tagsSaving}
-              >
-                {tagsSaving ? "저장 중..." : "저장"}
-              </button>
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-delete"
-                onClick={() => {
-                  setDraftTags([]);
-                  setTagsError("");
-                }}
-                disabled={tagsSaving || draftTags.length === 0}
-              >
-                초기화
-              </button>
-              <button
-                type="button"
-                className="mypage-avatar-btn mypage-avatar-btn-delete"
-                onClick={() => setEditingTags(false)}
-                disabled={tagsSaving}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        )}
 
         {!editingPassword ? (
           <button type="button" className="btn btn-outline profile-password-manage-btn" onClick={startEditPassword}>
@@ -643,7 +658,7 @@ function MyProfilePage() {
           </div>
         )}
 
-        <div className="profile-card-info">
+          <div className="profile-card-info">
           <div className="profile-card-info-row">
             <span>가입일</span>
             <span>{new Date(user.createdAt).toLocaleDateString("ko-KR")}</span>
@@ -657,6 +672,12 @@ function MyProfilePage() {
             <span>{!user.provider || user.provider === "LOCAL" ? "소셜 비연동" : user.provider}</span>
           </div>
         </div>
+
+        {!isSocialAccount && (
+          <button type="button" className="mypage-avatar-btn mypage-avatar-btn-change" onClick={handleLinkKakao}>
+            카카오 계정 연동하기
+          </button>
+        )}
 
         {!showWithdrawConfirm ? (
           <button

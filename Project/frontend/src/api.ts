@@ -198,6 +198,15 @@ export const linkAccount = async (ticket: string, password: string): Promise<str
   return response.data.token;
 };
 
+export const createLinkIntent = async (token: string): Promise<string> => {
+  const response = await axios.post<{ ticket: string }>(
+    `${API_BASE_URL}/auth/link-intent`,
+    null,
+    authHeader(token)
+  );
+  return response.data.ticket;
+};
+
 export const signup = async (
   loginId: string,
   email: string,

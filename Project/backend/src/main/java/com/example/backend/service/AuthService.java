@@ -186,4 +186,11 @@ public class AuthService {
         userSocialLinkRepository.save(new UserSocialLink(user.getUserId(), provider, providerId));
         return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
     }
+
+    // 마이페이지에서 "카카오 연동하기" 버튼을 눌렀을 때, 지금 로그인된 사용자 확인 후 발급
+    public String createLinkIntent(String loginId) {
+        User user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return jwtProvider.createLinkIntentTicket(user.getUserId());
+    }
 }
