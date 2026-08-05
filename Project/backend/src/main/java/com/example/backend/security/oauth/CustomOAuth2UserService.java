@@ -2,6 +2,8 @@ package com.example.backend.security.oauth;
 
 import com.example.backend.domain.User;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.UserSocialLinkRepository;
+import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -23,6 +25,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserSocialLinkRepository userSocialLinkRepository;
+    private final JwtProvider jwtProvider;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -48,6 +52,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String provider = userInfo.getProvider(); // "KAKAO"
         String providerId = userInfo.getProviderId();
 
+        // 1순위: "연동"된 일반계정이 있는지 (일반가입 후 카카오를 연동한 경우)
+        var linked = userSocialLinkRepository.findByProviderAndProviderId(provider, providerId);
+        if (linked.isPresent()) {
+            return userRepository.findById(linked.get().getUserId())
+                    .orElseThrow(() -> new OAuth2AuthenticationException(
+                            new OAuth2Error("link_broken", "연동 정보에 문제가 있습니다. 고객센터에 문의해주세요.", null)));
+        }
+
+        // 2순위: 소셜로 처음 가입했던 계정 (user.provider_id 직접 기록)
         // 탈퇴한 계정은 withdraw() 시점에 provider_id가 익명화돼서 여기서 다시 안 잡힘
         // -> 같은 소셜 계정으로 다시 로그인하면 완전히 새로운 계정으로 가입됨 (탈퇴 전 활동과 무관)
         return userRepository.findByProviderAndProviderId(provider, providerId)
@@ -57,11 +70,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private User registerNewSocialUser(String provider, String providerId, OAuth2UserInfo userInfo) {
         String email = userInfo.getEmail();
 
-        // 이미 다른 경로(일반가입 또는 다른 소셜)로 같은 이메일이 가입돼 있으면,
-        // 자동으로 계정을 합치지 않고 명확히 에러로 알림 (계정 도용/혼선 방지)
+        // 이미 다른 경로(일반가입)로 같은 이메일이 가입돼 있으면, 바로 가입시키지 않고
+        // "계정 연동" 흐름으로 안내함: 5분짜리 연동 티켓을 만들어 프론트의 연동 페이지로 전달
+        // (기존 계정 비밀번호를 확인한 뒤에만 연동되므로, 이메일만 같은 남의 계정에 붙는 사고를 방지)
         if (email != null && userRepository.existsByEmail(email)) {
+            String ticket = jwtProvider.createLinkTicket(provider, providerId, email);
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("email_already_exists", "이미 가입된 이메일입니다. 일반 로그인으로 시도해주세요.", null)
+                    new OAuth2Error("account_link_required", ticket, null)
             );
         }
 

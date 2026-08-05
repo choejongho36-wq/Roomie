@@ -11,6 +11,7 @@ import com.example.backend.dto.EmailVerificationConfirmRequest;
 import com.example.backend.dto.FindIdResponse;
 import com.example.backend.dto.PasswordResetRequest;
 import com.example.backend.dto.PasswordResetConfirmRequest;
+import com.example.backend.dto.AccountLinkRequest;
 import com.example.backend.service.AuthService;
 import com.example.backend.service.EmailVerificationService;
 import jakarta.validation.Valid;
@@ -95,5 +96,12 @@ public class AuthController {
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok().build();
+    }
+
+    // ===== 소셜 계정 연동 (일반가입 계정에 카카오 연결) =====
+
+    @PostMapping("/link-account")
+    public ResponseEntity<LoginResponse> linkAccount(@Valid @RequestBody AccountLinkRequest request) {
+        return ResponseEntity.ok(authService.linkAccount(request));
     }
 }

@@ -10,7 +10,10 @@ import com.example.backend.dto.SignupRequest;
 import com.example.backend.dto.FindIdResponse;
 import com.example.backend.dto.PasswordResetRequest;
 import com.example.backend.dto.PasswordResetConfirmRequest;
+import com.example.backend.dto.AccountLinkRequest;
+import com.example.backend.domain.UserSocialLink;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.UserSocialLinkRepository;
 import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +27,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final UserSocialLinkRepository userSocialLinkRepository;
     private final EmailVerificationService emailVerificationService;
 
     public void signup(SignupRequest request) {
@@ -152,5 +156,34 @@ public class AuthService {
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         emailVerificationService.invalidate(request.email());
+    }
+
+    // ===== 소셜 계정 연동 =====
+
+    // 카카오 인증 직후 발급된 5분짜리 티켓 + 기존 계정 비밀번호를 함께 확인한 뒤에만 연동함.
+    // (티켓 = "방금 그 카카오 계정 주인" 증명, 비밀번호 = "기존 일반계정 주인" 증명. 둘 다 통과해야 안전)
+    public LoginResponse linkAccount(AccountLinkRequest request) {
+        var claims = jwtProvider.parseLinkTicket(request.ticket());
+        if (claims == null) {
+            throw new IllegalArgumentException("연동 요청이 만료됐어요. 카카오 로그인을 다시 시도해주세요.");
+        }
+        String email = claims.getSubject();
+        String provider = claims.get("provider", String.class);
+        String providerId = claims.get("providerId", String.class);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("연동할 계정을 찾을 수 없습니다."));
+        if ("WITHDRAWN".equals(user.getStatus())) {
+            throw new IllegalArgumentException("탈퇴한 계정입니다.");
+        }
+        if (user.getPassword() == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+        if (userSocialLinkRepository.existsByUserIdAndProvider(user.getUserId(), provider)) {
+            throw new IllegalArgumentException("이미 " + provider + " 계정이 연동되어 있습니다.");
+        }
+
+        userSocialLinkRepository.save(new UserSocialLink(user.getUserId(), provider, providerId));
+        return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
     }
 }

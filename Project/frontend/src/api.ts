@@ -190,6 +190,14 @@ export const login = async (loginId: string, password: string): Promise<string> 
   return response.data.token;
 };
 
+export const linkAccount = async (ticket: string, password: string): Promise<string> => {
+  const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/link-account`, {
+    ticket,
+    password,
+  });
+  return response.data.token;
+};
+
 export const signup = async (
   loginId: string,
   email: string,
