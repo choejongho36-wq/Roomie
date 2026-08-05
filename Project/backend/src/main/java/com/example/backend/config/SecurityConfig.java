@@ -9,7 +9,9 @@ import com.example.backend.security.oauth.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.RequestContextFilter;
 
 import java.util.List;
 
@@ -39,6 +42,16 @@ public class SecurityConfig {
 
         @Value("${cors.allowed-origins:http://localhost:5174}")
         private String[] allowedOrigins;
+
+        // CustomOAuth2UserService(계정 연동 처리)에서 RequestContextHolder로 현재 요청/세션에 접근하는데,
+        // 이게 시큐리티 필터 체인 안에서는 자동으로 안 걸려있을 수 있어서 명시적으로 가장 먼저 등록해줌
+        @Bean
+        public FilterRegistrationBean<RequestContextFilter> requestContextFilter() {
+                var registration = new FilterRegistrationBean<RequestContextFilter>();
+                registration.setFilter(new RequestContextFilter());
+                registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+                return registration;
+        }
 
         // /admin/** 전용 세션 기반 폼 로그인 체인. API용 체인보다 먼저 매칭되도록 @Order(1).
         @Bean
@@ -61,7 +74,8 @@ public class SecurityConfig {
                                                 .defaultSuccessUrl("/admin", true)
                                                 .failureUrl("/admin/login?error"))
                                 .logout(logout -> logout
-                                                .logoutRequestMatcher(request -> "GET".equalsIgnoreCase(request.getMethod())
+                                                .logoutRequestMatcher(request -> "GET"
+                                                                .equalsIgnoreCase(request.getMethod())
                                                                 && "/admin/logout".equals(request.getRequestURI()))
                                                 .logoutSuccessUrl("/admin/login?logout"));
                 return http.build();
@@ -80,9 +94,10 @@ public class SecurityConfig {
                                 .exceptionHandling(e -> e.authenticationEntryPoint(
                                                 (request, response, authException) -> response
                                                                 .sendError(HttpServletResponse.SC_UNAUTHORIZED)))
-                               .oauth2Login(oauth2 -> oauth2
+                                .oauth2Login(oauth2 -> oauth2
                                                 .authorizationEndpoint(auth -> auth
-                                                                .authorizationRequestResolver(customAuthorizationRequestResolver))
+                                                                .authorizationRequestResolver(
+                                                                                customAuthorizationRequestResolver))
                                                 .successHandler(oAuth2LoginSuccessHandler)
                                                 .failureHandler(oAuth2LoginFailureHandler))
                                 .authorizeHttpRequests(auth -> auth

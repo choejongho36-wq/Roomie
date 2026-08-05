@@ -23,5 +23,6 @@ public record UserResponse(
         String provider,
         Boolean emailVerified,
         Boolean isAdmin,
-        Boolean needsAdditionalInfo
+        Boolean needsAdditionalInfo,
+        List<String> linkedProviders
 ) {}
