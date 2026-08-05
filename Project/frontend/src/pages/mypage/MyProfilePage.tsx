@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, Sparkles, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, updateBio, updateSmoking, changePassword, getMySurveys, withdraw, createLinkIntent, API_ORIGIN } from "../../api";
+import { updateTags, updateBio, updateSmoking, updateRegion, changePassword, getMySurveys, withdraw, API_ORIGIN, createLinkIntent } from "../../api";
+import RegionPicker, { parseRegionToken, type RegionToken } from "../../components/RegionPicker";
 import {
   PROFILE_TAG_GROUPS,
   PROFILE_TAGS,
@@ -15,15 +17,31 @@ import {
 } from "../../data/ProfileTags";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import NicknameModal from "./NicknameModal";
-import "./MyPageContent.css";
+import "./MyProfilePage.css";
+
+// 목업(마이페이지 리디자인)에서 그대로 가져온 팔레트: 크림 배경, 화이트 카드, 오렌지 포인트
+const T = {
+  card: "#FFFFFF",
+  accent: "#F2793A",
+  accentSoft: "#FDEDE2",
+  textPrimary: "#241C15",
+  textMuted: "#7D7263",
+  hairline: "#DCCFBC",
+  mbtiBg: "#EEF1FB",
+  mbtiText: "#4A5A9E",
+  customBg: "#F6EEF8",
+  customText: "#8C4F96",
+  danger: "#E03131",
+};
 
 const GENDER_LABEL: Record<string, string> = { M: "남성", F: "여성" };
-const SMOKING_TYPE_LABEL: Record<string, string> = { CIGARETTE: "연초", HEATED: "궐련형", LIQUID: "액상" };
+// 궐련형/액상형은 전자담배로 구분해서 표시, 연초는 그냥 흡연자로 표시
+const ECIG_TYPE_LABEL: Record<string, string> = { HEATED: "궐련", LIQUID: "액상" };
 const formatSmokingLabel = (smoking?: string | null, smokingType?: string | null): string | null => {
   if (smoking === "NON_SMOKER") return "비흡연자";
   if (smoking === "SMOKER") {
-    const typeLabel = smokingType ? SMOKING_TYPE_LABEL[smokingType] : null;
-    return typeLabel ? `흡연자 (${typeLabel})` : "흡연자";
+    const ecigLabel = smokingType ? ECIG_TYPE_LABEL[smokingType] : null;
+    return ecigLabel ? `전자담배(${ecigLabel})` : "흡연자";
   }
   return null;
 };
@@ -44,6 +62,76 @@ function extractErrorMessage(err: unknown, fallback: string): string {
   return axios.isAxiosError(err) && typeof err.response?.data === "string" ? err.response.data : fallback;
 }
 
+// 지역은 콤마로 이어 한 컬럼에 저장하므로("강동구 천호동, 서초구 방배동"), 편집 시작 시 각 조각을 다시 토큰으로 복원한다
+function parseRegionTokens(region: string | null | undefined): RegionToken[] {
+  if (!region) return [];
+  return region
+    .split(",")
+    .map((part) => parseRegionToken(part.trim()))
+    .filter((token): token is RegionToken => token !== null);
+}
+
+// 태그 색 구분(MBTI/관심사/직접입력)을 위한 배경·글자색
+function tagColors(variant: "mbti" | "custom" | "interest") {
+  if (variant === "mbti") return { background: T.mbtiBg, color: T.mbtiText };
+  if (variant === "custom") return { background: T.customBg, color: T.customText };
+  return { background: T.accentSoft, color: T.accent };
+}
+
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <p className="text-[12px] font-semibold tracking-wide mb-2.5" style={{ color: T.textMuted }}>
+      {children}
+    </p>
+  );
+}
+
+function EmptyStateCard({ text, cta, onClick }: { text: string; cta: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full rounded-2xl border-2 border-dashed px-5 py-6 text-center transition-colors hover:bg-[#FDEDE2]"
+      style={{ borderColor: T.hairline }}
+    >
+      <p className="text-[14px] mb-2" style={{ color: T.textMuted }}>
+        {text}
+      </p>
+      <span className="inline-flex items-center gap-1 text-[13px] font-semibold" style={{ color: T.accent }}>
+        {cta} <ChevronRight size={14} />
+      </span>
+    </button>
+  );
+}
+
+function PillButton({
+  children,
+  onClick,
+  disabled,
+  variant = "primary",
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: "primary" | "ghost";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-full px-4 py-1.5 text-[12px] font-semibold disabled:opacity-50 transition-opacity hover:opacity-90"
+      style={
+        variant === "primary"
+          ? { background: T.accent, color: "#fff" }
+          : { background: "transparent", color: T.textMuted, border: `1px solid ${T.hairline}` }
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
 function MyProfilePage() {
   const { user, token, setUser, logout } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +150,11 @@ function MyProfilePage() {
   const [draftSmokingType, setDraftSmokingType] = useState("");
   const [smokingSaving, setSmokingSaving] = useState(false);
   const [smokingError, setSmokingError] = useState("");
+  const [editingRegion, setEditingRegion] = useState(false);
+  const [draftRegionTokens, setDraftRegionTokens] = useState<RegionToken[]>([]);
+  const [regionSaving, setRegionSaving] = useState(false);
+  const [regionError, setRegionError] = useState("");
+  const [profilePublic, setProfilePublic] = useState(true);
   const [bioError, setBioError] = useState("");
   const [editingNickname, setEditingNickname] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
@@ -83,7 +176,6 @@ function MyProfilePage() {
   }, [token]);
 
   if (!user) return null;
-
 
   // 저장 순서 대신 그룹 정의 순서로 보여준다. 목록에 없는 직접 입력 태그는 맨 뒤로 보낸다
   const tagOrder = (tag: string) =>
@@ -219,6 +311,31 @@ function MyProfilePage() {
     }
   };
 
+  const startEditRegion = () => {
+    setDraftRegionTokens(parseRegionTokens(user.region));
+    setRegionError("");
+    setEditingRegion(true);
+  };
+
+  const handleSaveRegion = async () => {
+    if (!token) return;
+    if (draftRegionTokens.length === 0) {
+      setRegionError("선호 지역을 선택해주세요.");
+      return;
+    }
+    setRegionSaving(true);
+    setRegionError("");
+    try {
+      const updated = await updateRegion(token, draftRegionTokens.map((t) => t.label).join(", "));
+      setUser(updated);
+      setEditingRegion(false);
+    } catch (err) {
+      setRegionError(extractErrorMessage(err, "지역 저장에 실패했습니다."));
+    } finally {
+      setRegionSaving(false);
+    }
+  };
+
   const startEditPassword = () => {
     setDraftCurrentPassword("");
     setDraftNewPassword("");
@@ -278,262 +395,353 @@ function MyProfilePage() {
     }
   };
 
+  const smokingLabel = formatSmokingLabel(user.smoking, user.smokingType);
 
   return (
     <div className="mypage-panel">
-      <div className="profile-card profile-card-vertical">
+      <div
+        className="profile-card relative w-full max-w-[980px] mx-auto rounded-[28px] px-7 py-8"
+        style={{ background: T.card, boxShadow: "0 1px 3px rgba(36,28,21,0.06), 0 12px 32px rgba(36,28,21,0.06)" }}
+      >
+        <div className="max-w-[420px] mx-auto">
+
         {hasSurvey === false && (
-          <Link to="/survey" className="profile-survey-alert">
-            설문조사를 아직 안 하셨어요!
-            <br />
-            완료하면 매칭이 시작돼요.
+          <Link
+            to="/survey"
+            className="mb-6 flex items-center gap-3 rounded-2xl px-4 py-3.5 no-underline transition-transform hover:scale-[1.02]"
+            style={{
+              background: `linear-gradient(135deg, ${T.accent}, #FFAA66)`,
+              boxShadow: "0 8px 20px rgba(242,121,58,0.35)",
+            }}
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/25">
+              <Sparkles size={18} color="#fff" strokeWidth={2.2} />
+            </span>
+            <span className="flex-1">
+              <p className="text-[13px] font-bold text-white leading-snug">설문조사를 아직 안 하셨어요!</p>
+              <p className="text-[12px] text-white/85 leading-snug">완료하면 매칭이 시작돼요</p>
+            </span>
+            <ChevronRight size={18} color="#fff" strokeWidth={2.4} className="shrink-0" />
           </Link>
         )}
-        <img
-          className="mypage-avatar-img mypage-avatar-img-lg"
-          src={user.profileImageUrl ? `${API_ORIGIN}${user.profileImageUrl}` : defaultAvatar}
-          alt={user.nickname}
-        />
-        <Link to="/mypage/edit" className="profile-edit-btn">
-          이미지 편집
-        </Link>
 
-        <div className="profile-nickname-row">
-          <h2>{user.nickname}</h2>
-          {user.emailVerified && (
-            <span className="verified-badge" title="이메일 인증 완료" aria-label="이메일 인증 완료">
-              <svg width="16" height="18" viewBox="0 0 18 20" fill="none" aria-hidden="true">
-                <path
-                  d="M9 1l7 2.6v5.2c0 5-3 8.4-7 10.2-4-1.8-7-5.2-7-10.2V3.6L9 1z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M5.8 9.6l2.3 2.3L12.4 7"
-                  stroke="#fff"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
+        {/* ---------- 헤더: 아바타 + 이름 + 기본정보 ---------- */}
+        <div className="flex flex-col items-center text-center">
+          <div className="relative mb-3">
+            <img
+              className="w-24 h-24 rounded-full object-cover border-2"
+              style={{ borderColor: T.accent }}
+              src={user.profileImageUrl ? `${API_ORIGIN}${user.profileImageUrl}` : defaultAvatar}
+              alt={user.nickname}
+            />
+            <Link
+              to="/mypage/edit"
+              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center border-2"
+              style={{ background: T.accent, borderColor: T.card }}
+              aria-label="프로필 이미지 편집"
+            >
+              <Camera size={14} color="#fff" strokeWidth={2.2} />
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="relative">
+              {user.emailVerified && (
+                <span
+                  title="이메일 인증 완료"
+                  aria-label="이메일 인증 완료"
+                  className="absolute -left-7 top-1/2 -translate-y-1/2"
+                >
+                  {/* 방패 테두리와 체크 표시의 두께를 다르게 주기 위해 lucide ShieldCheck를 커스텀 svg로 대체 */}
+                  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path
+                      d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                      fill={T.accent}
+                      stroke="#fff"
+                      strokeWidth={2.2}
+                    />
+                    <path d="m9 12 2 2 4-4" stroke="#fff" strokeWidth={1.4} />
+                  </svg>
+                </span>
+              )}
+              <h1 className="text-[30px] font-bold m-1" style={{ color: T.textPrimary }}>
+                {user.nickname}
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditingNickname(true)}
+              className="opacity-70 hover:opacity-100"
+              style={{ color: T.textMuted }}
+              aria-label="닉네임 편집"
+            >
+              <Pencil size={15} />
+            </button>
+          </div>
+
+          {editingNickname && token && (
+            <NicknameModal
+              currentNickname={user.nickname}
+              token={token}
+              onClose={() => setEditingNickname(false)}
+              onSuccess={setUser}
+            />
           )}
-          <button
-            type="button"
-            className="profile-inline-edit-btn"
-            onClick={() => setEditingNickname(true)}
-            aria-label="닉네임 편집"
-          >
-            편집
-          </button>
-        </div>
 
-        {editingNickname && token && (
-          <NicknameModal
-            currentNickname={user.nickname}
-            token={token}
-            onClose={() => setEditingNickname(false)}
-            onSuccess={setUser}
-          />
-        )}
+          <p className="text-[13px] font-medium mb-1" style={{ color: T.textPrimary }}>
+            {[`${getAge(user.birthDate)}세`, GENDER_LABEL[user.gender] ?? user.gender, user.job].filter(Boolean).join(" · ")}
+          </p>
 
-        <p className="profile-card-meta">
-          {getAge(user.birthDate)}세 · {GENDER_LABEL[user.gender] ?? user.gender}
-        </p>
-
-        <div className="profile-bio-box">
+          {/* 흡연 여부 + 선호 지역 — 칩을 클릭하면 바로 편집 모드로 전환 */}
+          <div className="flex flex-wrap items-center justify-center gap-2">
           {!editingSmoking ? (
-            <>
-              <p className="profile-bio-text">
-                {formatSmokingLabel(user.smoking, user.smokingType) ?? "흡연 여부를 설정해주세요."}
-              </p>
-              <button
-                type="button"
-                className="profile-box-edit-btn"
-                onClick={startEditSmoking}
-                aria-label="흡연여부 편집"
-              >
-                편집
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={startEditSmoking}
+              aria-label="흡연여부 편집"
+              className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#FDEDE2] text-[#F2793A] transition-colors hover:bg-[#F2793A] hover:text-white"
+            >
+              {smokingLabel ?? "흡연 여부를 설정해주세요"}
+            </button>
           ) : (
-            <div className="profile-bio-editor">
-              <select value={draftSmoking} onChange={(e) => {
-                setDraftSmoking(e.target.value);
-                if (e.target.value !== "SMOKER") setDraftSmokingType("");
-              }}>
+            <div className="w-full max-w-[280px] text-left flex flex-col gap-2">
+              <select
+                className="w-full rounded-xl border px-3 py-2 text-[13px]"
+                style={{ borderColor: T.hairline, color: T.textPrimary }}
+                value={draftSmoking}
+                onChange={(e) => {
+                  setDraftSmoking(e.target.value);
+                  if (e.target.value !== "SMOKER") setDraftSmokingType("");
+                }}
+              >
                 <option value="" disabled>선택해주세요</option>
                 <option value="NON_SMOKER">비흡연자</option>
                 <option value="SMOKER">흡연자</option>
               </select>
               {draftSmoking === "SMOKER" && (
-                <select value={draftSmokingType} onChange={(e) => setDraftSmokingType(e.target.value)}>
+                <select
+                  className="w-full rounded-xl border px-3 py-2 text-[13px]"
+                  style={{ borderColor: T.hairline, color: T.textPrimary }}
+                  value={draftSmokingType}
+                  onChange={(e) => setDraftSmokingType(e.target.value)}
+                >
                   <option value="" disabled>흡연 종류 선택</option>
                   <option value="CIGARETTE">연초</option>
                   <option value="HEATED">궐련형</option>
                   <option value="LIQUID">액상</option>
                 </select>
               )}
-              {smokingError && <p className="mypage-error">{smokingError}</p>}
-              <div className="profile-tags-actions">
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-change"
-                  onClick={handleSaveSmoking}
-                  disabled={smokingSaving}
-                >
+              {smokingError && <p className="text-[12px]" style={{ color: T.danger }}>{smokingError}</p>}
+              <div className="flex gap-2">
+                <PillButton onClick={handleSaveSmoking} disabled={smokingSaving}>
                   {smokingSaving ? "저장 중..." : "저장"}
-                </button>
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-delete"
-                  onClick={() => setEditingSmoking(false)}
-                  disabled={smokingSaving}
-                >
+                </PillButton>
+                <PillButton variant="ghost" onClick={() => setEditingSmoking(false)} disabled={smokingSaving}>
                   취소
-                </button>
+                </PillButton>
               </div>
             </div>
           )}
+
+          {/* 선호 지역 — 칩을 클릭하면 바로 편집 모드로 전환 */}
+          {!editingRegion ? (
+            <button
+              type="button"
+              onClick={startEditRegion}
+              aria-label="선호 지역 편집"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#EEF1FB] text-[#4A5A9E] transition-colors hover:bg-[#4A5A9E] hover:text-white"
+            >
+              <MapPin size={14} strokeWidth={2.2} />
+              {user.region ?? "선호 지역을 설정해주세요"}
+            </button>
+          ) : (
+            <div className="w-full max-w-[280px] text-left flex flex-col gap-2">
+              <RegionPicker
+                selected={draftRegionTokens}
+                onChange={setDraftRegionTokens}
+                multiple
+                maxSelect={3}
+                variant="inline"
+                placeholder="지역명 검색 예) 강남, 역삼동, 강남구 역삼동"
+                emptyHint="선호 지역을 최대 3개까지 선택해주세요."
+              />
+              {regionError && <p className="text-[12px]" style={{ color: T.danger }}>{regionError}</p>}
+              <div className="flex gap-2">
+                <PillButton onClick={handleSaveRegion} disabled={regionSaving}>
+                  {regionSaving ? "저장 중..." : "저장"}
+                </PillButton>
+                <PillButton variant="ghost" onClick={() => setEditingRegion(false)} disabled={regionSaving}>
+                  취소
+                </PillButton>
+              </div>
+            </div>
+          )}
+          </div>
         </div>
 
-        <div className="profile-bio-box">
-          {!editingBio ? (
-            <>
-              <p className="profile-bio-text">
-                {user.bio ? `"${user.bio}"` : "아직 소개를 작성하지 않았어요."}
-              </p>
-              <button
-                type="button"
-                className="profile-box-edit-btn"
-                onClick={startEditBio}
-                aria-label="소개 편집"
-              >
-                편집
+        <div className="h-px my-7" style={{ background: T.hairline }} />
+
+        {/* ---------- 자기소개 ---------- */}
+        <div className="mb-7 text-center">
+          <div className="flex items-center justify-center gap-1.5 mb-2.5">
+            <SectionLabel>자기소개</SectionLabel>
+            {user.bio && !editingBio && (
+              <button type="button" onClick={startEditBio} className="opacity-40 hover:opacity-80" aria-label="소개 편집">
+                <Pencil size={13} />
               </button>
-            </>
-          ) : (
-            <div className="profile-bio-editor">
+            )}
+          </div>
+
+          {editingBio ? (
+            <div>
               <textarea
-                className="profile-bio-textarea"
+                autoFocus
                 value={draftBio}
                 onChange={(e) => setDraftBio(e.target.value.slice(0, MAX_BIO_LENGTH))}
                 maxLength={MAX_BIO_LENGTH}
-                placeholder="나를 소개하는 한마디를 남겨보세요."
+                placeholder="자기소개를 적어주세요"
                 rows={3}
+                className="w-full rounded-2xl px-4 py-3 text-[14px] outline-none border resize-none"
+                style={{ borderColor: T.accent, color: T.textPrimary }}
               />
-              <span className="profile-bio-count">
-                {draftBio.length} / {MAX_BIO_LENGTH}
-              </span>
-              {bioError && <p className="mypage-error">{bioError}</p>}
-              <div className="profile-tags-actions">
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-change"
-                  onClick={handleSaveBio}
-                  disabled={bioSaving}
-                >
-                  {bioSaving ? "저장 중..." : "저장"}
-                </button>
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-delete"
-                  onClick={() => setEditingBio(false)}
-                  disabled={bioSaving}
-                >
-                  취소
-                </button>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[12px]" style={{ color: T.textMuted }}>
+                  {draftBio.length} / {MAX_BIO_LENGTH}
+                </span>
+                <div className="flex gap-2">
+                  {bioError && <p className="text-[12px] self-center" style={{ color: T.danger }}>{bioError}</p>}
+                  <PillButton onClick={handleSaveBio} disabled={bioSaving}>
+                    {bioSaving ? "저장 중..." : "저장"}
+                  </PillButton>
+                  <PillButton variant="ghost" onClick={() => setEditingBio(false)} disabled={bioSaving}>
+                    취소
+                  </PillButton>
+                </div>
               </div>
             </div>
+          ) : user.bio ? (
+            <p className="text-[14px] leading-relaxed text-center rounded-2xl px-4 py-3.5" style={{ background: "#FAF6EF", color: T.textPrimary }}>
+              {user.bio}
+            </p>
+          ) : (
+            <EmptyStateCard text="아직 소개를 작성하지 않았어요" cta="자기소개 작성하기" onClick={startEditBio} />
           )}
         </div>
 
-            {!editingTags ? (
-              <div className="profile-tags-view">
-                {savedTags.length > 0 && (
-                  <div className="profile-tags">
-                    {savedTags.map((tag) => {
-                      const variant = tagVariant(tag);
-                      return (
-                        <span
-                          key={tag}
-                          className={`profile-tag${variant !== "interest" ? ` profile-tag-${variant}` : ""}`}
-                        >
-                          {tag}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-                <button type="button" className="profile-tags-edit" onClick={startEditTags}>
-                  태그 편집
+        {/* ---------- 태그 ---------- */}
+        <div className="mb-7 text-center">
+          <SectionLabel>내 태그</SectionLabel>
+
+          {!editingTags ? (
+            savedTags.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {savedTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium"
+                    style={tagColors(tagVariant(tag))}
+                  >
+                    {tag}
+                  </span>
+                ))}
+                <button
+                  type="button"
+                  onClick={startEditTags}
+                  className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-medium border border-dashed transition-colors hover:bg-[#FDEDE2]"
+                  style={{ borderColor: T.textMuted, color: T.textMuted }}
+                >
+                  <Pencil size={12} /> 편집
                 </button>
               </div>
             ) : (
-              <div className="profile-tags-editor">
-                <p className="profile-tag-hint">
-                 태그를 최대 {MAX_PROFILE_TAGS}개까지 넣을 수 있어요.
-                  <span className="profile-tag-hint-count">
-                    ({draftTags.length}/{MAX_PROFILE_TAGS})
-                  </span>
-                </p>
+              <EmptyStateCard text="아직 등록한 태그가 없어요" cta="태그 추가하기" onClick={startEditTags} />
+            )
+          ) : (
+            <div className="flex flex-col gap-3 text-left">
+              <p className="text-[12px]" style={{ color: T.textMuted }}>
+                태그를 최대 {MAX_PROFILE_TAGS}개까지 넣을 수 있어요.
+                <span className="ml-1 font-semibold" style={{ color: T.accent }}>
+                  ({draftTags.length}/{MAX_PROFILE_TAGS})
+                </span>
+              </p>
 
-                <p className="profile-tag-group-title">MBTI</p>
-                <div className="profile-tag-row profile-tag-row-mbti">
-                  {MBTI_TAGS.map((tag) => (
-                    <button
-                      type="button"
-                      key={tag}
-                      className={`profile-tag profile-tag-selectable${
-                        draftMbti === tag ? " profile-tag-selected profile-tag-mbti" : ""
-                      }`}
-                      onClick={() => pickMbti(tag)}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-
-                <p className="profile-tag-group-title">관심사</p>
-                <div className="profile-tag-row">
-                  {PROFILE_TAG_GROUPS.map((group) => {
-                    const picked = group.tags.filter((t) => draftTags.includes(t)).length;
+              <div>
+                <p className="text-[12px] font-bold mb-1.5" style={{ color: T.textMuted }}>MBTI</p>
+                <div className="flex flex-wrap gap-1">
+                  {MBTI_TAGS.map((tag) => {
+                    const selected = draftMbti === tag;
                     return (
                       <button
                         type="button"
-                        key={group.label}
-                        className={`profile-tag profile-tag-selectable profile-tag-group-btn${
-                          activeGroup === group ? " profile-tag-selected" : ""
-                        }`}
-                        onClick={() => setActiveGroup(activeGroup === group ? null : group)}
+                        key={tag}
+                        onClick={() => pickMbti(tag)}
+                        className="rounded-full px-2 py-1 text-[12px] font-medium border min-w-[52px]"
+                        style={
+                          selected
+                            ? { background: T.mbtiBg, borderColor: T.mbtiText, color: T.mbtiText }
+                            : { background: "#F7F7F7", borderColor: T.hairline, color: T.textMuted }
+                        }
                       >
-                        {group.label}
-                        {picked > 0 && <span className="profile-tag-check">✓ {picked}</span>}
+                        {tag}
                       </button>
                     );
                   })}
                 </div>
+              </div>
 
-                {activeGroup && (
-                  <div className="profile-tag-row profile-tag-row-options">
-                    {activeGroup.tags.map((tag) => (
+              <div>
+                <p className="text-[12px] font-bold mb-1.5" style={{ color: T.textMuted }}>관심사</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {PROFILE_TAG_GROUPS.map((group) => {
+                    const picked = group.tags.filter((t) => draftTags.includes(t)).length;
+                    const active = activeGroup === group;
+                    return (
+                      <button
+                        type="button"
+                        key={group.label}
+                        onClick={() => setActiveGroup(active ? null : group)}
+                        className="rounded-full px-3 py-1.5 text-[13px] font-medium border"
+                        style={
+                          active
+                            ? { background: T.accentSoft, borderColor: T.accent, color: T.accent }
+                            : { background: "#F7F7F7", borderColor: T.hairline, color: T.textMuted }
+                        }
+                      >
+                        {group.label}
+                        {picked > 0 && <span className="ml-1 font-bold" style={{ color: "#16a34a" }}>✓ {picked}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {activeGroup && (
+                <div className="flex flex-wrap gap-1.5 rounded-2xl p-2.5" style={{ background: "#FAF6EF" }}>
+                  {activeGroup.tags.map((tag) => {
+                    const selected = draftTags.includes(tag);
+                    return (
                       <button
                         type="button"
                         key={tag}
-                        className={`profile-tag profile-tag-selectable${
-                          draftTags.includes(tag) ? " profile-tag-selected" : ""
-                        }`}
                         onClick={() => toggleDraftTag(tag)}
+                        className="rounded-full px-3 py-1.5 text-[13px] font-medium border"
+                        style={
+                          selected
+                            ? { background: T.accentSoft, borderColor: T.accent, color: T.accent }
+                            : { background: "#fff", borderColor: T.hairline, color: T.textMuted }
+                        }
                       >
                         {tag}
                       </button>
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
+              )}
 
-                <p className="profile-tag-group-title">직접 입력</p>
-                <div className="profile-tag-custom">
+              <div>
+                <p className="text-[12px] font-bold mb-1.5" style={{ color: T.textMuted }}>직접 입력</p>
+                <div className="flex gap-1.5">
                   <input
-                    className="profile-tag-custom-input"
                     value={customTagInput}
                     onChange={(e) => setCustomTagInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -544,190 +752,209 @@ function MyProfilePage() {
                     }}
                     maxLength={MAX_CUSTOM_TAG_LENGTH}
                     placeholder={draftCustom ?? `나만의 태그 (${MAX_CUSTOM_TAG_LENGTH}자 이내)`}
+                    className="flex-1 min-w-0 rounded-full px-3 py-1.5 text-[13px] border outline-none"
+                    style={{ borderColor: T.hairline, color: T.textPrimary }}
                   />
                   <button
                     type="button"
-                    className="profile-tag profile-tag-selectable"
                     onClick={addCustomTag}
                     disabled={!customTagInput.trim()}
+                    className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-medium border border-dashed disabled:opacity-50"
+                    style={{ borderColor: T.textMuted, color: T.textMuted }}
                   >
-                    {draftCustom ? "변경" : "추가"}
-                  </button>
-                </div>
-
-                {draftTags.length > 0 && (
-                  <div className="profile-tag-row profile-tag-row-picked">
-                    {draftTags.map((tag) => {
-                      const variant = tagVariant(tag);
-                      return (
-                        <button
-                          type="button"
-                          key={tag}
-                          className={`profile-tag profile-tag-selected${
-                            variant !== "interest" ? ` profile-tag-${variant}` : ""
-                          }`}
-                          onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
-                        >
-                          {tag} ×
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {tagsError && <p className="mypage-error">{tagsError}</p>}
-                <div className="profile-tags-actions">
-                  <button
-                    type="button"
-                    className="mypage-avatar-btn mypage-avatar-btn-change"
-                    onClick={handleSaveTags}
-                    disabled={tagsSaving}
-                  >
-                    {tagsSaving ? "저장 중..." : "저장"}
-                  </button>
-                  <button
-                    type="button"
-                    className="mypage-avatar-btn mypage-avatar-btn-delete"
-                    onClick={() => {
-                      setDraftTags([]);
-                      setTagsError("");
-                    }}
-                    disabled={tagsSaving || draftTags.length === 0}
-                  >
-                    초기화
-                  </button>
-                  <button
-                    type="button"
-                    className="mypage-avatar-btn mypage-avatar-btn-delete"
-                    onClick={() => setEditingTags(false)}
-                    disabled={tagsSaving}
-                  >
-                    취소
+                    <Plus size={12} /> {draftCustom ? "변경" : "추가"}
                   </button>
                 </div>
               </div>
-            )}
 
+              {draftTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t" style={{ borderColor: T.hairline }}>
+                  {draftTags.map((tag) => {
+                    const variant = tagVariant(tag);
+                    return (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => setDraftTags(draftTags.filter((t) => t !== tag))}
+                        className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-medium"
+                        style={tagColors(variant)}
+                      >
+                        {tag}
+                        <X size={12} />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {tagsError && <p className="text-[12px]" style={{ color: T.danger }}>{tagsError}</p>}
+
+              <div className="flex gap-2">
+                <PillButton onClick={handleSaveTags} disabled={tagsSaving}>
+                  {tagsSaving ? "저장 중..." : "저장"}
+                </PillButton>
+                <PillButton
+                  variant="ghost"
+                  onClick={() => {
+                    setDraftTags([]);
+                    setTagsError("");
+                  }}
+                  disabled={tagsSaving || draftTags.length === 0}
+                >
+                  초기화
+                </PillButton>
+                <PillButton variant="ghost" onClick={() => setEditingTags(false)} disabled={tagsSaving}>
+                  취소
+                </PillButton>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="h-px mb-6" style={{ background: T.hairline }} />
+
+        {/* ---------- 비밀번호 관리 ---------- */}
         {!editingPassword ? (
-          <button type="button" className="btn btn-outline profile-password-manage-btn" onClick={startEditPassword}>
+          <button
+            type="button"
+            onClick={startEditPassword}
+            className="w-full rounded-full py-2 text-[15px] font-bold mb-6 transition-opacity hover:opacity-80"
+            style={{ background: T.accent, color: "#fff" }}
+          >
             비밀번호 관리
           </button>
         ) : (
-          <div className="profile-password-box">
-            <div className="profile-bio-editor">
-              <input
-                type="password"
-                className="profile-nickname-input"
-                placeholder="현재 비밀번호"
-                value={draftCurrentPassword}
-                onChange={(e) => setDraftCurrentPassword(e.target.value)}
-              />
-              <input
-                type="password"
-                className="profile-nickname-input"
-                placeholder="새 비밀번호"
-                value={draftNewPassword}
-                onChange={(e) => setDraftNewPassword(e.target.value)}
-              />
-              <input
-                type="password"
-                className="profile-nickname-input"
-                placeholder="새 비밀번호 확인"
-                value={draftNewPasswordConfirm}
-                onChange={(e) => setDraftNewPasswordConfirm(e.target.value)}
-              />
-              {passwordError && <p className="mypage-error">{passwordError}</p>}
-              <div className="profile-tags-actions">
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-change"
-                  onClick={handleSavePassword}
-                  disabled={passwordSaving}
-                >
-                  {passwordSaving ? "저장 중..." : "저장"}
-                </button>
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-delete"
-                  onClick={() => setEditingPassword(false)}
-                  disabled={passwordSaving}
-                >
-                  취소
-                </button>
-              </div>
+          <div className="mb-5 flex flex-col gap-2 text-left">
+            <input
+              type="password"
+              placeholder="현재 비밀번호"
+              value={draftCurrentPassword}
+              onChange={(e) => setDraftCurrentPassword(e.target.value)}
+              className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+              style={{ borderColor: T.hairline, color: T.textPrimary }}
+            />
+            <input
+              type="password"
+              placeholder="새 비밀번호"
+              value={draftNewPassword}
+              onChange={(e) => setDraftNewPassword(e.target.value)}
+              className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+              style={{ borderColor: T.hairline, color: T.textPrimary }}
+            />
+            <input
+              type="password"
+              placeholder="새 비밀번호 확인"
+              value={draftNewPasswordConfirm}
+              onChange={(e) => setDraftNewPasswordConfirm(e.target.value)}
+              className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+              style={{ borderColor: T.hairline, color: T.textPrimary }}
+            />
+            {passwordError && <p className="text-[12px]" style={{ color: T.danger }}>{passwordError}</p>}
+            <div className="flex gap-2">
+              <PillButton onClick={handleSavePassword} disabled={passwordSaving}>
+                {passwordSaving ? "저장 중..." : "저장"}
+              </PillButton>
+              <PillButton variant="ghost" onClick={() => setEditingPassword(false)} disabled={passwordSaving}>
+                취소
+              </PillButton>
             </div>
           </div>
         )}
 
-          <div className="profile-card-info">
-          <div className="profile-card-info-row">
-            <span>가입일</span>
-            <span>{new Date(user.createdAt).toLocaleDateString("ko-KR")}</span>
-          </div>
-          <div className="profile-card-info-row">
-            <span>이메일</span>
-            <span>{user.email}</span>
-          </div>
-          <div className="profile-card-info-row">
-            <span>소셜 로그인</span>
-            <span>{!user.provider || user.provider === "LOCAL" ? "소셜 비연동" : user.provider}</span>
+        {/* ---------- 계정 정보 ---------- */}
+        <div className="rounded-2xl px-4 py-1" style={{ background: "#FAF6EF" }}>
+          {(
+            [
+              ["가입일", new Date(user.createdAt).toLocaleDateString("ko-KR")],
+              ["이메일", user.email],
+              ["소셜 로그인", !user.provider || user.provider === "LOCAL" ? "소셜 비연동" : user.provider],
+            ] as const
+          ).map(([label, value]) => (
+            <div
+              key={label}
+              className="flex items-center justify-between py-3"
+              style={{ borderBottom: `1px solid ${T.hairline}` }}
+            >
+              <span className="text-[13px]" style={{ color: T.textMuted }}>{label}</span>
+              <span className="text-[13px] font-medium" style={{ color: T.textPrimary }}>{value}</span>
+            </div>
+          ))}
+
+          <div className="flex items-center justify-between py-3">
+            <span className="text-[13px]" style={{ color: T.textMuted }}>프로필 공개</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={profilePublic}
+              aria-label="프로필 공개 여부"
+              onClick={() => setProfilePublic((prev) => !prev)}
+              className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
+              style={{ background: profilePublic ? T.accent : T.hairline }}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform"
+                style={{ transform: profilePublic ? "translateX(22px)" : "translateX(0)" }}
+              />
+            </button>
           </div>
         </div>
-
         {!isSocialAccount && (
-          <button type="button" className="mypage-avatar-btn mypage-avatar-btn-change" onClick={handleLinkKakao}>
+          <button type="button" className="w-full rounded-full py-2 text-[15px] font-bold mb-6 transition-opacity hover:opacity-80"
+            style={{ background: T.accent, color: "#fff" }} onClick={handleLinkKakao}>
             카카오 계정 연동하기
           </button>
         )}
+        {/* ---------- 회원탈퇴 ---------- */}
 
         {!showWithdrawConfirm ? (
-          <button
-            type="button"
-            className="profile-withdraw-btn"
-            onClick={() => {
-              setShowWithdrawConfirm(true);
-              setWithdrawError("");
-              setWithdrawPassword("");
-            }}
-          >
-            회원탈퇴
-          </button>
+          <div className="flex justify-end mt-5">
+            <button
+              type="button"
+              onClick={() => {
+                setShowWithdrawConfirm(true);
+                setWithdrawError("");
+                setWithdrawPassword("");
+              }}
+              className="inline-flex items-center gap-1 text-[12px] hover:underline"
+              style={{ color: T.textMuted }}
+            >
+              <LogOut size={11} />
+              회원탈퇴
+            </button>
+          </div>
         ) : (
-          <div className="profile-password-box">
-            <div className="profile-bio-editor">
-              <p className="mypage-error" style={{ color: "#333", fontWeight: 600 }}>
-                정말 탈퇴하시겠어요? 이 작업은 되돌릴 수 없어요.
-              </p>
-              {!isSocialAccount && (
-                <input
-                  type="password"
-                  className="profile-nickname-input"
-                  placeholder="비밀번호 확인"
-                  value={withdrawPassword}
-                  onChange={(e) => setWithdrawPassword(e.target.value)}
-                />
-              )}
-              {withdrawError && <p className="mypage-error">{withdrawError}</p>}
-              <div className="profile-tags-actions">
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-delete"
-                  onClick={handleConfirmWithdraw}
-                  disabled={withdrawing}
-                >
-                  {withdrawing ? "처리 중..." : "탈퇴하기"}
-                </button>
-                <button
-                  type="button"
-                  className="mypage-avatar-btn mypage-avatar-btn-change"
-                  onClick={() => setShowWithdrawConfirm(false)}
-                  disabled={withdrawing}
-                >
-                  취소
-                </button>
-              </div>
+          <div className="mt-5 flex flex-col gap-2 text-left">
+            <p className="text-[13px] font-semibold" style={{ color: T.textPrimary }}>
+              정말 탈퇴하시겠어요? 이 작업은 되돌릴 수 없어요.
+            </p>
+            {!isSocialAccount && (
+              <input
+                type="password"
+                placeholder="비밀번호 확인"
+                value={withdrawPassword}
+                onChange={(e) => setWithdrawPassword(e.target.value)}
+                className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+                style={{ borderColor: T.hairline, color: T.textPrimary }}
+              />
+            )}
+            {withdrawError && <p className="text-[12px]" style={{ color: T.danger }}>{withdrawError}</p>}
+            <div className="flex justify-end gap-2">
+              <PillButton variant="ghost" onClick={() => setShowWithdrawConfirm(false)} disabled={withdrawing}>
+                취소
+              </PillButton>
+              <button
+                type="button"
+                onClick={handleConfirmWithdraw}
+                disabled={withdrawing}
+                className="rounded-full px-4 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+                style={{ background: T.danger }}
+              >
+                {withdrawing ? "처리 중..." : "탈퇴하기"}
+              </button>
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

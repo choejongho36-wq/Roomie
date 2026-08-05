@@ -1,4 +1,6 @@
 .login-modal {
+  /* Tailwind Preflight가 <dialog>의 기본 margin:auto(중앙 정렬)를 0으로 리셋해버려서 명시적으로 되살림 */
+  margin: auto;
   border: none;
   border-radius: 12px;
   padding: 0;

@@ -283,6 +283,15 @@ export const updateSmoking = async (
   return response.data;
 };
 
+export const updateRegion = async (token: string, region: string): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/region`,
+    { region },
+    authHeader(token)
+  );
+  return response.data;
+};
+
 export const updateBio = async (token: string, bio: string): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/bio`,

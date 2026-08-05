@@ -64,6 +64,8 @@ public class AuthService {
                 request.smoking(),
                 request.smokingType()
         );
+        // 위에서 이미 이메일 인증 완료를 확인했으니 가입과 동시에 인증 상태로 저장
+        user.markEmailVerified();
         userRepository.save(user);
     }
 

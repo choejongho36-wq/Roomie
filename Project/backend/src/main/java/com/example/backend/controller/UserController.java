@@ -5,6 +5,7 @@ import com.example.backend.dto.AdditionalInfoRequest;
 import com.example.backend.dto.BioRequest;
 import com.example.backend.dto.NicknameRequest;
 import com.example.backend.dto.PasswordChangeRequest;
+import com.example.backend.dto.RegionRequest;
 import com.example.backend.dto.SmokingRequest;
 import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
@@ -249,6 +250,22 @@ public UserResponse updateSmoking(Authentication authentication, @RequestBody Sm
     userRepository.save(user);
     return toResponse(user);
 }
+
+    @PutMapping("/me/region")
+    public UserResponse updateRegion(Authentication authentication, @RequestBody RegionRequest request) {
+        String region = request.region() == null ? "" : request.region().trim();
+        if (region.isEmpty()) {
+            throw new IllegalArgumentException("선호 지역을 선택해주세요.");
+        }
+        if (region.length() > 100) {
+            throw new IllegalArgumentException("선호 지역이 너무 깁니다.");
+        }
+
+        User user = findUser(authentication);
+        user.updateRegionAndJob(region, user.getJob());
+        userRepository.save(user);
+        return toResponse(user);
+    }
 
     @PutMapping("/me/bio")
     public UserResponse updateBio(Authentication authentication, @RequestBody BioRequest request) {

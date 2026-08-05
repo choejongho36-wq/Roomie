@@ -224,6 +224,10 @@ public class User {
         this.job = job;
     }
 
+    public void markEmailVerified() {
+        this.emailVerified = true;
+    }
+
     // 회원가입용 생성자
     public User(String email, String password, String nickname, String gender, LocalDate birthDate) {
         this.email = email;
