@@ -94,12 +94,16 @@
   left: auto;
   right: 0;
   width: 280px;
+  max-width: calc(100vw - 32px);
   max-height: 320px;
   overflow-y: auto;
   transform: translateY(-8px) scaleY(0.95);
 }
 
-.navbar-dropdown:hover .navbar-notify-menu {
+/* .navbar-dropdown-menu.is-open(뒤에서 선언됨)와 클래스 2개짜리 동일 특정도라 소스 순서상
+   그쪽 transform(translateX(-50%)...)이 이겨서 알림창이 엉뚱한 위치로 밀려나 안 보였다.
+   클래스 3개로 특정도를 올려서 이 규칙이 항상 이기게 함 */
+.navbar-dropdown-menu.navbar-notify-menu.is-open {
   transform: translateY(0) scaleY(1);
 }
 
@@ -208,6 +212,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -295,9 +304,13 @@
 }
 
 .navbar-dropdown-trigger {
+  font: inherit;
   font-size: 15px;
   font-weight: 600;
-  cursor: default;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .navbar-dropdown-menu {
@@ -320,7 +333,7 @@
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
 }
 
-.navbar-dropdown:hover .navbar-dropdown-menu {
+.navbar-dropdown-menu.is-open {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
@@ -349,11 +362,12 @@
   left: auto;
   right: 0;
   width: 200px;
+  max-width: calc(100vw - 32px);
   padding: 8px;
   transform: translateY(-8px) scaleY(0.95);
 }
 
-.navbar-dropdown:hover .navbar-profile-dropdown-menu {
+.navbar-dropdown-menu.navbar-profile-dropdown-menu.is-open {
   transform: translateY(0) scaleY(1);
 }
 
@@ -437,4 +451,190 @@
 
 .navbar-menu a:hover {
   color: var(--navbar-text-hover);
+}
+
+.navbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--navbar-text);
+  cursor: pointer;
+  justify-self: end;
+}
+
+.navbar-hamburger svg {
+  /* 알림 벨 아이콘(.navbar-notify-btn .mypage-nav-icon)과 같은 20px로 맞춰서
+     새로 생긴 버튼만 유독 커 보이지 않게 함 */
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* 데스크톱에서는 이 래퍼가 레이아웃에 안 끼도록 통째로 무시 —
+   .navbar-menu/.navbar-auth가 지금처럼 grid의 직접 자식으로 배치된다 */
+.navbar-mobile-panel {
+  display: contents;
+}
+
+/* ===== 768px 이하: 가로 메뉴 대신 햄버거로 접힘 =====
+   .navbar-menu와 .navbar-auth를 각각 grid-column: 1/-1로 펼치면 grid가 이 둘을
+   서로 다른 행으로 취급해서 그 사이(그리고 로고/햄버거가 있는 첫 행과의 사이)에도
+   gap이 끼어, 접혀 있어야 할 때도 세로로 불필요하게 길어지고 로고·햄버거가
+   서로 다른 행에 놓여 위치가 어긋났었다. .navbar-mobile-panel 하나로 묶어서
+   grid에는 이거 한 덩어리만 별도 행(row 2)으로 들어가게 하고, 그 안에서
+   메뉴/인증 버튼은 그냥 세로로 쌓는다.
+   하우스/커뮤니티/고객센터 드롭다운(.navbar-menu 안)은 팝오버 대신 목록 안에 바로 펼쳐진다.
+   알림/프로필 드롭다운(.navbar-auth 안)은 원래대로 팝오버 형태를 유지한다. */
+@media (max-width: 768px) {
+  /* 접혔을 때(로고+햄버거만 있는 상태)는 내용이 적으니 데스크톱보다 더 얇게.
+     단, 이 높이는 MainPage.css의 .hero가 margin-top: -76px로 네비바 높이만큼
+     배경을 끌어올려 겹치게 그리는 계산과 짝이 맞아야 한다 — 여기서 높이를
+     바꾸면 .hero의 -76px도 같이 맞춰야 함(계산: 로고/햄버거 32px + 셸 padding
+     10px*2 + navbar padding 12px*2 = 76px). */
+  .navbar {
+    padding: 12px 20px;
+  }
+
+  .navbar-shell {
+    grid-template-columns: 1fr auto;
+    padding: 10px 20px;
+    /* 768px 이하에서는 열려 있든 닫혀 있든 항상 이 모서리만 쓴다 — 접힐 때 999px(알약)
+       로 바뀌면 도형이 바뀌는 것처럼 보여서, 펼쳐지고 접힐 때 높이만 쭉 늘었다 줄었다
+       하는 느낌만 나도록 모바일에서는 알약 모양 자체를 없앤다. */
+    border-radius: 28px;
+    /* row-gap은 펼쳤을 때만 필요 — 접혀 있을 땐 0으로 둬야 76px 계산이 정확히 맞는다 */
+    row-gap: 0;
+    column-gap: 12px;
+  }
+
+  .navbar.is-mobile-open .navbar-shell {
+    row-gap: 12px;
+  }
+
+  .navbar-logo img {
+    height: 32px;
+  }
+
+  .navbar-hamburger {
+    width: 32px;
+    height: 32px;
+    display: flex;
+  }
+
+  /* display:none↔flex는 애니메이션이 안 붙어서 뚝 끊겨 나타나 보였다.
+     대신 max-height/opacity를 트랜지션해서 펼쳐지는 느낌을 준다.
+     max-height 480px는 실제 목록보다 넉넉히 큰 값(끝에서 살짝 감속되는 정도는 자연스러움). */
+  .navbar-mobile-panel {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 0.28s ease, opacity 0.2s ease;
+  }
+
+  .navbar.is-mobile-open .navbar-mobile-panel {
+    max-height: 480px;
+    opacity: 1;
+    pointer-events: auto;
+    /* overflow:hidden이 접혀있는 동안(높이 애니메이션)엔 필요하지만, 펼쳐진 뒤에도
+       그대로 두면 알림/프로필처럼 position:absolute로 패널 바깥까지 튀어나오는
+       팝오버가 잘려서 안 보인다. 열린 상태에선 다시 보이게 풀어준다. */
+    overflow: visible;
+  }
+
+  .navbar-menu {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .navbar-auth {
+    align-items: center;
+    /* 알림/프로필 드롭다운은 right:0 기준으로 "이 트리거의 오른쪽 끝에 붙어라"고
+       계산돼 있는데, 데스크톱 grid에선 이 트리거가 항상 화면 맨 오른쪽에 있어서
+       맞았다. 모바일에서 .navbar-auth가 패널 폭 전체를 flex-start로 채우면
+       트리거가 화면 왼쪽 절반 즈음에 있게 돼서 팝오버가 왼쪽으로 잘려 나갔다.
+       flex-end로 오른쪽에 붙여서 같은 계산이 다시 맞게 만든다. */
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  /* flex-end로 오른쪽에 붙여도 알림 벨은 프로필 트리거 왼쪽에 나란히 있어서
+     "화면 진짜 오른쪽 끝"은 아니다 — 그 상태에서 알림창이 자기 버튼(작은 벨)
+     기준 right:0으로 펼쳐지면 280px 폭이 왼쪽으로 화면 밖까지 넘어갔다.
+     이 래퍼를 position:static으로 풀어서, 알림창의 절대위치 기준을
+     (position:relative인) 헤더 전체(.navbar)로 넘긴다 — 그러면 항상
+     화면 안쪽(.navbar의 padding 안)에서 오른쪽 정렬된다. */
+  .navbar-notify-dropdown {
+    position: static;
+  }
+
+  .navbar-menu > * {
+    width: 100%;
+    text-align: left;
+    padding: 10px 4px;
+  }
+
+  /* <button>의 기본 text-align은 center라서(브라우저 기본 스타일), 폭을 100%로
+     늘려도 텍스트가 가운데로 쏠려 "매칭"/"하우스"와 다르게 보였다. 명시적으로 왼쪽 정렬. */
+  .navbar-dropdown-trigger {
+    width: 100%;
+    text-align: left;
+  }
+
+  .navbar-menu-link::after {
+    display: none;
+  }
+
+  .navbar-dropdown {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* 커뮤니티/고객센터/하우스처럼 .navbar-menu 안에 있는 드롭다운만 인라인으로 펼침 */
+  .navbar-menu .navbar-dropdown-menu {
+    position: static;
+    min-width: 0;
+    box-shadow: none;
+    border: none;
+    /* 반투명 오버레이(흰색이든 검정이든)는 네비바 배경색에 따라 칙칙해지거나
+       글씨색과 비슷해지는 문제가 있어서, 데스크톱 팝오버와 같은 흰 카드 배경으로
+       통일 — 밝은/어두운 네브 변형 어느 쪽이든 항상 또렷하게 보인다.
+       width:100% 대신 좌우 margin만 줘서 자연스럽게 양쪽 다 안쪽으로 들어가게 함
+       (전에는 왼쪽만 padding-left라 오른쪽 끝에 그대로 붙어 있었다). */
+    background: #fff;
+    border-radius: 10px;
+    display: none;
+    margin: 4px 16px;
+    padding: 4px;
+    transform: none;
+  }
+
+  .navbar-menu .navbar-dropdown-menu.is-open {
+    display: block;
+  }
+
+  .navbar-menu .navbar-dropdown-item {
+    color: #333;
+  }
+
+  .navbar-profile-trigger {
+    width: 100%;
+    justify-content: space-between;
+  }
 }

@@ -2,11 +2,16 @@
   margin-top: -110px;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  /* center였는데, 회원가입 폼이 뷰포트보다 키가 커지면(입력칸이 많아서 흔한 경우)
+     세로 중앙 정렬 때문에 박스 윗부분이 0보다 위로, 즉 네비바 뒤로 밀려 올라가서
+     "회원가입" 제목이 네비바에 가려졌다. flex-start로 항상 위에서부터 쌓이게 해서
+     내용이 얼마나 길든 padding-top만큼은 항상 네비바 아래에서 시작하게 한다. */
+  align-items: flex-start;
   justify-content: center;
   background: linear-gradient(135deg, #e8763f 0%, #f4834f 45%, #ffc79b 100%);
   padding: 130px;
   font-family: "Pretendard", sans-serif;
+  box-sizing: border-box;
 }
 
 .signup-box {
@@ -20,6 +25,24 @@
   flex-direction: column;
   gap: 16px;
   text-align: left;
+  box-sizing: border-box;
+}
+
+/* 768px 이하에서는 Navbar.css가 접힌 네비바를 76px로 얇게 만들어서 위의
+   margin-top: -110px도 짝을 맞춰야 하고(계산은 Navbar.css 주석 참고),
+   130px 고정 padding은 좁은 화면에서 카드가 거의 안 보일 정도로 눌러버려서
+   같이 줄인다. */
+@media (max-width: 768px) {
+  .signup-page {
+    margin-top: -76px;
+    /* 위쪽만 96px: -76px 당겨진 만큼(76px)을 다시 내려서 네비바 아래에서 시작하고
+       거기에 여유 20px을 더함(데스크톱의 130px-110px=20px 여백과 동일한 계산) */
+    padding: 96px 16px 24px;
+  }
+
+  .signup-box {
+    padding: 28px 24px;
+  }
 }
 
 .signup-box h1 {

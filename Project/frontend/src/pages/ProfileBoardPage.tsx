@@ -57,6 +57,7 @@ function ProfileBoardPage() {
   const [selectedProfile, setSelectedProfile] = useState<RecommendationResult | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [isSendConfirmOpen, setIsSendConfirmOpen] = useState(false);
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
@@ -151,8 +152,7 @@ function ProfileBoardPage() {
   const selectedBoardProfile =
     pagedProfiles.find((item) => item.userId === selectedBoardUserId) ?? null;
 
-  const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
-    event.stopPropagation();
+  const loadComparison = (item: RecommendationResult) => {
     if (!token) return;
 
     setSelectedProfile(item);
@@ -177,6 +177,27 @@ function ProfileBoardPage() {
       .finally(() => setComparisonLoadingUserId(null));
   };
 
+  const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
+    event.stopPropagation();
+    loadComparison(item);
+  };
+
+  // recommend 페이지와 동일하게, 모달을 연 채로 화살표로 같은 페이지 안의 다른
+  // 프로필을 넘겨볼 수 있게 한다. 페이지 경계는 안 넘어간다(단순하게 유지).
+  const selectedProfileIndex = pagedProfiles.findIndex((item) => item.userId === selectedProfile?.userId);
+  const hasPrevProfile = selectedProfileIndex > 0;
+  const hasNextProfile = selectedProfileIndex !== -1 && selectedProfileIndex < pagedProfiles.length - 1;
+
+  const goToPrevProfile = () => {
+    if (!hasPrevProfile) return;
+    loadComparison(pagedProfiles[selectedProfileIndex - 1]);
+  };
+
+  const goToNextProfile = () => {
+    if (!hasNextProfile) return;
+    loadComparison(pagedProfiles[selectedProfileIndex + 1]);
+  };
+
   const closeComparison = () => {
     setIsComparisonOpen(false);
     setComparisonError("");
@@ -184,6 +205,7 @@ function ProfileBoardPage() {
     setAiExplanation(null);
     setAiExplanationError("");
     setAiExplanationLoading(false);
+    setIsSendConfirmOpen(false);
   };
 
   return (
@@ -299,13 +321,22 @@ function ProfileBoardPage() {
       )}
 
       {isComparisonOpen && (
-        <div className="comparison-modal-backdrop" onClick={closeComparison}>
+        <div className="comparison-modal-backdrop">
+          <button
+            type="button"
+            className="comparison-nav-arrow comparison-nav-prev"
+            onClick={goToPrevProfile}
+            disabled={!hasPrevProfile}
+            aria-label="이전 프로필 보기"
+          >
+            ◀
+          </button>
+
           <section
             className="comparison-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="board-comparison-title"
-            onClick={(event) => event.stopPropagation()}
           >
             <div className="comparison-modal-header">
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
@@ -374,6 +405,28 @@ function ProfileBoardPage() {
                   </div>
 
                   <div className="comparison-panel comparison-panel-profile">
+                    <div className="comparison-profile-preferences">
+                      <span className="comparison-preference-hover">
+                        희망 조건
+                        <span className="comparison-preference-tooltip">
+                          <span>
+                            선호지역 :{" "}
+                            <span className="comparison-preference-value">
+                              {selectedProfile?.region ?? "정보 없음"}
+                            </span>
+                          </span>
+                          <span>
+                            희망 월세 :{" "}
+                            <span className="comparison-preference-value">
+                              {comparisonLoadingUserId !== null
+                                ? "불러오는 중..."
+                                : comparison.items.find((item) => item.category === "월 생활비")?.otherAnswer ??
+                                  "정보 없음"}
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </div>
                     <img
                       className="comparison-profile-avatar"
                       src={getProfileImageSrc(selectedProfile?.profileImageUrl ?? null) ?? defaultAvatar}
@@ -418,11 +471,7 @@ function ProfileBoardPage() {
                   <button
                     type="button"
                     className="btn btn-primary comparison-start-chat-button"
-                    onClick={() =>
-                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
-                        state: { nickname: comparison.nickname },
-                      })
-                    }
+                    onClick={() => setIsSendConfirmOpen(true)}
                   >
                     {comparison.nickname}님에게 첫 메시지 보내기
                   </button>
@@ -430,6 +479,44 @@ function ProfileBoardPage() {
               </div>
             )}
           </section>
+
+          <button
+            type="button"
+            className="comparison-nav-arrow comparison-nav-next"
+            onClick={goToNextProfile}
+            disabled={!hasNextProfile}
+            aria-label="다음 프로필 보기"
+          >
+            ▶
+          </button>
+
+          {isSendConfirmOpen && comparison && (
+            <div className="send-confirm-backdrop">
+              <div className="send-confirm-box" role="dialog" aria-modal="true">
+                <p className="send-confirm-text">메시지를 보내시겠어요?</p>
+                <div className="send-confirm-actions">
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    onClick={() => setIsSendConfirmOpen(false)}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
+                        state: { nickname: comparison.nickname },
+                      });
+                    }}
+                  >
+                    보내기
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

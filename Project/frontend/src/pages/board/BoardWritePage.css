@@ -8,6 +8,17 @@
   font-family: "Pretendard", sans-serif;
 }
 
+@media (max-width: 640px) {
+  .board-write-page {
+    padding: 24px 16px 56px;
+  }
+
+  .board-write-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .board-write-header {
   width: 100%;
   box-sizing: border-box;
