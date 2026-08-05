@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, updateBio, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
+import { updateTags, updateBio, updateSmoking, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
 import {
   PROFILE_TAG_GROUPS,
   PROFILE_TAGS,
@@ -18,6 +18,15 @@ import NicknameModal from "./NicknameModal";
 import "./MyPageContent.css";
 
 const GENDER_LABEL: Record<string, string> = { M: "남성", F: "여성" };
+const SMOKING_TYPE_LABEL: Record<string, string> = { CIGARETTE: "연초", HEATED: "궐련형", LIQUID: "액상" };
+const formatSmokingLabel = (smoking?: string | null, smokingType?: string | null): string | null => {
+  if (smoking === "NON_SMOKER") return "비흡연자";
+  if (smoking === "SMOKER") {
+    const typeLabel = smokingType ? SMOKING_TYPE_LABEL[smokingType] : null;
+    return typeLabel ? `흡연자 (${typeLabel})` : "흡연자";
+  }
+  return null;
+};
 const MAX_BIO_LENGTH = 150;
 
 function getAge(birthDate: string) {
@@ -48,6 +57,11 @@ function MyProfilePage() {
   const [editingBio, setEditingBio] = useState(false);
   const [draftBio, setDraftBio] = useState("");
   const [bioSaving, setBioSaving] = useState(false);
+  const [editingSmoking, setEditingSmoking] = useState(false);
+  const [draftSmoking, setDraftSmoking] = useState("");
+  const [draftSmokingType, setDraftSmokingType] = useState("");
+  const [smokingSaving, setSmokingSaving] = useState(false);
+  const [smokingError, setSmokingError] = useState("");
   const [bioError, setBioError] = useState("");
   const [editingNickname, setEditingNickname] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
@@ -175,6 +189,36 @@ function MyProfilePage() {
     }
   };
 
+  const startEditSmoking = () => {
+    setDraftSmoking(user?.smoking ?? "");
+    setDraftSmokingType(user?.smokingType ?? "");
+    setSmokingError("");
+    setEditingSmoking(true);
+  };
+
+  const handleSaveSmoking = async () => {
+    if (!token) return;
+    if (!draftSmoking) {
+      setSmokingError("흡연 여부를 선택해주세요.");
+      return;
+    }
+    if (draftSmoking === "SMOKER" && !draftSmokingType) {
+      setSmokingError("흡연 종류를 선택해주세요.");
+      return;
+    }
+    setSmokingSaving(true);
+    setSmokingError("");
+    try {
+      const updated = await updateSmoking(token, draftSmoking, draftSmoking === "SMOKER" ? draftSmokingType : null);
+      setUser(updated);
+      setEditingSmoking(false);
+    } catch (err) {
+      setSmokingError(extractErrorMessage(err, "저장에 실패했습니다."));
+    } finally {
+      setSmokingSaving(false);
+    }
+  };
+
   const startEditPassword = () => {
     setDraftCurrentPassword("");
     setDraftNewPassword("");
@@ -284,6 +328,62 @@ function MyProfilePage() {
         <p className="profile-card-meta">
           {getAge(user.birthDate)}세 · {GENDER_LABEL[user.gender] ?? user.gender}
         </p>
+
+        <div className="profile-bio-box">
+          {!editingSmoking ? (
+            <>
+              <p className="profile-bio-text">
+                {formatSmokingLabel(user.smoking, user.smokingType) ?? "흡연 여부를 설정해주세요."}
+              </p>
+              <button
+                type="button"
+                className="profile-box-edit-btn"
+                onClick={startEditSmoking}
+                aria-label="흡연여부 편집"
+              >
+                편집
+              </button>
+            </>
+          ) : (
+            <div className="profile-bio-editor">
+              <select value={draftSmoking} onChange={(e) => {
+                setDraftSmoking(e.target.value);
+                if (e.target.value !== "SMOKER") setDraftSmokingType("");
+              }}>
+                <option value="" disabled>선택해주세요</option>
+                <option value="NON_SMOKER">비흡연자</option>
+                <option value="SMOKER">흡연자</option>
+              </select>
+              {draftSmoking === "SMOKER" && (
+                <select value={draftSmokingType} onChange={(e) => setDraftSmokingType(e.target.value)}>
+                  <option value="" disabled>흡연 종류 선택</option>
+                  <option value="CIGARETTE">연초</option>
+                  <option value="HEATED">궐련형</option>
+                  <option value="LIQUID">액상</option>
+                </select>
+              )}
+              {smokingError && <p className="mypage-error">{smokingError}</p>}
+              <div className="profile-tags-actions">
+                <button
+                  type="button"
+                  className="mypage-avatar-btn mypage-avatar-btn-change"
+                  onClick={handleSaveSmoking}
+                  disabled={smokingSaving}
+                >
+                  {smokingSaving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  type="button"
+                  className="mypage-avatar-btn mypage-avatar-btn-delete"
+                  onClick={() => setEditingSmoking(false)}
+                  disabled={smokingSaving}
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="profile-bio-box">
           {!editingBio ? (

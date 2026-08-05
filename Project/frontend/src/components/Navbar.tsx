@@ -15,7 +15,7 @@ import { useMatchingRedirect } from "../hooks/useMatchingRedirect";
 const PROFILE_MENU_ITEMS = NAV_ITEMS.filter((item) => item.icon !== "bell");
 
 // 배경 자체가 진한 오렌지 그라데이션인 페이지 — 네비바는 연한 필로 반전해서 대비를 준다.
-const VIVID_BACKGROUND_PATHS = new Set(["/", "/signup"]);
+const VIVID_BACKGROUND_PATHS = new Set(["/", "/signup", "/complete-profile"]);
 
 function Navbar() {
   const navigate = useNavigate();

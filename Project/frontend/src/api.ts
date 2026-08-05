@@ -253,6 +253,19 @@ export const updateTags = async (token: string, tags: string[]): Promise<User> =
   return response.data;
 };
 
+export const updateSmoking = async (
+  token: string,
+  smoking: string,
+  smokingType: string | null
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/smoking`,
+    { smoking, smokingType },
+    authHeader(token)
+  );
+  return response.data;
+};
+
 export const updateBio = async (token: string, bio: string): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/bio`,

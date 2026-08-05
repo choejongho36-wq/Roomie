@@ -111,7 +111,7 @@ public class AdminController {
 
     // duration: "7", "30", "PERMANENT"
     @PostMapping("/admin/users/{id}/suspend")
-    public String suspendUser(@PathVariable("id") Long id, @RequestParam String duration) {
+    public String suspendUser(@PathVariable("id") Long id, @RequestParam(name = "duration") String duration) {
         userRepository.findById(id).ifPresent(user -> {
             LocalDateTime until = switch (duration) {
                 case "7" -> LocalDateTime.now().plusDays(7);
@@ -320,7 +320,7 @@ public class AdminController {
     }
 
     @PostMapping("/admin/inquiries/{id}/answer")
-    public String answerInquiry(@PathVariable("id") Long id, @RequestParam String answer) {
+    public String answerInquiry(@PathVariable("id") Long id, @RequestParam(name = "answer") String answer) {
         Inquiry inquiry = inquiryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의입니다."));
         inquiry.answer(answer);

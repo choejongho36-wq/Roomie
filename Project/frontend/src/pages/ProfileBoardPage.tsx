@@ -23,6 +23,22 @@ const getProfileImageSrc = (url: string | null) => {
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
 
+const SMOKING_TYPE_LABELS: Record<string, string> = {
+  CIGARETTE: "연초",
+  HEATED: "궐련형",
+  LIQUID: "액상",
+};
+
+// "SMOKER" + "HEATED" -> "흡연자(궐련형)", "NON_SMOKER" -> "비흡연자", 정보 없으면 null
+const formatSmoking = (smoking?: string | null, smokingType?: string | null): string | null => {
+  if (smoking === "NON_SMOKER") return "비흡연자";
+  if (smoking === "SMOKER") {
+    const typeLabel = smokingType ? SMOKING_TYPE_LABELS[smokingType] : null;
+    return typeLabel ? `흡연자(${typeLabel})` : "흡연자";
+  }
+  return null;
+};
+
 function ProfileBoardPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -216,6 +232,9 @@ function ProfileBoardPage() {
                       <strong>{item.nickname}</strong>
                       <span className="profile-board-list-age-region">
                         {item.age}세 · {item.region ?? "지역 정보 준비 중"}
+                        {formatSmoking(item.smoking, item.smokingType) && (
+                          <> · {formatSmoking(item.smoking, item.smokingType)}</>
+                        )}
                       </span>
                     </span>
                     <span className="profile-board-list-score">{item.compatibilityScore}점</span>
@@ -242,6 +261,9 @@ function ProfileBoardPage() {
                     {selectedBoardProfile.job ? ` · ${selectedBoardProfile.job}` : " · 직업 정보 준비 중"}
                     {" · "}
                     {selectedBoardProfile.region ?? "지역 정보 준비 중"}
+                    {formatSmoking(selectedBoardProfile.smoking, selectedBoardProfile.smokingType) && (
+                      <> · {formatSmoking(selectedBoardProfile.smoking, selectedBoardProfile.smokingType)}</>
+                    )}
                   </p>
                 </div>
               </div>
@@ -360,6 +382,9 @@ function ProfileBoardPage() {
                     <p className="comparison-profile-name">{comparison.nickname}</p>
                     <p className="comparison-profile-meta">
                       {selectedProfile?.age}세 · {selectedProfile?.job} · {selectedProfile?.region}
+                      {formatSmoking(selectedProfile?.smoking, selectedProfile?.smokingType) && (
+                        <> · {formatSmoking(selectedProfile?.smoking, selectedProfile?.smokingType)}</>
+                      )}
                     </p>
                     <p className="comparison-profile-bio">
                       {selectedProfile?.bio && selectedProfile.bio.trim()

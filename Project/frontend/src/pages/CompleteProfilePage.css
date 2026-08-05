@@ -1,10 +1,11 @@
 .complete-profile-page {
-  min-height: calc(100vh - 72px);
+  margin-top: -110px;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7f7f7;
-  padding: 24px;
+  background: linear-gradient(135deg, #e8763f 0%, #f4834f 45%, #ffc79b 100%);
+  padding: 130px;
   font-family: "Pretendard", sans-serif;
 }
 
@@ -22,16 +23,14 @@
 }
 
 .complete-profile-box h1 {
-  font-size: 22px;
-  margin: 0 0 4px;
+  font-size: 24px;
+  margin: 0 0 8px;
   text-align: center;
 }
 
 .complete-profile-box p {
   text-align: center;
   color: #555;
-  font-size: 14px;
-  margin: 0 0 8px;
 }
 
 .complete-profile-box label {
