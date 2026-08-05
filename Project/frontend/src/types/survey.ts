@@ -32,6 +32,8 @@ export interface RecommendationResult {
   age: number;
   job?: string | null;
   region?: string | null;
+  smoking?: string | null;
+  smokingType?: string | null;
   emailVerified: boolean;
   // 설문 "희망 월세" 응답이 가리키는 구간(만원). 전세·년세이거나 설문 응답이 없으면 둘 다 null.
   desiredRentMin?: number | null;

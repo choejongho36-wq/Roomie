@@ -5,6 +5,7 @@ import com.example.backend.dto.AdditionalInfoRequest;
 import com.example.backend.dto.BioRequest;
 import com.example.backend.dto.NicknameRequest;
 import com.example.backend.dto.PasswordChangeRequest;
+import com.example.backend.dto.SmokingRequest;
 import com.example.backend.dto.TagsRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
@@ -131,7 +132,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public List<UserSearchResponse> search(Authentication authentication, @RequestParam String nickname) {
+    public List<UserSearchResponse> search(Authentication authentication, @RequestParam(name = "nickname") String nickname) {
         User currentUser = findUser(authentication);
         if (nickname == null || nickname.isBlank()) {
             return List.of();
@@ -232,6 +233,22 @@ public class UserController {
         userRepository.save(user);
         return toResponse(user);
     }
+
+    @PutMapping("/me/smoking")
+public UserResponse updateSmoking(Authentication authentication, @RequestBody SmokingRequest request) {
+    if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
+        throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
+    }
+    if ("SMOKER".equals(request.smoking())
+            && (request.smokingType() == null || request.smokingType().isBlank())) {
+        throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
+    }
+
+    User user = findUser(authentication);
+    user.updateSmoking(request.smoking(), request.smokingType());
+    userRepository.save(user);
+    return toResponse(user);
+}
 
     @PutMapping("/me/bio")
     public UserResponse updateBio(Authentication authentication, @RequestBody BioRequest request) {

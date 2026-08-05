@@ -38,17 +38,17 @@ public class AuthController {
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam String email) {
+    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam(name = "email") String email) {
         return ResponseEntity.ok(authService.checkEmail(email));
     }
 
     @GetMapping("/check-login-id")
-    public ResponseEntity<LoginIdCheckResponse> checkLoginId(@RequestParam String loginId) {
+    public ResponseEntity<LoginIdCheckResponse> checkLoginId(@RequestParam(name = "loginId") String loginId) {
         return ResponseEntity.ok(authService.checkLoginId(loginId));
     }
 
     @GetMapping("/check-nickname")
-    public ResponseEntity<NicknameCheckResponse> checkNickname(@RequestParam String nickname) {
+    public ResponseEntity<NicknameCheckResponse> checkNickname(@RequestParam(name = "nickname") String nickname) {
         return ResponseEntity.ok(authService.checkNickname(nickname));
     }
 
@@ -77,7 +77,7 @@ public class AuthController {
     // 인증번호 확인은 위의 공용 /email/verify-confirm 을 그대로 재사용함
 
     @GetMapping("/find-id/result")
-    public ResponseEntity<FindIdResponse> findIdResult(@RequestParam String email) {
+    public ResponseEntity<FindIdResponse> findIdResult(@RequestParam(name = "email") String email) {
         return ResponseEntity.ok(authService.findLoginId(email));
     }
 

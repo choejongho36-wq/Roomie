@@ -108,6 +108,8 @@ public class CompatibilityService {
                 calculateAge(user.getBirthDate()),
                 user.getJob(),
                 user.getRegion(),
+                user.getSmoking(),
+                user.getSmokingType(),
                 user.getEmailVerified(),
                 rentRange.min(),
                 rentRange.max()
