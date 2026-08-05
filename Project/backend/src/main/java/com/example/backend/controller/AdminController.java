@@ -201,7 +201,22 @@ public class AdminController {
     @GetMapping("/admin/notices")
     public String notices(@RequestParam(required = false) String type, Model model) {
         List<String> boardTypes = (type != null && !type.isBlank()) ? List.of(type) : List.of("공지사항", "이벤트");
-        List<Post> notices = postRepository.findByBoardTypeInOrderByCreatedAtDesc(boardTypes);
+        List<Post> notices = new ArrayList<>(postRepository.findByBoardTypeInOrderByCreatedAtDesc(boardTypes));
+        // 고정된 글을 pinOrder 오름차순(같으면 postId 오름차순)으로 맨 위에 먼저 보여주고,
+        // 그 아래는 기존처럼 최신순. postId 2차 기준은 고정된 글끼리 비교할 때만 적용해서,
+        // 고정 안 된 글들의 "최신순" 정렬에는 영향이 없게 한다.
+        notices.sort((a, b) -> {
+            if (a.isPinned() != b.isPinned()) {
+                return a.isPinned() ? -1 : 1;
+            }
+            if (a.isPinned()) {
+                int byOrder = Integer.compare(
+                        a.getPinOrder() == null ? Integer.MAX_VALUE : a.getPinOrder(),
+                        b.getPinOrder() == null ? Integer.MAX_VALUE : b.getPinOrder());
+                return byOrder != 0 ? byOrder : Long.compare(a.getPostId(), b.getPostId());
+            }
+            return b.getCreatedAt().compareTo(a.getCreatedAt());
+        });
         model.addAttribute("notices", notices);
         model.addAttribute("authorNames", authorNameMap(notices.stream().map(Post::getUserId).toList()));
         model.addAttribute("type", type == null ? "" : type);
@@ -256,6 +271,23 @@ public class AdminController {
                 content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
         postService.adminUpdate(id, request);
         return "redirect:/admin/notices";
+    }
+
+    @PostMapping("/admin/notices/{id}/pin")
+    public String togglePinNotice(@PathVariable("id") Long id,
+            @RequestParam(required = false) String type) {
+        Post notice = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지입니다."));
+        postService.adminSetPinned(id, !notice.isPinned());
+        return "redirect:/admin/notices" + (type != null && !type.isBlank() ? "?type=" + type : "");
+    }
+
+    @PostMapping("/admin/notices/{id}/pin-order")
+    public String moveNoticePinOrder(@PathVariable("id") Long id,
+            @RequestParam String direction,
+            @RequestParam(required = false) String type) {
+        postService.adminMovePinOrder(id, "up".equals(direction));
+        return "redirect:/admin/notices" + (type != null && !type.isBlank() ? "?type=" + type : "");
     }
 
     // ===== 문의 관리 =====

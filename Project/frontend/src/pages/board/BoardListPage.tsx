@@ -68,8 +68,20 @@ function BoardListPage() {
 
   const filteredPosts = useMemo(() => {
     if (!posts) return [];
-    return posts
+
+    // 관리자가 고정한 공지사항/이벤트는 지금 보고 있는 게시판이 무엇이든(자유 게시판이든
+    // 공지사항/이벤트 탭이든) 항상 맨 위에 먼저 보여준다. 문의 게시판은 이 컴포넌트를
+    // 아예 쓰지 않으니 자연히 대상에서 빠진다.
+    const pinnedPosts = posts
+      .filter((post) => post.pinned && post.boardType && SPECIAL_BOARDS.includes(post.boardType))
+      // pinOrder가 같은 경우(정상적으로는 안 생기지만 혹시를 대비해) postId로 한 번 더 정렬해서,
+      // 관리자 페이지와 항상 같은 순서로 보이게 한다.
+      .sort((a, b) => (a.pinOrder ?? 0) - (b.pinOrder ?? 0) || a.postId - b.postId);
+    const pinnedIds = new Set(pinnedPosts.map((post) => post.postId));
+
+    const rest = posts
       .filter((post) => {
+        if (pinnedIds.has(post.postId)) return false; // 위 고정 목록에 이미 포함되므로 중복 방지
         if (!boardType) return true;
         // "자유 게시판"은 별도 boardType 값이 아니라, 공지사항/이벤트를 뺀
         // 카테고리(고민상담·잡담 등)로 분류된 글 전체를 묶어서 보여준다.
@@ -81,6 +93,8 @@ function BoardListPage() {
       // 최신 글이 맨 위로 오도록 작성일 기준 내림차순 정렬. (백엔드가 정렬 없이
       // 그냥 저장 순서대로 내려주고 있어서 프론트에서 한 번 더 정렬해준다.)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return [...pinnedPosts, ...rest];
   }, [posts, boardType]);
 
   // 게시판(필터)을 바꾸면 이전 게시판에서 보던 페이지 번호가 아니라 1페이지부터 다시 보여준다.
@@ -129,7 +143,7 @@ function BoardListPage() {
         <div className="board-table-wrap">
           <table className="board-table">
             <colgroup>
-              <col style={{ width: 70 }} />
+              <col style={{ width: 84 }} />
               <col />
               <col style={{ width: 140 }} />
               <col style={{ width: 90 }} />
@@ -143,7 +157,7 @@ function BoardListPage() {
                 <th>작성자</th>
                 <th>작성일</th>
                 <th>조회수</th>
-                <th>찜</th>
+                <th>추천</th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +169,15 @@ function BoardListPage() {
                 >
                   {/* 관리자 페이지(게시글 관리)의 ID 열과 값을 일치시키기 위해, 화면에 다시 계산한
                       순번이 아니라 실제 게시글 고유 id(postId)를 그대로 보여준다. */}
-                  <td className="board-table-number-cell">{post.postId}</td>
+                  <td className="board-table-number-cell">
+                    {post.pinned ? (
+                      <span className="board-table-pinned-badge">
+                        {post.boardType === "이벤트" ? "이벤트" : "공지"}
+                      </span>
+                    ) : (
+                      post.postId
+                    )}
+                  </td>
                   <td className="board-table-title-cell">
                     <Link to={`/board/${post.postId}`} onClick={(e) => e.stopPropagation()}>
                       {post.title || post.region || "제목 없음"}
@@ -169,7 +191,7 @@ function BoardListPage() {
                   </td>
                   <td>{formatShortDate(post.createdAt)}</td>
                   <td>{post.viewCount}</td>
-                  <td>{post.bookmarkCount}</td>
+                  <td>{post.recommendCount}</td>
                 </tr>
               ))}
             </tbody>
