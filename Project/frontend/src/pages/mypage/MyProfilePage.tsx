@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, Sparkles, X, BadgeCheck } from "lucide-react";
+import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, Sparkles, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { updateTags, updateBio, updateSmoking, updateRegion, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
 import RegionPicker, { parseRegionToken, type RegionToken } from "../../components/RegionPicker";
@@ -154,6 +154,7 @@ function MyProfilePage() {
   const [draftRegionTokens, setDraftRegionTokens] = useState<RegionToken[]>([]);
   const [regionSaving, setRegionSaving] = useState(false);
   const [regionError, setRegionError] = useState("");
+  const [profilePublic, setProfilePublic] = useState(true);
   const [bioError, setBioError] = useState("");
   const [editingNickname, setEditingNickname] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
@@ -433,14 +434,29 @@ function MyProfilePage() {
           </div>
 
           <div className="flex items-center gap-1.5 mb-0.5">
-            <h1 className="text-[30px] font-bold m-1" style={{ color: T.textPrimary }}>
-              {user.nickname}
-            </h1>
-            {user.emailVerified && (
-              <span title="이메일 인증 완료" aria-label="이메일 인증 완료" style={{ color: T.accent }}>
-                <BadgeCheck size={17} strokeWidth={2.2} />
-              </span>
-            )}
+            <div className="relative">
+              {user.emailVerified && (
+                <span
+                  title="이메일 인증 완료"
+                  aria-label="이메일 인증 완료"
+                  className="absolute -left-7 top-1/2 -translate-y-1/2"
+                >
+                  {/* 방패 테두리와 체크 표시의 두께를 다르게 주기 위해 lucide ShieldCheck를 커스텀 svg로 대체 */}
+                  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                    <path
+                      d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                      fill={T.accent}
+                      stroke="#fff"
+                      strokeWidth={2.2}
+                    />
+                    <path d="m9 12 2 2 4-4" stroke="#fff" strokeWidth={1.4} />
+                  </svg>
+                </span>
+              )}
+              <h1 className="text-[30px] font-bold m-1" style={{ color: T.textPrimary }}>
+                {user.nickname}
+              </h1>
+            </div>
             <button
               type="button"
               onClick={() => setEditingNickname(true)}
@@ -462,7 +478,7 @@ function MyProfilePage() {
           )}
 
           <p className="text-[13px] font-medium mb-1" style={{ color: T.textPrimary }}>
-            {getAge(user.birthDate)}세 · {GENDER_LABEL[user.gender] ?? user.gender}
+            {[`${getAge(user.birthDate)}세`, GENDER_LABEL[user.gender] ?? user.gender, user.job].filter(Boolean).join(" · ")}
           </p>
 
           {/* 흡연 여부 + 선호 지역 — 칩을 클릭하면 바로 편집 모드로 전환 */}
@@ -842,16 +858,34 @@ function MyProfilePage() {
               ["이메일", user.email],
               ["소셜 로그인", !user.provider || user.provider === "LOCAL" ? "소셜 비연동" : user.provider],
             ] as const
-          ).map(([label, value], i, arr) => (
+          ).map(([label, value]) => (
             <div
               key={label}
               className="flex items-center justify-between py-3"
-              style={i < arr.length - 1 ? { borderBottom: `1px solid ${T.hairline}` } : {}}
+              style={{ borderBottom: `1px solid ${T.hairline}` }}
             >
               <span className="text-[13px]" style={{ color: T.textMuted }}>{label}</span>
               <span className="text-[13px] font-medium" style={{ color: T.textPrimary }}>{value}</span>
             </div>
           ))}
+
+          <div className="flex items-center justify-between py-3">
+            <span className="text-[13px]" style={{ color: T.textMuted }}>프로필 공개</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={profilePublic}
+              aria-label="프로필 공개 여부"
+              onClick={() => setProfilePublic((prev) => !prev)}
+              className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
+              style={{ background: profilePublic ? T.accent : T.hairline }}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform"
+                style={{ transform: profilePublic ? "translateX(22px)" : "translateX(0)" }}
+              />
+            </button>
+          </div>
         </div>
 
         {/* ---------- 회원탈퇴 ---------- */}
