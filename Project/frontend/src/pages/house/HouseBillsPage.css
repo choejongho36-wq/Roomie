@@ -84,6 +84,23 @@
 .house-bills-list-title {
   font-weight: 600;
   color: #333;
+  /* grid의 1fr 열은 기본적으로 내용(min-content)보다 안 좁아져서, 긴 제목이
+     좁은 화면에서 금액/삭제 버튼 칸을 밀어내 줄 전체가 넘칠 수 있다.
+     줄임표로 자르고 min-width:0으로 실제로 줄어들 수 있게 한다. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .house-bills-list {
+    padding: 12px 16px;
+  }
+
+  .house-bills-list-row {
+    gap: 8px;
+  }
 }
 
 .house-bills-list-payer {

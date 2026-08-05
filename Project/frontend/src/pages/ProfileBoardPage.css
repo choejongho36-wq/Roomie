@@ -274,6 +274,22 @@
 }
 
 @media (max-width: 720px) {
+  /* "헤더~목록~상세 카드가 스크롤 없이 한 화면에 다 보이게" 하려고 #root 자체를
+     100svh로 고정하고 overflow:hidden을 걸어둔 건데, 이건 헤더/목록/상세가
+     가로로 나란히 있는 데스크톱 레이아웃 기준이다. 720px 이하에서는 이게 전부
+     세로로 쌓이면서 총 높이가 폰 화면보다 훨씬 커지는데, 페이지 스크롤 자체가
+     막혀 있어서 목록 아래(자기소개/태그/비교 버튼 등)가 화면에 아예 안 보이고
+     스크롤할 방법도 없었다. 모바일에서는 이 잠금을 풀어서 그냥 페이지 스크롤로
+     다 보이게 한다. */
+  #root.profile-board-viewport-lock {
+    height: auto;
+    overflow: visible;
+  }
+
+  .profile-board-page {
+    height: auto;
+  }
+
   .profile-board-header {
     flex-direction: column;
     align-items: stretch;
@@ -295,6 +311,10 @@
 
   .profile-board-list {
     flex: 0 0 auto;
+    /* 데스크톱용 min-height: 448px가 그대로 남아있으면 min이 항상 max보다
+       우선이라 아래 max-height: 280px가 무시되고 목록이 그대로 448px로
+       나온다 — min부터 같이 풀어줘야 한다. */
+    min-height: 0;
     max-height: 280px;
   }
 

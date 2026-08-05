@@ -38,6 +38,20 @@
   }
 }
 
+/* 900px 이하에서는 요약 패널이 카드 목록 왼쪽이 아니라 위로 올라오는 구조라
+   (아래 900px 미디어쿼리에서 1열로 바뀜), 왼쪽에서 들어오는 느낌 대신
+   위에서 아래로 슬라이딩해 들어오는 느낌으로 바꾼다. */
+@keyframes recommendation-summary-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .recommendation-summary {
     animation: none;
@@ -864,6 +878,7 @@
   .recommendation-summary {
     width: 100%;
     box-sizing: border-box;
+    animation-name: recommendation-summary-in-top;
   }
 }
 
@@ -894,6 +909,14 @@
   .comparison-modal-backdrop {
     align-items: stretch;
     padding: 16px;
+  }
+
+  /* 부모를 align-items:stretch로 바꾸면서(모달 카드가 세로로 꽉 차게 하려던 것),
+     고정 크기(44px)라 실제로는 안 늘어나는 화살표 버튼도 늘어난 것처럼 취급돼
+     세로 중앙이 아니라 맨 위(cross-axis 시작점)에 붙어버렸다. 화살표만 다시
+     중앙 정렬로 되돌린다. */
+  .comparison-nav-arrow {
+    align-self: center;
   }
 
   .comparison-modal {

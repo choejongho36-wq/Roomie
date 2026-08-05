@@ -170,6 +170,28 @@
   border-collapse: collapse;
 }
 
+/* 번호/제목/작성자/작성일/조회수/추천 6개 열이 좁은 화면에서 찌그러지는 대신,
+   가로 스크롤로 볼 수 있게 한다 (열을 숨기는 대신 전부 그대로 보여주는 쪽을 택함). */
+@media (max-width: 640px) {
+  .board-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .board-table {
+    min-width: 560px;
+  }
+
+  .board-list-page {
+    padding: 24px 16px 56px;
+  }
+
+  .board-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .board-table th {
   text-align: left;
   font-size: 13px;

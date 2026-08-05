@@ -34,6 +34,20 @@
   background: #faf7f2;
 }
 
+/* 카테고리 이름이 길면 티어 버튼 3개랑 한 줄에서 자리다툼하다 좁은 화면에서
+   찌그러지거나 겹쳐 보여서, 세로로 쌓이게 바꾼다 */
+@media (max-width: 480px) {
+  .survey-weights-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .survey-weights-tiers {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+}
+
 .survey-weights-category {
   font-size: 14px;
   font-weight: 700;

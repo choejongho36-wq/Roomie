@@ -11,6 +11,17 @@
   font-family: "Pretendard", sans-serif;
 }
 
+@media (max-width: 640px) {
+  .board-detail-page {
+    margin: 20px auto 56px;
+    padding: 24px 16px;
+  }
+
+  .board-detail-header h1 {
+    font-size: 21px;
+  }
+}
+
 .info-modal-backdrop {
   position: fixed;
   inset: 0;
