@@ -91,6 +91,15 @@ export const toggleBookmark = async (token: string, postId: number): Promise<Pos
   return response.data;
 };
 
+export const toggleRecommend = async (token: string, postId: number): Promise<Post> => {
+  const response = await axios.post<Post>(
+    `${API_BASE_URL}/posts/${postId}/recommend`,
+    {},
+    authHeader(token)
+  );
+  return response.data;
+};
+
 export const reportPost = async (token: string, postId: number, reason: string): Promise<void> => {
   await axios.post(
     `${API_BASE_URL}/posts/${postId}/report`,

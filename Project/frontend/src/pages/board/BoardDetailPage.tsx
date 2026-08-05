@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, updateComment } from "../../api";
+import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, toggleRecommend, updateComment } from "../../api";
 import type { Comment, Post } from "../../types/board";
 import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
@@ -325,6 +325,21 @@ function BoardDetailPage() {
     }
   };
 
+  const handleToggleRecommend = async () => {
+    if (!post) return;
+    if (!token) {
+      setInfoModal("추천하려면 로그인이 필요해요.");
+      return;
+    }
+    if (isAuthor) return;
+    try {
+      const updated = await toggleRecommend(token, post.postId);
+      setPost(updated);
+    } catch {
+      setInfoModal("추천 처리에 실패했어요. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
   const handleDeletePost = () => {
     if (!token || !post) return;
     setConfirmModal({
@@ -447,6 +462,16 @@ function BoardDetailPage() {
             <span aria-hidden="true">{post.bookmarked ? "🧡" : "🤍"}</span>
             찜 {post.bookmarkCount}
           </button>
+          {!isAuthor && (
+            <button
+              type="button"
+              className={`board-detail-recommend-button${post.recommended ? " is-active" : ""}`}
+              onClick={handleToggleRecommend}
+            >
+              <span aria-hidden="true">👍</span>
+              추천 {post.recommendCount}
+            </button>
+          )}
         </div>
         {post.tags && (
           <div className="board-detail-tags">

@@ -21,6 +21,10 @@ export interface Post {
   bookmarked: boolean;
   createdAt: string;
   updatedAt: string | null;
+  pinned: boolean;
+  pinOrder: number | null;
+  recommendCount: number;
+  recommended: boolean;
 }
 
 export interface PostRequest {

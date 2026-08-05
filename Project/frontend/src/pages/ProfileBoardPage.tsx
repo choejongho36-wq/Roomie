@@ -12,6 +12,7 @@ import type { RecommendationResult, SurveyComparisonResult } from "../types/surv
 import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import RentRangeDropdown from "../components/RentRangeDropdown";
+import Pagination from "../components/Pagination";
 import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
@@ -33,6 +34,9 @@ function ProfileBoardPage() {
   const RENT_MAX = 100;
   const [rentRange, setRentRange] = useState<[number, number]>([RENT_MIN, RENT_MAX]);
   const [selectedBoardUserId, setSelectedBoardUserId] = useState<number | null>(null);
+  // 목록을 스크롤 대신 페이지 단위로 넘겨서, 페이지 전체가 스크롤 없이 헤더~푸터가 한 화면에 보이게 한다.
+  const PAGE_SIZE = 6;
+  const [page, setPage] = useState(0);
 
   const [selectedProfile, setSelectedProfile] = useState<RecommendationResult | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
@@ -107,18 +111,29 @@ function ProfileBoardPage() {
 
   const isFiltered = selectedRegions.length > 0 || isRentFiltered;
 
+  // 지역/월세 필터가 바뀌면 이전 필터에서 보던 페이지 번호가 아니라 1페이지부터 다시 보여준다.
   useEffect(() => {
-    if (filteredProfiles.length === 0) {
+    setPage(0);
+  }, [selectedRegions, rentRange]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
+  // 필터링 결과가 줄어들어 지금 페이지가 범위를 벗어나면 마지막 유효 페이지로 되돌린다.
+  const safePage = Math.min(page, totalPages - 1);
+  const pagedProfiles = filteredProfiles.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+
+  useEffect(() => {
+    if (pagedProfiles.length === 0) {
       setSelectedBoardUserId(null);
       return;
     }
-    if (!filteredProfiles.some((item) => item.userId === selectedBoardUserId)) {
-      setSelectedBoardUserId(filteredProfiles[0].userId);
+    if (!pagedProfiles.some((item) => item.userId === selectedBoardUserId)) {
+      setSelectedBoardUserId(pagedProfiles[0].userId);
     }
-  }, [filteredProfiles, selectedBoardUserId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagedProfiles, selectedBoardUserId]);
 
   const selectedBoardProfile =
-    filteredProfiles.find((item) => item.userId === selectedBoardUserId) ?? null;
+    pagedProfiles.find((item) => item.userId === selectedBoardUserId) ?? null;
 
   const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
     event.stopPropagation();
@@ -179,8 +194,9 @@ function ProfileBoardPage() {
         </p>
       ) : (
         <div className="profile-board-layout">
+          <div className="profile-board-list-col">
           <ul className="profile-board-list">
-            {filteredProfiles.map((item) => {
+            {pagedProfiles.map((item) => {
               const imageSrc = getProfileImageSrc(item.profileImageUrl);
               const isSelected = item.userId === selectedBoardUserId;
 
@@ -208,6 +224,8 @@ function ProfileBoardPage() {
               );
             })}
           </ul>
+          <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
+          </div>
 
           {selectedBoardProfile && (
             <div className="profile-board-detail">

@@ -161,11 +161,6 @@ function InquiryWritePage() {
           required
         />
 
-        <label className="inquiry-secret-checkbox">
-          <input type="checkbox" checked={isSecret} onChange={(e) => setIsSecret(e.target.checked)} />
-          비밀글로 작성 (작성자 본인과 관리자만 내용을 볼 수 있어요)
-        </label>
-
         <div className="board-write-toolbar">
           <button
             type="button"
@@ -200,6 +195,11 @@ function InquiryWritePage() {
           data-placeholder="내용을 입력해주세요."
           suppressContentEditableWarning
         />
+
+        <label className="inquiry-secret-checkbox">
+          <input type="checkbox" checked={isSecret} onChange={(e) => setIsSecret(e.target.checked)} />
+          비밀글로 작성 (작성자 본인과 관리자만 내용을 볼 수 있어요)
+        </label>
 
         <div className="board-write-actions">
           <button type="submit" className="btn btn-primary">
