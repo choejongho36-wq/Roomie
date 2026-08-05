@@ -16,4 +16,5 @@ export interface User {
   emailVerified: boolean;
   isAdmin: boolean;
   needsAdditionalInfo: boolean;
+  linkedProviders: string[];
 }

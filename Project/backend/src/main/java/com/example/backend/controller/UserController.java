@@ -1,18 +1,19 @@
 package com.example.backend.controller;
 
 import com.example.backend.domain.User;
+import com.example.backend.domain.UserSocialLink;
 import com.example.backend.dto.AdditionalInfoRequest;
 import com.example.backend.dto.BioRequest;
 import com.example.backend.dto.NicknameRequest;
 import com.example.backend.dto.PasswordChangeRequest;
-import com.example.backend.dto.RegionRequest;
-import com.example.backend.dto.SmokingRequest;
 import com.example.backend.dto.TagsRequest;
+import com.example.backend.dto.SmokingRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.dto.WithdrawRequest;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.SurveyResultRepository;
+import com.example.backend.repository.UserSocialLinkRepository;
 import com.example.backend.service.UserCategoryWeightService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -109,6 +110,7 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final UserCategoryWeightService userCategoryWeightService;
     private final SurveyResultRepository surveyResultRepository;
+    private final UserSocialLinkRepository userSocialLinkRepository;
 
     @Value("${file.upload-dir:uploads/profile}")
     private String uploadDir;
@@ -236,33 +238,17 @@ public class UserController {
     }
 
     @PutMapping("/me/smoking")
-public UserResponse updateSmoking(Authentication authentication, @RequestBody SmokingRequest request) {
-    if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
-        throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
-    }
-    if ("SMOKER".equals(request.smoking())
-            && (request.smokingType() == null || request.smokingType().isBlank())) {
-        throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
-    }
-
-    User user = findUser(authentication);
-    user.updateSmoking(request.smoking(), request.smokingType());
-    userRepository.save(user);
-    return toResponse(user);
-}
-
-    @PutMapping("/me/region")
-    public UserResponse updateRegion(Authentication authentication, @RequestBody RegionRequest request) {
-        String region = request.region() == null ? "" : request.region().trim();
-        if (region.isEmpty()) {
-            throw new IllegalArgumentException("선호 지역을 선택해주세요.");
+    public UserResponse updateSmoking(Authentication authentication, @RequestBody SmokingRequest request) {
+        if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
+            throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
         }
-        if (region.length() > 100) {
-            throw new IllegalArgumentException("선호 지역이 너무 깁니다.");
+        if ("SMOKER".equals(request.smoking())
+                && (request.smokingType() == null || request.smokingType().isBlank())) {
+            throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
         }
 
         User user = findUser(authentication);
-        user.updateRegionAndJob(region, user.getJob());
+        user.updateSmoking(request.smoking(), request.smokingType());
         userRepository.save(user);
         return toResponse(user);
     }
@@ -344,6 +330,7 @@ public UserResponse updateSmoking(Authentication authentication, @RequestBody Sm
         // 설문 답변은 성향/생활패턴 등 민감한 개인정보라, 탈퇴 시 진짜로 삭제함
         // (채팅/게시글처럼 "다른 사람과 얽힌" 데이터가 아니라 온전히 본인 것이라 남겨둘 이유가 없음)
         surveyResultRepository.deleteByUserId(user.getUserId());
+        userSocialLinkRepository.deleteByUserId(user.getUserId()); // 연동된 소셜 계정 연결도 해제
         deleteImageFile(oldProfileImageUrl);
 
         return ResponseEntity.ok().build();
@@ -367,6 +354,8 @@ public UserResponse updateSmoking(Authentication authentication, @RequestBody Sm
         List<String> tags = user.getTags() == null || user.getTags().isBlank()
                 ? List.of()
                 : Arrays.stream(user.getTags().split(",")).collect(Collectors.toList());
+        List<String> linkedProviders = userSocialLinkRepository.findAllByUserId(user.getUserId())
+                .stream().map(UserSocialLink::getProvider).toList();
         return new UserResponse(
                 user.getUserId(),
                 user.getLoginId(),
@@ -386,7 +375,8 @@ public UserResponse updateSmoking(Authentication authentication, @RequestBody Sm
                 user.getProvider(),
                 user.getEmailVerified(),
                 user.isAdmin(),
-                user.needsAdditionalInfo()
+                user.needsAdditionalInfo(),
+                linkedProviders
         );
     }
 }
