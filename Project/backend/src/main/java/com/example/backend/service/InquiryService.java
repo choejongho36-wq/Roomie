@@ -63,6 +63,8 @@ public class InquiryService {
     }
 
     // 관리자 전용. 공개 사이트(문의 게시판)와 관리자 페이지(/admin/inquiries) 양쪽에서 공용으로 쓴다.
+    // 엔티티 수정 내용이 트랜잭션 커밋 시점에 반영되도록 @Transactional 필수.
+    @Transactional
     public InquiryResponse answer(Long inquiryId, String answer) {
         if (answer == null || answer.isBlank()) {
             throw new IllegalArgumentException("답변 내용을 입력해주세요.");
@@ -88,6 +90,15 @@ public class InquiryService {
     public void adminDelete(Long inquiryId) {
         Inquiry inquiry = findInquiry(inquiryId);
         inquiryRepository.delete(inquiry);
+    }
+
+    // 관리자 전용. 등록된 답변을 지우고 문의를 다시 "답변대기" 상태로 되돌린다.
+    @Transactional
+    public InquiryResponse deleteAnswer(Long inquiryId) {
+        Inquiry inquiry = findInquiry(inquiryId);
+        inquiry.clearAnswer();
+        // 관리자만 호출 가능한 엔드포인트라 viewerIsAdmin=true로 항상 전체 내용을 반환한다.
+        return toResponse(inquiry, authorOf(inquiry.getUserId()), null, true);
     }
 
     private Inquiry findInquiry(Long inquiryId) {

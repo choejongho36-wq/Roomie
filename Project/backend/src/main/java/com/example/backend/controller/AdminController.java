@@ -209,7 +209,10 @@ public class AdminController {
     }
 
     @GetMapping("/admin/notices/write")
-    public String noticeWriteForm() {
+    public String noticeWriteForm(@RequestParam(required = false) String type, Model model) {
+        // 공지사항/이벤트 목록에서 필터를 걸어둔 채로 "새 글쓰기"를 누르면, 그 카테고리가
+        // 미리 선택된 채로 글쓰기 폼이 열리게 한다.
+        model.addAttribute("presetBoardType", type == null ? "" : type);
         return "notice-write";
     }
 
@@ -348,17 +351,22 @@ public class AdminController {
 
     @GetMapping("/admin/401")
     public String error401() {
-        return "401";
+        return "error/401";
+    }
+
+    @GetMapping("/admin/403")
+    public String error403() {
+        return "error/403";
     }
 
     @GetMapping("/admin/404")
     public String error404() {
-        return "404";
+        return "error/404";
     }
 
     @GetMapping("/admin/500")
     public String error500() {
-        return "500";
+        return "error/500";
     }
 
     // Post/Inquiry의 userId는 User와 JPA 연관관계가 없어 직접 조회해 매핑한다.

@@ -36,32 +36,39 @@ class CompatibilityCalculatorTest {
     }
 
     @Test
-    void smokingMismatchIsPenalizedRegardlessOfDegree() {
+    void smokingQuestionNeverAffectsScoreAnymore() {
+        // 흡연(12번)은 이제 "허용도" 문항이라 답변끼리 비교해 채점하지 않는다.
+        // 실제 흡연 여부 기반 필터링은 CompatibilityService가 담당하므로,
+        // 여기서는 답이 무엇이든 점수에 전혀 영향을 주면 안 된다.
         List<Integer> a = idealBaseA();
-        a.set(11, 2); // 비흡연
+        a.set(11, 1);
 
-        List<Integer> smokerB = idealBaseB();
-        smokerB.set(11, 1); // 흡연
+        List<Integer> sameAnswer = idealBaseB();
+        sameAnswer.set(11, 1);
 
-        List<Integer> nonSmokerB = idealBaseB();
-        nonSmokerB.set(11, 2); // 비흡연
+        List<Integer> differentAnswer = idealBaseB();
+        differentAnswer.set(11, 4);
 
-        int mismatchScore = calculator.score(a, smokerB);
-        int matchScore = calculator.score(a, nonSmokerB);
-
-        assertTrue(mismatchScore < matchScore, "흡연 여부가 다르면 점수가 더 낮아야 함");
-        assertEquals(100, matchScore, "흡연 여부가 같고 나머지가 이상적이면 만점");
+        assertEquals(100, calculator.score(a, sameAnswer));
+        assertEquals(100, calculator.score(a, differentAnswer),
+                "흡연 허용도 답변이 달라도 채점에는 영향이 없어야 함");
     }
 
     @Test
-    void smokingMismatchIsHardCappedEvenWhenEverythingElseIsIdeal() {
-        List<Integer> a = idealBaseA();
-        a.set(11, 2); // 비흡연
+    void smokingSeverityRanksNonSmokerBelowEveryTypeOfSmoker() {
+        assertEquals(0, calculator.smokingSeverity("NON_SMOKER", null), "비흡연자는 항상 심각도 0");
+        assertEquals(1, calculator.smokingSeverity("SMOKER", "LIQUID"), "액상형이 흡연자 중 가장 낮은 심각도");
+        assertEquals(2, calculator.smokingSeverity("SMOKER", "HEATED"));
+        assertEquals(3, calculator.smokingSeverity("SMOKER", "CIGARETTE"), "연초가 가장 높은 심각도");
+        assertEquals(3, calculator.smokingSeverity("SMOKER", null), "흡연자인데 종류를 모르면 가장 엄격하게 취급");
+    }
 
-        List<Integer> b = idealBaseB();
-        b.set(11, 1); // 흡연 (나머지는 전부 이상적)
-
-        assertTrue(calculator.score(a, b) <= 50, "다른 문항이 전부 맞아도 흡연 여부가 다르면 50점을 넘으면 안 됨");
+    @Test
+    void maxAcceptedSmokingSeverityMatchesToleranceAnswerOrder() {
+        assertEquals(3, calculator.maxAcceptedSmokingSeverity(1), "연초도 괜찮으면 전부 허용");
+        assertEquals(2, calculator.maxAcceptedSmokingSeverity(2), "궐련형까지 허용이면 연초만 제외");
+        assertEquals(1, calculator.maxAcceptedSmokingSeverity(3), "액상형까지 허용이면 궐련형·연초 제외");
+        assertEquals(0, calculator.maxAcceptedSmokingSeverity(4), "흡연자가 싫으면 비흡연자만 허용");
     }
 
     @Test
@@ -99,8 +106,8 @@ class CompatibilityCalculatorTest {
 
     @Test
     void penaltySpreadExponentPenalizesLargerDifferencesDisproportionatelyMore() {
-        // 모든 일반 문항(화장실/벌레/흡연 제외)에 같은 크기의 차이를 줘서, 문항 하나의 차이가
-        // 전체 가중치(44)에 묻히지 않고 점수에 뚜렷하게 드러나게 한다.
+        // 모든 일반 문항(화장실/벌레/흡연 제외)에 같은 크기의 차이를 줘서, 지수 보정 효과가
+        // 점수에 뚜렷하게 드러나게 한다.
         List<Integer> base = idealBaseA();
 
         List<Integer> diffOneEverywhere = idealBaseB();
@@ -136,6 +143,25 @@ class CompatibilityCalculatorTest {
 
         assertTrue(loweredWeightScore > defaultWeightScore, "가중치를 낮추면 그 문항의 불일치가 전체 점수에 덜 반영돼야 함");
         assertEquals(defaultWeightScore, raisedWeightScore, "기본값과 같은 커스텀 가중치는 점수에 변화가 없어야 함");
+    }
+
+    @Test
+    void weightLevelDeductsPointsDirectlyInsteadOfBeingDilutedByAverage() {
+        // 청결(5번)에서 완전히 어긋난 상황을 낮음/높음으로 각각 설정했을 때, 가중 평균 방식이었던
+        // 예전엔 문항 하나의 가중치를 아무리 바꿔도 최대 4~5점밖에 안 움직였다. 지금은 가중치 단계별로
+        // 정해진 점수를 직접 빼는 방식이라 두 자릿수 차이가 나야 한다.
+        List<Integer> a = idealBaseA();
+        a.set(4, 1);
+        List<Integer> b = idealBaseB();
+        b.set(4, 5); // 청결 완전 불일치 (diff=4)
+
+        int lowWeightScore = calculator.score(a, b, Map.of(5, 1)); // 낮음
+        int highWeightScore = calculator.score(a, b, Map.of(5, 3)); // 높음
+
+        assertEquals(98, lowWeightScore, "낮음이면 완전히 어긋나도 최대 2점만 깎여야 함");
+        assertEquals(85, highWeightScore, "높음이면 완전히 어긋났을 때 15점 깎여야 함");
+        assertTrue(lowWeightScore - highWeightScore >= 10,
+                "가중치 차이가 두 자릿수 점수 차이로 체감돼야 함 (예전 가중 평균 방식은 최대 4~5점 차이였음)");
     }
 
     @Test
