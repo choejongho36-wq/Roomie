@@ -24,6 +24,7 @@ function Navbar() {
   const { notifications, unreadCount, removeNotification, clearAllNotifications, chatUnreadCount } = useChat();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
+  const [pendingNavPath, setPendingNavPath] = useState<string | null>(null);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
   const [houseId, setHouseId] = useState<number | null>(null);
 
@@ -63,6 +64,14 @@ function Navbar() {
     }
 
     goToMatching(token);
+  };
+
+  // 비회원 전용 안내 페이지(하우스 진입, 문의 게시판)로 보내는 대신, 로그인 모달을 바로 띄운다.
+  const handleGatedLinkClick = (e: MouseEvent, path: string) => {
+    if (token) return;
+    e.preventDefault();
+    setPendingNavPath(path);
+    setIsLoginOpen(true);
   };
 
   const handleNotificationClick = (notification: NotificationItem) => {
@@ -105,7 +114,7 @@ function Navbar() {
               </div>
             </div>
           ) : (
-            <Link to="/house" className="navbar-menu-link">
+            <Link to="/house" className="navbar-menu-link" onClick={(e) => handleGatedLinkClick(e, "/house")}>
               하우스
             </Link>
           )}
@@ -126,7 +135,7 @@ function Navbar() {
           <div className="navbar-dropdown">
             <span className="navbar-menu-link navbar-dropdown-trigger">고객센터</span>
             <div className="navbar-dropdown-menu">
-              <Link to="/inquiry" className="navbar-dropdown-item">
+              <Link to="/inquiry" className="navbar-dropdown-item" onClick={(e) => handleGatedLinkClick(e, "/inquiry")}>
                 문의 게시판
               </Link>
               <Link to="/terms" className="navbar-dropdown-item">
@@ -246,6 +255,7 @@ function Navbar() {
           onClose={() => {
             setIsLoginOpen(false);
             setRedirectAfterLogin(false);
+            setPendingNavPath(null);
           }}
           onLoginSuccess={(token) => {
             login(token);
@@ -253,6 +263,10 @@ function Navbar() {
             if (redirectAfterLogin) {
               setRedirectAfterLogin(false);
               goToMatching(token);
+            } else if (pendingNavPath) {
+              const path = pendingNavPath;
+              setPendingNavPath(null);
+              navigate(path);
             } else {
               navigate("/");
             }

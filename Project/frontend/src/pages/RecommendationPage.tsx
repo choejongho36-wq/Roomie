@@ -28,7 +28,6 @@ function RecommendationPage() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [showPreferences, setShowPreferences] = useState(false);
   const [isSendConfirmOpen, setIsSendConfirmOpen] = useState(false);
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
@@ -74,7 +73,6 @@ function RecommendationPage() {
     setAiExplanation(null);
     setAiExplanationError("");
     setAiExplanationLoading(false);
-    setShowPreferences(false);
   }, [location.key]);
 
   const hasRecommendations = recommendations !== null && recommendations.length > 0;
@@ -126,7 +124,6 @@ function RecommendationPage() {
 
     setSelectedUserId(item.userId);
     setIsComparisonOpen(true);
-    setShowPreferences(false);
     setComparison(null);
     setComparisonError("");
     setComparisonLoadingUserId(item.userId);
@@ -173,7 +170,6 @@ function RecommendationPage() {
     setAiExplanation(null);
     setAiExplanationError("");
     setAiExplanationLoading(false);
-    setShowPreferences(false);
     setIsSendConfirmOpen(false);
   };
 
@@ -320,31 +316,10 @@ function RecommendationPage() {
             aria-labelledby="comparison-title"
           >
             <div className="comparison-modal-header">
-              <button
-                type="button"
-                className="comparison-preference-toggle"
-                onClick={() => setShowPreferences((prev) => !prev)}
-              >
-                선호 정보 {showPreferences ? "숨기기" : "보기"}
-              </button>
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
                 닫기
               </button>
             </div>
-
-            {showPreferences && (
-              <div className="comparison-preference-panel">
-                <p>
-                  <strong>선호 지역</strong> · {selectedRecommendation?.region ?? "정보 없음"}
-                </p>
-                <p>
-                  <strong>희망 월세</strong> ·{" "}
-                  {comparisonLoadingUserId !== null
-                    ? "불러오는 중..."
-                    : comparison?.items.find((item) => item.category === "월 생활비")?.otherAnswer ?? "정보 없음"}
-                </p>
-              </div>
-            )}
 
             {comparisonLoadingUserId !== null && (
               <p className="comparison-modal-state">비교 데이터를 불러오는 중...</p>
@@ -407,6 +382,28 @@ function RecommendationPage() {
                   </div>
 
                   <div className="comparison-panel comparison-panel-profile">
+                    <div className="comparison-profile-preferences">
+                      <span className="comparison-preference-hover">
+                        희망 조건
+                        <span className="comparison-preference-tooltip">
+                          <span>
+                            선호지역 :{" "}
+                            <span className="comparison-preference-value">
+                              {selectedRecommendation?.region ?? "정보 없음"}
+                            </span>
+                          </span>
+                          <span>
+                            희망 월세 :{" "}
+                            <span className="comparison-preference-value">
+                              {comparisonLoadingUserId !== null
+                                ? "불러오는 중..."
+                                : comparison.items.find((item) => item.category === "월 생활비")?.otherAnswer ??
+                                  "정보 없음"}
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </div>
                     <img
                       className="comparison-profile-avatar"
                       src={getProfileImageSrc(selectedRecommendation?.profileImageUrl ?? null) ?? defaultAvatar}

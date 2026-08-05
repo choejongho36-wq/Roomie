@@ -167,7 +167,7 @@ public class CompatibilityCalculator {
             case "LIQUID" -> 1;
             case "HEATED" -> 2;
             case "CIGARETTE" -> 3;
-            default -> 3;
+            case null, default -> 3;
         };
     }
 
