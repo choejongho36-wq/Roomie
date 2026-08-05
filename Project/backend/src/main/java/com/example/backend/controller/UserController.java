@@ -11,6 +11,7 @@ import com.example.backend.dto.SmokingRequest;
 import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.dto.WithdrawRequest;
+import com.example.backend.dto.RegionRequest;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.SurveyResultRepository;
 import com.example.backend.repository.UserSocialLinkRepository;
@@ -41,8 +42,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
-    private static final Set<String> ALLOWED_IMAGE_TYPES =
-            Set.of(MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE, "image/webp");
+    private static final Set<String> ALLOWED_IMAGE_TYPES = Set.of(MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE,
+            "image/webp");
     private static final long MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
     // 프론트 src/data/ProfileTags.ts 와 같은 목록을 유지해야 한다.
@@ -94,8 +95,7 @@ public class UserController {
             "INTJ", "INTP", "ENTJ", "ENTP",
             "INFJ", "INFP", "ENFJ", "ENFP",
             "ISTJ", "ISFJ", "ESTJ", "ESFJ",
-            "ISTP", "ISFP", "ESTP", "ESFP"
-    );
+            "ISTP", "ISFP", "ESTP", "ESFP");
     // MBTI, 관심사, 직접 입력 태그를 합쳐서 최대 10개 (프론트 MAX_PROFILE_TAGS와 맞춰야 한다)
     private static final int MAX_TAGS = 10;
     // 직접 입력 태그는 목록 밖이라 길이만 검사한다.
@@ -103,8 +103,8 @@ public class UserController {
     private static final int MAX_CUSTOM_TAG_LENGTH = 12;
     private static final int MAX_BIO_LENGTH = 150;
     private static final int MAX_NICKNAME_LENGTH = 30;
-    private static final java.util.regex.Pattern PASSWORD_PATTERN =
-            java.util.regex.Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,24}$");
+    private static final java.util.regex.Pattern PASSWORD_PATTERN = java.util.regex.Pattern
+            .compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,24}$");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -135,7 +135,8 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public List<UserSearchResponse> search(Authentication authentication, @RequestParam(name = "nickname") String nickname) {
+    public List<UserSearchResponse> search(Authentication authentication,
+            @RequestParam(name = "nickname") String nickname) {
         User currentUser = findUser(authentication);
         if (nickname == null || nickname.isBlank()) {
             return List.of();
@@ -149,7 +150,8 @@ public class UserController {
 
     // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰/지역/직업을 채워 넣을 때 사용
     @PutMapping("/me/additional-info")
-    public UserResponse completeAdditionalInfo(Authentication authentication, @RequestBody AdditionalInfoRequest request) {
+    public UserResponse completeAdditionalInfo(Authentication authentication,
+            @RequestBody AdditionalInfoRequest request) {
         if (request.gender() == null || request.gender().isBlank()) {
             throw new IllegalArgumentException("성별을 선택해주세요.");
         }
@@ -253,6 +255,17 @@ public class UserController {
         return toResponse(user);
     }
 
+    @PutMapping("/me/region")
+    public UserResponse updateRegion(Authentication authentication, @RequestBody RegionRequest request) {
+        if (request.region() == null || request.region().isBlank()) {
+            throw new IllegalArgumentException("지역을 선택해주세요.");
+        }
+        User user = findUser(authentication);
+        user.updateRegion(request.region());
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
     @PutMapping("/me/bio")
     public UserResponse updateBio(Authentication authentication, @RequestBody BioRequest request) {
         String bio = request.bio() == null ? "" : request.bio().trim();
@@ -282,7 +295,7 @@ public class UserController {
             java.time.LocalDate nextChangeDate = user.getNicknameChangedAt().plusMonths(3).toLocalDate();
             throw new IllegalArgumentException("닉네임은 3개월에 한 번만 변경할 수 있어요. 다음 변경 가능일: " + nextChangeDate);
         }
-        
+
         if (!nickname.equals(user.getNickname()) && userRepository.existsByNickname(nickname)) {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
         }
@@ -294,7 +307,8 @@ public class UserController {
     @PutMapping("/me/password")
     public UserResponse updatePassword(Authentication authentication, @RequestBody PasswordChangeRequest request) {
         User user = findUser(authentication);
-        if (request.currentPassword() == null || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+        if (request.currentPassword() == null
+                || !passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
         if (request.newPassword() == null || !PASSWORD_PATTERN.matcher(request.newPassword()).matches()) {
@@ -337,7 +351,8 @@ public class UserController {
     }
 
     private void deleteImageFile(String profileImageUrl) {
-        if (profileImageUrl == null) return;
+        if (profileImageUrl == null)
+            return;
         String filename = profileImageUrl.substring(profileImageUrl.lastIndexOf('/') + 1);
         try {
             Files.deleteIfExists(Path.of(uploadDir).resolve(filename));
@@ -376,7 +391,6 @@ public class UserController {
                 user.getEmailVerified(),
                 user.isAdmin(),
                 user.needsAdditionalInfo(),
-                linkedProviders
-        );
+                linkedProviders);
     }
 }
