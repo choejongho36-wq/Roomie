@@ -389,7 +389,7 @@ function MyProfilePage() {
   return (
     <div className="mypage-panel">
       <div
-        className="profile-mockup relative w-full max-w-[980px] mx-auto rounded-[28px] px-7 py-8"
+        className="profile-card relative w-full max-w-[980px] mx-auto rounded-[28px] px-7 py-8"
         style={{ background: T.card, boxShadow: "0 1px 3px rgba(36,28,21,0.06), 0 12px 32px rgba(36,28,21,0.06)" }}
       >
         <div className="max-w-[420px] mx-auto">
