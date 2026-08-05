@@ -37,6 +37,12 @@ public class CompatibilityService {
             return List.of();
         }
 
+        User me = userRepository.findById(userId).orElse(null);
+        if (me == null) {
+            return List.of();
+        }
+        String myGender = me.getGender();
+
         SurveyResult mine = ownSurveys.get(0);
         List<Integer> myAnswers = parseAnswers(mine.getAnswers());
         if (myAnswers.isEmpty()) {
@@ -63,14 +69,15 @@ public class CompatibilityService {
 
         return latestByUser.values().stream()
                 .filter(result -> !confirmedPartnerIds.contains(result.getUserId()))
-                .map(result -> buildRecommendation(result, myAnswers, myWeights, myMaxSmokingSeverity))
+                .map(result -> buildRecommendation(result, myAnswers, myWeights, myMaxSmokingSeverity, myGender))
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(RecommendationResponse::compatibilityScore).reversed())
                 .toList();
     }
 
     private RecommendationResponse buildRecommendation(
-            SurveyResult result, List<Integer> myAnswers, Map<Integer, Integer> myWeights, int myMaxSmokingSeverity) {
+            SurveyResult result, List<Integer> myAnswers, Map<Integer, Integer> myWeights,
+            int myMaxSmokingSeverity, String myGender) {
         List<Integer> otherAnswers = parseAnswers(result.getAnswers());
         if (otherAnswers.isEmpty()) {
             return null;
@@ -84,6 +91,16 @@ public class CompatibilityService {
         // 탈퇴 시 설문결과도 같이 지우고 있지만, 그 로직이 생기기 전에 이미 탈퇴한 계정처럼
         // 남아있을 수 있는 예외 케이스를 위해 여기서도 한 번 더 확실히 걸러냄
         if ("WITHDRAWN".equals(user.getStatus())) {
+            return null;
+        }
+
+        // 매칭은 유저끼리만 — 관리자 계정은 룸메이트 매칭 대상이 아니므로 항상 제외
+        if (user.isAdmin()) {
+            return null;
+        }
+
+        // 동성 매칭만 지원함 (MM/FF) — 성별이 다르면 점수 계산도 할 필요 없이 바로 제외
+        if (!Objects.equals(myGender, user.getGender())) {
             return null;
         }
 
