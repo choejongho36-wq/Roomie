@@ -55,7 +55,7 @@ function CompleteProfilePage() {
       setError("생년월일을 모두 선택해주세요.");
       return;
     }
-    if (phone && !PHONE_PATTERN.test(phone)) {
+    if (!PHONE_PATTERN.test(phone)) {
       setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
       return;
     }
@@ -89,7 +89,7 @@ function CompleteProfilePage() {
         gender,
         birthDate,
         phone,
-        regionTokens[0].label,
+        regionTokens.map((token) => token.label).join(", "),
         job,
         smoking,
         smoking === "SMOKER" ? smokingType : null
@@ -174,13 +174,14 @@ function CompleteProfilePage() {
         </label>
 
         <label>
-          휴대폰 번호 <span className="complete-profile-optional">(선택)</span>
+          휴대폰 번호
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
-            placeholder="숫자만 입력"
+            placeholder="숫자만 입력 (예: 01012345678)"
             maxLength={11}
+            required
           />
         </label>
 
@@ -189,10 +190,12 @@ function CompleteProfilePage() {
           <RegionPicker
             selected={regionTokens}
             onChange={setRegionTokens}
-            multiple={false}
+            multiple={true}
+            maxSelect={3}
             variant="inline"
             triggerLabel="지역 선택"
-            emptyHint="지역을 선택해주세요."
+            placeholder="지역명 검색 예) 강남, 역삼동, 강남구 역삼동"
+            emptyHint="희망 지역을 최대 3개까지 선택해주세요."
           />
         </label>
 
