@@ -1,7 +1,10 @@
 package com.example.backend.security.oauth;
 
 import com.example.backend.domain.User;
+import com.example.backend.domain.UserSocialLink;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.UserSocialLinkRepository;
+import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -10,6 +13,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.security.SecureRandom;
 import java.util.UUID;
@@ -23,6 +28,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserSocialLinkRepository userSocialLinkRepository;
+    private final JwtProvider jwtProvider;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -33,7 +40,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, oAuth2User.getAttributes());
 
-        User user = findOrCreateUser(userInfo);
+        User user;
+        User linkedUser = handleLinkIntentIfPresent(userInfo.getProvider(), userInfo.getProviderId());
+        user = linkedUser != null ? linkedUser : findOrCreateUser(userInfo);
 
         // 강제 정지(운영자 조치)는 본인이 로그인한다고 풀리면 안 되니 계속 차단
         if ("SUSPENDED".equals(user.getStatus())) {
@@ -48,21 +57,74 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String provider = userInfo.getProvider(); // "KAKAO"
         String providerId = userInfo.getProviderId();
 
+        // 1순위: "연동"된 일반계정이 있는지 (일반가입 후 카카오를 연동한 경우)
+        var linked = userSocialLinkRepository.findByProviderAndProviderId(provider, providerId);
+        if (linked.isPresent()) {
+            return userRepository.findById(linked.get().getUserId())
+                    .orElseThrow(() -> new OAuth2AuthenticationException(
+                            new OAuth2Error("link_broken", "연동 정보에 문제가 있습니다. 고객센터에 문의해주세요.", null)));
+        }
+
+        // 2순위: 소셜로 처음 가입했던 계정 (user.provider_id 직접 기록)
         // 탈퇴한 계정은 withdraw() 시점에 provider_id가 익명화돼서 여기서 다시 안 잡힘
         // -> 같은 소셜 계정으로 다시 로그인하면 완전히 새로운 계정으로 가입됨 (탈퇴 전 활동과 무관)
         return userRepository.findByProviderAndProviderId(provider, providerId)
                 .orElseGet(() -> registerNewSocialUser(provider, providerId, userInfo));
     }
 
+    private User handleLinkIntentIfPresent(String provider, String providerId) {
+        Object attr = null;
+        try {
+            var requestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+            attr = requestAttributes.getRequest().getSession().getAttribute("link_intent_ticket");
+        } catch (IllegalStateException ignored) {
+            // 요청 컨텍스트가 없는 경우(테스트 등) - 연동 시도가 아닌 걸로 취급
+        }
+        if (attr == null) {
+            return null; // 연동 시도가 아님 -> 평소처럼 로그인/신규가입 흐름으로
+        }
+
+        // 한 번 쓴 세션 값은 바로 지워서 재사용(같은 카카오 인증으로 여러 번 연동 시도) 방지
+        var requestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+        requestAttributes.getRequest().getSession().removeAttribute("link_intent_ticket");
+
+        Long userId = jwtProvider.parseLinkIntentTicket((String) attr);
+        if (userId == null) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("link_intent_expired", "연동 요청이 만료됐어요. 마이페이지에서 다시 시도해주세요.", null));
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new OAuth2AuthenticationException(
+                        new OAuth2Error("link_intent_invalid", "연동할 계정을 찾을 수 없습니다.", null)));
+
+        // 이 카카오 계정이 이미 다른 사람 것(신규가입 또는 다른 사람의 연동)이면 막음
+        boolean alreadyUsedBySomeoneElse = userRepository.findByProviderAndProviderId(provider, providerId)
+                .filter(u -> !u.getUserId().equals(userId))
+                .isPresent()
+                || userSocialLinkRepository.findByProviderAndProviderId(provider, providerId)
+                        .filter(link -> !link.getUserId().equals(userId))
+                        .isPresent();
+        if (alreadyUsedBySomeoneElse) {
+            throw new OAuth2AuthenticationException(
+                    new OAuth2Error("link_conflict", "이미 다른 계정에 연동된 카카오 계정이에요.", null));
+        }
+
+        if (!userSocialLinkRepository.existsByUserIdAndProvider(userId, provider)) {
+            userSocialLinkRepository.save(new UserSocialLink(userId, provider, providerId));
+        }
+        return user;
+    }
+
     private User registerNewSocialUser(String provider, String providerId, OAuth2UserInfo userInfo) {
         String email = userInfo.getEmail();
 
-        // 이미 다른 경로(일반가입 또는 다른 소셜)로 같은 이메일이 가입돼 있으면,
-        // 자동으로 계정을 합치지 않고 명확히 에러로 알림 (계정 도용/혼선 방지)
+        // 이미 다른 경로(일반가입)로 같은 이메일이 가입돼 있으면, 바로 가입시키지 않고
+        // "계정 연동" 흐름으로 안내함: 5분짜리 연동 티켓을 만들어 프론트의 연동 페이지로 전달
+        // (기존 계정 비밀번호를 확인한 뒤에만 연동되므로, 이메일만 같은 남의 계정에 붙는 사고를 방지)
         if (email != null && userRepository.existsByEmail(email)) {
+            String ticket = jwtProvider.createLinkTicket(provider, providerId, email);
             throw new OAuth2AuthenticationException(
-                    new OAuth2Error("email_already_exists", "이미 가입된 이메일입니다. 일반 로그인으로 시도해주세요.", null)
-            );
+                    new OAuth2Error("account_link_required", ticket, null));
         }
 
         String loginId = generateUniqueLoginId(provider);
@@ -82,7 +144,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 ? email
                 : provider.toLowerCase() + "_" + providerId + "@social.roomie.local";
 
-        User user = new User(provider, providerId, loginId, finalEmail, randomPassword, nickname, userInfo.getProfileImageUrl());
+        User user = new User(provider, providerId, loginId, finalEmail, randomPassword, nickname,
+                userInfo.getProfileImageUrl());
         return userRepository.save(user);
     }
 

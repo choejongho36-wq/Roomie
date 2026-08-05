@@ -8,6 +8,7 @@ import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import FindIdPage from "./pages/FindIdPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import LinkAccountPage from "./pages/LinkAccountPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPageLayout from "./pages/mypage/MyPageLayout";
@@ -51,6 +52,7 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/find-id" element={<FindIdPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/link-account" element={<LinkAccountPage />} />
               <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
               <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/survey" element={<SurveyPage />} />

@@ -24,17 +24,24 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-        return addPromptLogin(defaultResolver.resolve(request));
+        return addPromptLogin(defaultResolver.resolve(request), request);
     }
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
-        return addPromptLogin(defaultResolver.resolve(request, clientRegistrationId));
+        return addPromptLogin(defaultResolver.resolve(request, clientRegistrationId), request);
     }
 
-    private OAuth2AuthorizationRequest addPromptLogin(OAuth2AuthorizationRequest authorizationRequest) {
+    private OAuth2AuthorizationRequest addPromptLogin(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request) {
         if (authorizationRequest == null) {
             return null;
+        }
+        // 마이페이지에서 "카카오 계정 연동하기"로 들어온 경우, ?intent=(연동 의사 티켓)을 세션에 잠깐 보관.
+        // 카카오 인증이 끝나고 콜백이 돌아올 때(같은 브라우저 세션) CustomOAuth2UserService가 이걸 꺼내서
+        // "이건 신규가입/로그인이 아니라, 지금 로그인된 계정에 연동하려는 시도"임을 알게 됨.
+        String linkIntent = request.getParameter("intent");
+        if (linkIntent != null && !linkIntent.isBlank()) {
+            request.getSession().setAttribute("link_intent_ticket", linkIntent);
         }
         Map<String, Object> extraParams = new HashMap<>(authorizationRequest.getAdditionalParameters());
         extraParams.put("prompt", "login");

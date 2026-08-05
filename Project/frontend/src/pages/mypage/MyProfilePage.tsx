@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, Sparkles, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, updateBio, updateSmoking, updateRegion, changePassword, getMySurveys, withdraw, API_ORIGIN } from "../../api";
+import { updateTags, updateBio, updateSmoking, updateRegion, changePassword, getMySurveys, withdraw, API_ORIGIN, createLinkIntent } from "../../api";
 import RegionPicker, { parseRegionToken, type RegionToken } from "../../components/RegionPicker";
 import {
   PROFILE_TAG_GROUPS,
@@ -364,6 +364,17 @@ function MyProfilePage() {
   };
 
   const isSocialAccount = Boolean(user?.provider && user.provider !== "LOCAL");
+
+  const handleLinkKakao = async () => {
+    if (!token) return;
+    setWithdrawError("");
+    try {
+      const ticket = await createLinkIntent(token);
+      window.location.href = `${API_ORIGIN}/oauth2/authorization/kakao?intent=${encodeURIComponent(ticket)}`;
+    } catch (err) {
+      setWithdrawError(extractErrorMessage(err, "연동 시작에 실패했습니다."));
+    }
+  };
 
   const handleConfirmWithdraw = async () => {
     if (!token) return;
@@ -887,8 +898,14 @@ function MyProfilePage() {
             </button>
           </div>
         </div>
-
+        {!isSocialAccount && (
+          <button type="button" className="w-full rounded-full py-2 text-[15px] font-bold mb-6 transition-opacity hover:opacity-80"
+            style={{ background: T.accent, color: "#fff" }} onClick={handleLinkKakao}>
+            카카오 계정 연동하기
+          </button>
+        )}
         {/* ---------- 회원탈퇴 ---------- */}
+
         {!showWithdrawConfirm ? (
           <div className="flex justify-end mt-5">
             <button
