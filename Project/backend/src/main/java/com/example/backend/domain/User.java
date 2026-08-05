@@ -149,7 +149,7 @@ public class User {
 
         // 여기부터는 "신원 확인용"이 아니라 "개인정보/노출정보"라, 탈퇴 시 진짜로 비움
         // (채팅/게시글 등 다른 테이블은 이 user_id를 계속 참조하지만, 정작 이 사람이 어떤 사람인지 보여주는
-        //  정보는 하나도 안 남아있게 되어 "탈퇴한 사용자"로만 보이게 됨)
+        // 정보는 하나도 안 남아있게 되어 "탈퇴한 사용자"로만 보이게 됨)
         String oldProfileImageUrl = this.profileImageUrl;
         this.gender = null;
         this.birthDate = null;
@@ -222,6 +222,10 @@ public class User {
     public void updateRegionAndJob(String region, String job) {
         this.region = region;
         this.job = job;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
     }
 
     public void markEmailVerified() {
