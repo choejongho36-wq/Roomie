@@ -85,9 +85,12 @@ public class PostController {
     }
 
     private User findUser(Authentication authentication) {
-        return userRepository.findByLoginId(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    if (authentication == null) {
+        throw new IllegalArgumentException("로그인이 필요합니다.");
     }
+    return userRepository.findByLoginId(authentication.getName())
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+}
 
     private void requireAdminForNoticeOrEvent(User user, PostRequest request) {
         if (ADMIN_ONLY_BOARD_TYPES.contains(request.boardType()) && !user.isAdmin()) {

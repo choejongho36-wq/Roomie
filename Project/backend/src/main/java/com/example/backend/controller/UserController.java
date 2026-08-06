@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -332,6 +333,7 @@ public class UserController {
     }
 
     // 소셜 로그인 계정은 비밀번호를 본인이 모르니(자동 생성된 값), 그 경우엔 비밀번호 확인을 건너뜀
+    @Transactional
     @DeleteMapping("/me")
     public ResponseEntity<Void> withdraw(Authentication authentication, @RequestBody WithdrawRequest request) {
         User user = findUser(authentication);
@@ -367,9 +369,12 @@ public class UserController {
     }
 
     private User findUser(Authentication authentication) {
-        return userRepository.findByLoginId(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    if (authentication == null) {
+        throw new IllegalArgumentException("로그인이 필요합니다.");
     }
+    return userRepository.findByLoginId(authentication.getName())
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+}
 
     private UserResponse toResponse(User user) {
         List<String> tags = user.getTags() == null || user.getTags().isBlank()

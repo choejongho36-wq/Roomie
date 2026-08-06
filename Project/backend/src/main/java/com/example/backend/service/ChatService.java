@@ -7,6 +7,7 @@ import com.example.backend.dto.ChatMessageResponse;
 import com.example.backend.dto.ConversationResponse;
 import com.example.backend.repository.ChatLeaveRepository;
 import com.example.backend.repository.ChatMessageRepository;
+import com.example.backend.repository.ChatRequestRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final ChatLeaveRepository chatLeaveRepository;
+    private final ChatRequestRepository chatRequestRepository;
 
     public List<ConversationResponse> getConversations(Long userId) {
         List<ChatMessage> messages =
@@ -99,6 +101,11 @@ public class ChatService {
         if (chatLeaveRepository.existsByUserIdAndPartnerId(senderId, receiverId)
                 || chatLeaveRepository.existsByUserIdAndPartnerId(receiverId, senderId)) {
             throw new IllegalArgumentException("연결이 끊긴 상대에게는 메시지를 보낼 수 없습니다.");
+        }
+        boolean alreadyTalking = chatMessageRepository
+                .existsBySenderIdAndReceiverIdOrSenderIdAndReceiverId(senderId, receiverId, receiverId, senderId);
+        if (!alreadyTalking && !chatRequestRepository.existsAcceptedBetween(senderId, receiverId)) {
+            throw new IllegalArgumentException("상대가 채팅 신청을 수락해야 메시지를 보낼 수 있습니다.");
         }
 
         ChatMessage saved = chatMessageRepository.save(new ChatMessage(senderId, receiverId, trimmed));

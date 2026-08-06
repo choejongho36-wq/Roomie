@@ -17,6 +17,9 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     long countByReceiverIdAndReadFalse(Long receiverId);
 
+    boolean existsBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
+            Long senderId1, Long receiverId1, Long senderId2, Long receiverId2);
+
     @Modifying
     @Query("update ChatMessage m set m.read = true "
             + "where m.receiverId = :receiverId and m.senderId = :senderId and m.read = false")

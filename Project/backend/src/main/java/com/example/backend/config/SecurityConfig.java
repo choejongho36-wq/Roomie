@@ -108,7 +108,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/inquiries/**").authenticated()
                                                 .requestMatchers("/api/users/**", "/api/surveys/**",
                                                                 "/api/recommendations", "/api/recommendations/**",
-                                                                "/api/chat/**", "/api/notifications/**")
+                                                                "/api/chat/**", "/api/chat-requests/**", "/api/notifications/**")
                                                 .authenticated()
                                                 .anyRequest().permitAll())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

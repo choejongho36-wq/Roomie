@@ -907,7 +907,7 @@ function MyProfilePage() {
           </div>
           {!isSocialAccount && !user.linkedProviders.includes("KAKAO") && (
             <button type="button" className="w-full rounded-full py-2 text-[15px] font-bold mb-6 transition-opacity hover:opacity-80"
-              style={{ background: T.accent, color: "#fff" }} onClick={handleLinkKakao}>
+              style={{ background: "#FEE500", color: "#191919" }} onClick={handleLinkKakao}>
               카카오 계정 연동하기
             </button>
           )}

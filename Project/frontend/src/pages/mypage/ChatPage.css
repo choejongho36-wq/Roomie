@@ -19,6 +19,125 @@
   overflow: hidden;
 }
 
+.chat-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.chat-sidebar-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #222;
+}
+
+.chat-list-menu-wrapper {
+  position: relative;
+}
+
+.chat-list-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #999;
+  cursor: pointer;
+}
+
+.chat-list-menu-btn:hover {
+  background: #fff1e8;
+  color: #f16526;
+}
+
+.chat-list-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 96px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.chat-list-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: #333;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chat-list-menu-item:hover {
+  background: #fff1e8;
+  color: #f16526;
+}
+
+.chat-conversation-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1.5px solid #ddd;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.chat-conversation-checkbox.is-checked {
+  border-color: #f16526;
+  background: #f16526;
+}
+
+.chat-edit-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+  border-top: 1px solid #f0ece8;
+}
+
+.chat-edit-cancel-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.chat-edit-leave-btn {
+  flex: 1;
+  border: 1px solid #e03131;
+  border-radius: 999px;
+  background: none;
+  color: #e03131;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-edit-leave-btn:hover:not(:disabled) {
+  background: #fff0f0;
+}
+
+.chat-edit-leave-btn:disabled {
+  border-color: #ddd;
+  color: #bbb;
+  cursor: not-allowed;
+}
+
 .chat-conversation-list {
   flex: 1;
   display: flex;
@@ -161,13 +280,8 @@
 .chat-verified-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #fff1e8;
-  color: #f16526;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
+  flex-shrink: 0;
+  color: #ff6600;
 }
 
 .chat-header-action-btn {
