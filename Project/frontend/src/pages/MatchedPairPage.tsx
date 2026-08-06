@@ -59,12 +59,32 @@ function MatchedPairPage() {
     if (!token || !id) return;
     setConfirming(true);
     try {
-      await confirmMatchedPair(token, Number(id));
-      navigate(`/house/${id}`);
-    } catch {
+      const updated = await confirmMatchedPair(token, Number(id));
+      setPair(updated);
+      if (updated.status === "CONFIRMED") {
+        navigate(`/house/${id}`);
+      }
+    } finally {
       setConfirming(false);
     }
   };
+
+  // 나는 확정했는데 상대방이 아직 안 했으면, 상대방이 확정하는 순간 자동으로 하우스로 넘어가게 주기적으로 확인
+  useEffect(() => {
+    if (!token || !id || !pair) return;
+    if (pair.status === "CONFIRMED" || !pair.myConfirmed) return;
+
+    const interval = setInterval(() => {
+      getMatchedPair(token, Number(id)).then((updated) => {
+        setPair(updated);
+        if (updated.status === "CONFIRMED") {
+          navigate(`/house/${id}`);
+        }
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [token, id, pair, navigate]);
 
   if (loadError) {
     return (
@@ -165,10 +185,26 @@ function MatchedPairPage() {
 
       <section className="matched-pair-section">
         <h2>방을 구하셨나요?</h2>
-        <p className="matched-pair-hint">함께 살 방이 정해졌다면, 하우스 공간으로 넘어가서 정산/청소 관리를 시작해보세요.</p>
-        <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirming}>
-          {confirming ? "이동 중..." : "하우스로 이동"}
-        </button>
+        <p className="matched-pair-hint">
+          함께 살 방이 정해졌다면, 하우스 공간으로 넘어가서 정산/청소 관리를 시작해보세요.
+          <br />
+          두 분 모두 확정해야 하우스가 열려요.
+        </p>
+        <div className="matched-pair-confirm-status">
+          <span className={pair.myConfirmed ? "matched-pair-confirm-done" : ""}>
+            {pair.me.nickname}: {pair.myConfirmed ? "확정함 ✓" : "미확정"}
+          </span>
+          <span className={pair.partnerConfirmed ? "matched-pair-confirm-done" : ""}>
+            {pair.partner.nickname}: {pair.partnerConfirmed ? "확정함 ✓" : "미확정"}
+          </span>
+        </div>
+        {pair.myConfirmed ? (
+          <p className="matched-pair-hint">상대방이 확정하면 자동으로 하우스로 이동해요. 잠시만 기다려주세요.</p>
+        ) : (
+          <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirming}>
+            {confirming ? "처리 중..." : "하우스로 이동"}
+          </button>
+        )}
       </section>
     </div>
   );

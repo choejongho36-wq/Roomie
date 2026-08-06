@@ -44,10 +44,11 @@ public class MatchedPairService {
         return toResponse(pair, requestUserId);
     }
 
-    // "방을 구하셨나요?" -> 하우스로 이동 버튼을 누르면 호출. 페어를 CONFIRMED로 바꿔서 하우스 기능을 열어줌
+    // "방을 구하셨나요?" -> 하우스로 이동 버튼을 누르면 호출. 나 혼자만 확정한 상태로 두고,
+    // 상대방도 확정해야만 실제로 CONFIRMED로 바뀜(MatchedPair.confirmBy 참고)
     public MatchedPairResponse confirm(Long pairId, Long requestUserId) {
         MatchedPair pair = findPairForUser(pairId, requestUserId);
-        pair.confirm();
+        pair.confirmBy(requestUserId);
         matchedPairRepository.save(pair);
         return toResponse(pair, requestUserId);
     }
@@ -87,7 +88,9 @@ public class MatchedPairService {
                 pair.getCreatedAt(),
                 new MatchedPairResponse.PartnerInfo(me.getUserId(), me.getNickname(), me.getProfileImageUrl(), me.getRegion()),
                 new MatchedPairResponse.PartnerInfo(partner.getUserId(), partner.getNickname(), partner.getProfileImageUrl(), partner.getRegion()),
-                ExternalSearchLinkBuilder.build(pair)
+                ExternalSearchLinkBuilder.build(pair),
+                pair.isConfirmedBy(viewerUserId),
+                pair.isConfirmedBy(partnerId)
         );
     }
 }

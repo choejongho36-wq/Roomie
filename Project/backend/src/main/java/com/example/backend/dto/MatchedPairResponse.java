@@ -11,7 +11,9 @@ public record MatchedPairResponse(
         LocalDateTime createdAt,
         PartnerInfo me,
         PartnerInfo partner,
-        String dabangMapUrl
+        String dabangMapUrl,
+        Boolean myConfirmed,
+        Boolean partnerConfirmed
 ) {
     // 참고용: 각자 회원가입 때 저장해둔 희망지역 (매칭 페어의 공통조건과는 별개)
     public record PartnerInfo(Long userId, String nickname, String profileImageUrl, String region) {}

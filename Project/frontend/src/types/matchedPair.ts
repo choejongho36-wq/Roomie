@@ -15,4 +15,6 @@ export interface MatchedPair {
   me: MatchedPairPartnerInfo;
   partner: MatchedPairPartnerInfo;
   dabangMapUrl: string;
+  myConfirmed: boolean;
+  partnerConfirmed: boolean;
 }

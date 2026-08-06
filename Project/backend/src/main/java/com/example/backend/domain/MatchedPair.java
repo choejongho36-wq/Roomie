@@ -46,6 +46,12 @@ public class MatchedPair {
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
+    @Column(name = "user_a_confirmed", nullable = false)
+    private boolean userAConfirmed;
+
+    @Column(name = "user_b_confirmed", nullable = false)
+    private boolean userBConfirmed;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -70,8 +76,22 @@ public class MatchedPair {
         this.monthlyRentMax = monthlyRentMax;
     }
 
-    public void confirm() {
-        this.status = STATUS_CONFIRMED;
-        this.confirmedAt = LocalDateTime.now();
+    // 한쪽이 "하우스로 이동" 버튼을 누르면 그 사람 몫만 체크. 양쪽 다 확정됐을 때만 실제로 CONFIRMED 전환
+    public void confirmBy(Long userId) {
+        if (userAId.equals(userId)) {
+            this.userAConfirmed = true;
+        } else if (userBId.equals(userId)) {
+            this.userBConfirmed = true;
+        }
+        if (this.userAConfirmed && this.userBConfirmed && !STATUS_CONFIRMED.equals(this.status)) {
+            this.status = STATUS_CONFIRMED;
+            this.confirmedAt = LocalDateTime.now();
+        }
+    }
+
+    public boolean isConfirmedBy(Long userId) {
+        if (userAId.equals(userId)) return userAConfirmed;
+        if (userBId.equals(userId)) return userBConfirmed;
+        return false;
     }
 }

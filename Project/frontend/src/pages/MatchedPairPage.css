@@ -134,3 +134,16 @@
 .matched-pair-section .btn-primary {
   margin-top: 4px;
 }
+
+.matched-pair-confirm-status {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #999;
+  margin: 10px 0;
+}
+
+.matched-pair-confirm-done {
+  color: #2f9e44;
+  font-weight: 600;
+}
