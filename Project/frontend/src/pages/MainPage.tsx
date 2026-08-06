@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./MainPage.css";
 import logo from "../assets/Roomie_logo2.png";
 import sampleAvatar from "../assets/Roomie_logo.png";
@@ -105,10 +105,16 @@ const features = [
 function MainPage() {
   const { token, login } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const chatbotDialogRef = useRef<HTMLDialogElement>(null);
   const [featureRef, featureInView] = useInView<HTMLDivElement>();
   const [aiMatchRef, aiMatchInView] = useInView<HTMLDivElement>();
   const [stepsRef, stepsInView] = useInView<HTMLDivElement>();
   const { isRedirecting, goToMatching } = useMatchingRedirect();
+
+  useEffect(() => {
+    if (isChatbotOpen) chatbotDialogRef.current?.showModal();
+  }, [isChatbotOpen]);
 
   const handleMatchClick = () => {
     if (!token) {
@@ -295,6 +301,18 @@ function MainPage() {
 
       <button
         type="button"
+        className="chatbot-btn"
+        aria-label="챗봇"
+        onClick={() => setIsChatbotOpen(true)}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 4v-4H6a2 2 0 0 1-2-2z" />
+          <path d="M8 10h.01M12 10h.01M16 10h.01" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
         className="scroll-top-btn"
         aria-label="맨 위로"
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -303,6 +321,36 @@ function MainPage() {
           <path d="M12 19V5M5 12l7-7 7 7" />
         </svg>
       </button>
+
+      <dialog
+        ref={chatbotDialogRef}
+        className="chatbot-modal"
+        onClose={() => setIsChatbotOpen(false)}
+      >
+        <div className="chatbot-modal-content">
+          <button
+            type="button"
+            className="chatbot-modal-close"
+            aria-label="닫기"
+            onClick={() => chatbotDialogRef.current?.close()}
+          >
+            ×
+          </button>
+          <div className="chatbot-modal-header">
+            <div className="chatbot-modal-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 4v-4H6a2 2 0 0 1-2-2z" />
+                <path d="M8 10h.01M12 10h.01M16 10h.01" />
+              </svg>
+            </div>
+            <div className="chatbot-modal-header-text">
+              <p className="chatbot-modal-title">Roomie 챗봇</p>
+              <p className="chatbot-modal-subtitle">궁금한 점을 편하게 물어보세요</p>
+            </div>
+          </div>
+          <p className="chatbot-modal-text">추후 업데이트 될 설정입니다.</p>
+        </div>
+      </dialog>
 
       {isRedirecting && <MatchingLoadingOverlay />}
     </div>
