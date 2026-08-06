@@ -17,7 +17,10 @@ function HouseEntryPage() {
   useEffect(() => {
     if (!token) return;
     getMyConfirmedHouse(token)
-      .then((house) => navigate(`/house/${house.id}`, { replace: true }))
+      .then((house) => {
+        if (house) navigate(`/house/${house.id}`, { replace: true });
+        else setNotConfirmed(true);
+      })
       .catch(() => setNotConfirmed(true));
   }, [token, navigate]);
 

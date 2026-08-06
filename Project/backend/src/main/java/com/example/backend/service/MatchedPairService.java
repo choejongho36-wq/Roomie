@@ -9,6 +9,8 @@ import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class MatchedPairService {
@@ -53,13 +55,13 @@ public class MatchedPairService {
         return toResponse(pair, requestUserId);
     }
 
-    // 네비바 "하우스" 메뉴에서 내가 확정한 하우스를 찾을 때 사용
-    public MatchedPairResponse getMyConfirmedHouse(Long requestUserId) {
-        MatchedPair pair = matchedPairRepository.findByUserIdAndStatus(requestUserId, MatchedPair.STATUS_CONFIRMED)
+    // 네비바 "하우스" 메뉴에서 내가 확정한 하우스를 찾을 때 사용. 확정된 하우스가 없는 게
+    // 대다수 사용자에게 정상 상태이므로 에러가 아니라 빈 값으로 반환한다.
+    public Optional<MatchedPairResponse> getMyConfirmedHouse(Long requestUserId) {
+        return matchedPairRepository.findByUserIdAndStatus(requestUserId, MatchedPair.STATUS_CONFIRMED)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("확정된 하우스가 없습니다."));
-        return toResponse(pair, requestUserId);
+                .map(pair -> toResponse(pair, requestUserId));
     }
 
     private MatchedPair findPairForUser(Long pairId, Long requestUserId) {

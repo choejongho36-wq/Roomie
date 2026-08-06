@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -u aki -p1234 roomie_db -e ' *)",
+      "Bash(mysql -u aki -p'1234' roomie_db -e \"SELECT COUNT\\(*\\) FROM user WHERE login_id LIKE 'matchq%' OR login_id LIKE 'debugtest%';\")",
+      "Bash(mysql -u aki -p'1234' roomie_db -e \"SELECT user_id, login_id, email FROM user WHERE login_id LIKE 'matchq%' OR login_id LIKE 'debugtest%';\")",
+      "Bash(mysql -u aki -p'1234' roomie_db -e \"SELECT COUNT\\(*\\) FROM user;\")",
+      "Bash(mysql -u aki -p'1234' roomie_db -e \"SELECT user_id, login_id, email, created_at FROM user ORDER BY created_at DESC LIMIT 5;\")",
+      "PowerShell(try { $c = Get-NetTCPConnection -LocalPort 5174,8080 -State Listen -ErrorAction Stop; $c | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; \"killed stragglers\" } catch { \"ports already free\" })",
+      "Bash(bash \"C:\\\\Users\\\\hi\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--IBM-Roomie\\\\79228438-e84d-4151-8c9d-9e96345010c4\\\\scratchpad\\\\verify_fix.sh\")",
+      "Bash(mysql -u aki -p'1234' roomie_db -e \"SELECT user_id, login_id FROM user WHERE login_id LIKE 'fixqa%' OR login_id LIKE 'matchq%';\")"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

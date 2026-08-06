@@ -108,4 +108,35 @@ public class JwtProvider {
             return null;
         }
     }
+
+    // 소셜 신규가입 티켓: 카카오 인증은 통과했지만 아직 추가정보를 안 채운 상태를 나타내는 15분짜리 토큰.
+    // 이 티켓 단계에서는 DB에 아무것도 저장 안 하고, "추가정보 입력 완료" 제출 시점에만 실제 계정을 만듦.
+    public String createSocialSignupTicket(String provider, String providerId, String email, String nickname, String profileImageUrl) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 15 * 60 * 1000); // 15분 (입력할 항목이 많아서 링크 티켓보다 넉넉히)
+        return Jwts.builder()
+                .subject(email)
+                .claim("purpose", "social_signup")
+                .claim("provider", provider)
+                .claim("providerId", providerId)
+                .claim("nickname", nickname)
+                .claim("profileImageUrl", profileImageUrl == null ? "" : profileImageUrl)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(key)
+                .compact();
+    }
+
+    public io.jsonwebtoken.Claims parseSocialSignupTicket(String ticket) {
+        try {
+            io.jsonwebtoken.Claims claims = Jwts.parser().verifyWith(key).build()
+                    .parseSignedClaims(ticket).getPayload();
+            if (!"social_signup".equals(claims.get("purpose", String.class))) {
+                return null;
+            }
+            return claims;
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
 }

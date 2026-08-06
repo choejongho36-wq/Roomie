@@ -75,7 +75,7 @@ function Navbar() {
       return;
     }
     getMyConfirmedHouse(token)
-      .then((house) => setHouseId(house.id))
+      .then((house) => setHouseId(house?.id ?? null))
       .catch(() => setHouseId(null));
   }, [token]);
 
