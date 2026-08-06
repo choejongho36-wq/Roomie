@@ -1,11 +1,36 @@
+/* 제목/부제목을 왼쪽에, 통계 카드 2개를 같은 줄 오른쪽에 배치한다. */
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 980px;
+  margin: 0 auto 24px;
+  flex-wrap: wrap;
+}
+
+/* #root에 전역 text-align: center가 걸려 있어서, 이 블록 안에서만
+   명시적으로 왼쪽 정렬로 되돌린다. */
+.activity-header-text {
+  text-align: left;
+  margin-top: 10px;
+}
+
+.activity-header-text .mypage-panel-title,
+.activity-header-text .mypage-panel-desc {
+  margin: 0;
+  text-align: left;
+}
+
+.activity-header-text .mypage-panel-title {
+  margin-bottom: 4px;
+}
+
 .activity-stats {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  align-items: stretch;
   flex-wrap: wrap;
   gap: 14px;
-  margin: 0 auto 24px;
-  max-width: 980px;
 }
 
 .activity-stat-card {
@@ -21,6 +46,17 @@
   min-width: 110px;
 }
 
+@media (max-width: 640px) {
+  .activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .activity-stat-card {
+    flex: 1 1 auto;
+  }
+}
+
 .activity-stat-number {
   font-size: 30px;
   font-weight: 800;
@@ -32,31 +68,6 @@
   font-size: 13px;
   color: #999;
   font-weight: 600;
-}
-
-.activity-stat-card-wide {
-  flex: 1 1 200px;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.activity-stat-recent-link {
-  font-size: 15px;
-  font-weight: 700;
-  color: #222;
-  text-decoration: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.activity-stat-recent-link:hover {
-  color: #f16526;
-}
-
-.activity-stat-recent-empty {
-  font-size: 14px;
-  color: #bbb;
 }
 
 .activity-tabs {
@@ -103,15 +114,24 @@
   text-decoration: none;
 }
 
+/* 전체선택 바를 아래 목록 카드와 테두리를 공유하는 하나의 카드로 합쳤다.
+   바는 위쪽 모서리만 둥글고 아래쪽 테두리가 없고, 목록 카드는 위쪽 테두리가
+   없고 아래쪽 모서리만 둥글어서 사이에 틈 없이 이어져 보인다.
+   box-sizing을 border-box로 지정해서 padding이 max-width 980px 바깥으로
+   더해지지 않게 했고(이게 없으면 바가 목록 카드보다 옆으로 더 넓어 보임),
+   배경도 목록 카드와 같은 흰색으로 맞추고 구분선만 border-bottom으로 남겼다. */
 .activity-row-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
   max-width: 980px;
-  margin: 0 auto 10px;
+  margin: 0 auto;
   padding: 10px 14px;
-  background: #fafafa;
-  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 12px 12px 0 0;
 }
 
 .activity-row-select-all {
@@ -146,11 +166,13 @@
 }
 
 .activity-row-list {
+  box-sizing: border-box;
   max-width: 980px;
   margin: 0 auto;
   background: #fff;
   border: 1px solid #eee;
-  border-radius: 12px;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
   overflow: hidden;
 }
 
@@ -218,13 +240,15 @@
 }
 
 .activity-comment-list {
+  box-sizing: border-box;
   max-width: 980px;
   margin: 0 auto;
   padding: 0;
   list-style: none;
   background: #fff;
   border: 1px solid #eee;
-  border-radius: 12px;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
   overflow: hidden;
 }
 
@@ -296,8 +320,3 @@
   text-decoration: underline;
 }
 
-@media (max-width: 640px) {
-  .activity-stat-card {
-    flex: 1 1 100%;
-  }
-}

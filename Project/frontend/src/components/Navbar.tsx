@@ -191,11 +191,23 @@ function Navbar() {
                 <Link to={`/house/${houseId}`} className="navbar-dropdown-item">
                   하우스 홈
                 </Link>
+                <Link to={`/house/${houseId}/rules`} className="navbar-dropdown-item">
+                  하우스규칙
+                </Link>
+                <Link to={`/house/${houseId}/contract`} className="navbar-dropdown-item">
+                  룸메 계약서
+                </Link>
                 <Link to={`/house/${houseId}/bills`} className="navbar-dropdown-item">
                   관리비정산
                 </Link>
+                <Link to={`/house/${houseId}/supplies`} className="navbar-dropdown-item">
+                  생필품 장바구니
+                </Link>
                 <Link to={`/house/${houseId}/cleaning`} className="navbar-dropdown-item">
                   청소당번
+                </Link>
+                <Link to={`/house/${houseId}/album`} className="navbar-dropdown-item">
+                  하우스 앨범
                 </Link>
               </div>
             </div>

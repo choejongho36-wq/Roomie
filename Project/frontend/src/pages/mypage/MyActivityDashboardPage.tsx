@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getMyPosts, getMyComments, deleteComment, deletePost, API_ORIGIN } from "../../api";
@@ -42,8 +42,6 @@ function MyActivityDashboardPage() {
   }, [token]);
 
   const loading = posts === null || comments === null;
-
-  const recentPost = useMemo(() => (posts && posts.length > 0 ? posts[0] : null), [posts]);
 
   const allPostsSelected = posts !== null && posts.length > 0 && selectedPostIds.size === posts.length;
 
@@ -109,31 +107,25 @@ function MyActivityDashboardPage() {
 
   return (
     <div className="mypage-panel">
-      <h1 className="mypage-panel-title">내 활동</h1>
-      <p className="mypage-panel-desc">내가 작성한 글과 댓글을 한눈에 확인할 수 있어요.</p>
-
-      {error && <p className="mypage-error">{error}</p>}
-
-      <div className="activity-stats">
-        <div className="activity-stat-card">
-          <span className="activity-stat-number">{posts?.length ?? "-"}</span>
-          <span className="activity-stat-label">작성한 글</span>
+      <div className="activity-header">
+        <div className="activity-header-text">
+          <h1 className="mypage-panel-title">내 활동</h1>
+          <p className="mypage-panel-desc">내가 작성한 글과 댓글을 한눈에 확인할 수 있어요.</p>
         </div>
-        <div className="activity-stat-card">
-          <span className="activity-stat-number">{comments?.length ?? "-"}</span>
-          <span className="activity-stat-label">작성한 댓글</span>
-        </div>
-        <div className="activity-stat-card activity-stat-card-wide">
-          <span className="activity-stat-label">최근 작성한 글</span>
-          {recentPost ? (
-            <Link to={`/board/${recentPost.postId}`} className="activity-stat-recent-link">
-              {recentPost.title || recentPost.region || "제목 없음"}
-            </Link>
-          ) : (
-            <span className="activity-stat-recent-empty">아직 없어요</span>
-          )}
+
+        <div className="activity-stats">
+          <div className="activity-stat-card">
+            <span className="activity-stat-number">{posts?.length ?? "-"}</span>
+            <span className="activity-stat-label">작성한 글</span>
+          </div>
+          <div className="activity-stat-card">
+            <span className="activity-stat-number">{comments?.length ?? "-"}</span>
+            <span className="activity-stat-label">작성한 댓글</span>
+          </div>
         </div>
       </div>
+
+      {error && <p className="mypage-error">{error}</p>}
 
       <div className="activity-tabs">
         <button
