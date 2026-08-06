@@ -249,6 +249,30 @@ export const completeAdditionalInfo = async (
   return response.data;
 };
 
+// 카카오 인증만 통과하고 아직 계정이 없는 상태(티켓만 있음)에서, 추가정보와 함께 실제 계정을 만들 때 사용
+export const completeSocialSignup = async (
+  ticket: string,
+  gender: string,
+  birthDate: string,
+  phone: string,
+  region: string,
+  job: string,
+  smoking: string,
+  smokingType: string | null
+): Promise<string> => {
+  const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/complete-social-signup`, {
+    ticket,
+    gender,
+    birthDate,
+    phone: phone || null,
+    region,
+    job,
+    smoking,
+    smokingType,
+  });
+  return response.data.token;
+};
+
 export const uploadProfileImage = async (token: string, file: File): Promise<User> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -509,10 +533,10 @@ export const confirmMatchedPair = async (token: string, pairId: number): Promise
   return response.data;
 };
 
-// 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 400)
-export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair> => {
+// 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 null, 204)
+export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair | null> => {
   const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/me/confirmed`, authHeader(token));
-  return response.data;
+  return response.status === 204 ? null : response.data;
 };
 
 // ===== 아이디 찾기 =====

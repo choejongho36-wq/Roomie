@@ -44,10 +44,13 @@ public class MatchedPairController {
     }
 
     // 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용
+    // (확정된 하우스가 없으면 에러가 아니라 204로 응답 — 대부분의 사용자에게 정상 상태이기 때문)
     @GetMapping("/me/confirmed")
     public ResponseEntity<MatchedPairResponse> getMyConfirmed(Authentication authentication) {
         User me = findUser(authentication);
-        return ResponseEntity.ok(matchedPairService.getMyConfirmedHouse(me.getUserId()));
+        return matchedPairService.getMyConfirmedHouse(me.getUserId())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     // 공동 방 탐색 화면에서 희망지역/예산/입주희망일 같은 공통 조건을 저장할 때 사용

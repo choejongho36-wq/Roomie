@@ -12,6 +12,7 @@ import com.example.backend.dto.FindIdResponse;
 import com.example.backend.dto.PasswordResetRequest;
 import com.example.backend.dto.PasswordResetConfirmRequest;
 import com.example.backend.dto.AccountLinkRequest;
+import com.example.backend.dto.SocialSignupRequest;
 import com.example.backend.service.AuthService;
 import com.example.backend.service.EmailVerificationService;
 import jakarta.validation.Valid;
@@ -112,5 +113,12 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> createLinkIntent(Authentication authentication) {
         String ticket = authService.createLinkIntent(authentication.getName());
         return ResponseEntity.ok(Map.of("ticket", ticket));
+    }
+
+    // 카카오 인증만 통과하고 아직 추가정보를 안 채운 상태에서, /complete-profile "완료" 버튼으로 호출됨.
+    // 이 요청이 성공해야 비로소 DB에 계정이 만들어짐 (그 전엔 아무것도 저장 안 되어있음)
+    @PostMapping("/complete-social-signup")
+    public ResponseEntity<LoginResponse> completeSocialSignup(@Valid @RequestBody SocialSignupRequest request) {
+        return ResponseEntity.ok(authService.completeSocialSignup(request));
     }
 }
