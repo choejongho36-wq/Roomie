@@ -192,13 +192,13 @@ function Navbar() {
                   하우스 홈
                 </Link>
                 <Link to={`/house/${houseId}/rules`} className="navbar-dropdown-item">
-                  하우스규칙
+                  하우스 규칙
                 </Link>
                 <Link to={`/house/${houseId}/contract`} className="navbar-dropdown-item">
                   룸메 계약서
                 </Link>
                 <Link to={`/house/${houseId}/bills`} className="navbar-dropdown-item">
-                  관리비정산
+                  관리비 정산
                 </Link>
                 <Link to={`/house/${houseId}/supplies`} className="navbar-dropdown-item">
                   생필품 장바구니
