@@ -519,10 +519,10 @@ export const confirmMatchedPair = async (token: string, pairId: number): Promise
   return response.data;
 };
 
-// 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 400)
-export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair> => {
+// 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 null, 204)
+export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair | null> => {
   const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/me/confirmed`, authHeader(token));
-  return response.data;
+  return response.status === 204 ? null : response.data;
 };
 
 // ===== 아이디 찾기 =====

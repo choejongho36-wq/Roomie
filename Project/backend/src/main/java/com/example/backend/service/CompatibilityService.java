@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -61,14 +62,13 @@ public class CompatibilityService {
                 .collect(Collectors.toMap(SurveyResult::getUserId, r -> r,
                         BinaryOperator.maxBy(Comparator.comparing(SurveyResult::getCompletedAt))));
 
-        // 이미 하우스가 확정된(매칭 확정) 상대는 더 이상 추천 후보로 보여줄 필요가 없음
-        Set<Long> confirmedPartnerIds = matchedPairRepository
-                .findByUserIdAndStatus(userId, MatchedPair.STATUS_CONFIRMED).stream()
-                .map(pair -> pair.getUserAId().equals(userId) ? pair.getUserBId() : pair.getUserAId())
+        // 이미 하우스가 확정된(매칭 확정) 사람은 상대가 나든 다른 누구든 더 이상 추천 후보로 보여줄 필요가 없음
+        Set<Long> confirmedUserIds = matchedPairRepository.findAllByStatus(MatchedPair.STATUS_CONFIRMED).stream()
+                .flatMap(pair -> Stream.of(pair.getUserAId(), pair.getUserBId()))
                 .collect(Collectors.toSet());
 
         return latestByUser.values().stream()
-                .filter(result -> !confirmedPartnerIds.contains(result.getUserId()))
+                .filter(result -> !confirmedUserIds.contains(result.getUserId()))
                 .map(result -> buildRecommendation(result, myAnswers, myWeights, myMaxSmokingSeverity, myGender))
                 .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(RecommendationResponse::compatibilityScore).reversed())
