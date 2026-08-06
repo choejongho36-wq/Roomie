@@ -13,6 +13,7 @@ import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.dto.WithdrawRequest;
 import com.example.backend.dto.RegionRequest;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.SurveyComparisonExplanationRepository;
 import com.example.backend.repository.SurveyResultRepository;
 import com.example.backend.repository.UserSocialLinkRepository;
 import com.example.backend.service.UserCategoryWeightService;
@@ -110,6 +111,7 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final UserCategoryWeightService userCategoryWeightService;
     private final SurveyResultRepository surveyResultRepository;
+    private final SurveyComparisonExplanationRepository surveyComparisonExplanationRepository;
     private final UserSocialLinkRepository userSocialLinkRepository;
 
     @Value("${file.upload-dir:uploads/profile}")
@@ -344,6 +346,10 @@ public class UserController {
         // 설문 답변은 성향/생활패턴 등 민감한 개인정보라, 탈퇴 시 진짜로 삭제함
         // (채팅/게시글처럼 "다른 사람과 얽힌" 데이터가 아니라 온전히 본인 것이라 남겨둘 이유가 없음)
         surveyResultRepository.deleteByUserId(user.getUserId());
+        // 설문을 지운 이상, 그 설문 내용을 근거로 만들어졌던 AI 궁합 설명 캐시도 같이 지운다
+        // (보는 쪽이었든 상대방이었든 이 사람이 얽힌 캐시는 전부 정리).
+        surveyComparisonExplanationRepository.deleteByViewerUserId(user.getUserId());
+        surveyComparisonExplanationRepository.deleteByTargetUserId(user.getUserId());
         userSocialLinkRepository.deleteByUserId(user.getUserId()); // 연동된 소셜 계정 연결도 해제
         deleteImageFile(oldProfileImageUrl);
 

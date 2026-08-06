@@ -6,8 +6,8 @@ import com.example.backend.dto.SurveyComparisonExplanationResponse;
 import com.example.backend.dto.SurveyComparisonResponse;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.CompatibilityService;
+import com.example.backend.service.SurveyComparisonExplanationService;
 import com.example.backend.service.SurveyComparisonService;
-import com.example.backend.service.SurveySummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,7 @@ public class RecommendationController {
 
     private final CompatibilityService compatibilityService;
     private final SurveyComparisonService surveyComparisonService;
-    private final SurveySummaryService surveySummaryService;
+    private final SurveyComparisonExplanationService surveyComparisonExplanationService;
     private final UserRepository userRepository;
 
     @GetMapping
@@ -44,13 +44,9 @@ public class RecommendationController {
     ) {
         User user = userRepository.findByLoginId(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        SurveyComparisonResponse comparison = surveyComparisonService.compare(user.getUserId(), userId);
-        String explanation = surveySummaryService.explainComparison(
-                comparison.nickname(),
-                comparison.compatibilityScore(),
-                comparison.topReasons(),
-                comparison.differences()
-        );
+        // 한 번 생성한 설명은 저장해뒀다가 재사용한다. 페이지를 나갔다 다시 들어와도
+        // (설문을 다시 제출하지 않는 한) 같은 문구가 나온다.
+        String explanation = surveyComparisonExplanationService.getOrGenerate(user.getUserId(), userId);
         return new SurveyComparisonExplanationResponse(explanation);
     }
 }
