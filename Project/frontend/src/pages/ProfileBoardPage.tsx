@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
   getRecommendations,
   getSurveyComparison,
   getSurveyComparisonAiExplanation,
+  sendChatRequest,
 } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
 import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts";
@@ -41,7 +42,6 @@ const formatSmoking = (smoking?: string | null, smokingType?: string | null): st
 
 function ProfileBoardPage() {
   const { token } = useAuth();
-  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<RecommendationResult[] | null>(null);
   const [error, setError] = useState("");
 
@@ -58,6 +58,9 @@ function ProfileBoardPage() {
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [isSendConfirmOpen, setIsSendConfirmOpen] = useState(false);
+  const [isRequestSending, setIsRequestSending] = useState(false);
+  const [isRequestSent, setIsRequestSent] = useState(false);
+  const [requestSendError, setRequestSendError] = useState("");
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
@@ -471,9 +474,13 @@ function ProfileBoardPage() {
                   <button
                     type="button"
                     className="btn btn-primary comparison-start-chat-button"
-                    onClick={() => setIsSendConfirmOpen(true)}
+                    onClick={() => {
+                      setIsRequestSent(false);
+                      setRequestSendError("");
+                      setIsSendConfirmOpen(true);
+                    }}
                   >
-                    {comparison.nickname}님에게 첫 메시지 보내기
+                    채팅 신청하기
                   </button>
                 </div>
               </div>
@@ -493,27 +500,58 @@ function ProfileBoardPage() {
           {isSendConfirmOpen && comparison && (
             <div className="send-confirm-backdrop">
               <div className="send-confirm-box" role="dialog" aria-modal="true">
-                <p className="send-confirm-text">메시지를 보내시겠어요?</p>
-                <div className="send-confirm-actions">
-                  <button
-                    type="button"
-                    className="btn btn-outline"
-                    onClick={() => setIsSendConfirmOpen(false)}
-                  >
-                    취소
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => {
-                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
-                        state: { nickname: comparison.nickname },
-                      });
-                    }}
-                  >
-                    보내기
-                  </button>
-                </div>
+                {isRequestSent ? (
+                  <>
+                    <p className="send-confirm-text">채팅 신청을 보냈습니다!</p>
+                    <p className="send-confirm-subtext">상대가 수락하면 채팅방이 열려요.</p>
+                    <div className="send-confirm-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => setIsSendConfirmOpen(false)}
+                      >
+                        확인
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="send-confirm-text">채팅을 신청하시겠어요?</p>
+                    {requestSendError && <p className="send-confirm-error">{requestSendError}</p>}
+                    <div className="send-confirm-actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => setIsSendConfirmOpen(false)}
+                        disabled={isRequestSending}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={isRequestSending}
+                        onClick={() => {
+                          if (!token) return;
+                          setIsRequestSending(true);
+                          setRequestSendError("");
+                          sendChatRequest(token, comparison.userId)
+                            .then(() => setIsRequestSent(true))
+                            .catch((err) => {
+                              const message =
+                                axios.isAxiosError(err) && typeof err.response?.data === "string"
+                                  ? err.response.data
+                                  : "채팅 신청에 실패했습니다.";
+                              setRequestSendError(message);
+                            })
+                            .finally(() => setIsRequestSending(false));
+                        }}
+                      >
+                        신청 보내기
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

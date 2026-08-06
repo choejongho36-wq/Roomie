@@ -20,7 +20,7 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { token, user } = useAuth();
-  const { isConnected, lastMessage, sendMessage } = useChatSocket(token);
+  const { isConnected, lastMessage, lastNotification, sendMessage } = useChatSocket(token);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
@@ -43,9 +43,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!token || !lastMessage || lastMessage.senderId === myUserId) return;
-    getNotifications(token).then(setNotifications).catch(() => {});
     refreshChatUnreadCount();
   }, [lastMessage, token, myUserId, refreshChatUnreadCount]);
+
+  // 알림(채팅신청/수락/댓글답글/채팅 등)은 백엔드가 생성 즉시 웹소켓으로 밀어준다 (NotificationService.saveAndPush).
+  // 프레임 자체를 바로 상태에 붙이지 않고 다시 목록을 받아오는 이유는 read 여부 등 서버 계산값을 신뢰하기 위함.
+  useEffect(() => {
+    if (!token || !lastNotification) return;
+    getNotifications(token).then(setNotifications).catch(() => {});
+  }, [lastNotification, token]);
 
   const removeNotification = useCallback(
     (notificationId: number) => {
