@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +21,16 @@ const getProfileImageSrc = (url: string | null) => {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   return `${API_ORIGIN}${url.startsWith("/") ? "" : "/"}${url}`;
 };
+
+// 계기판 바늘이 도는 구간: 왼쪽 아래(-135°)에서 오른쪽 아래(135°)까지 270°, 5점마다 눈금 하나.
+const GAUGE_START_ANGLE = -135;
+const GAUGE_SWEEP_ANGLE = 270;
+const GAUGE_TICK_COUNT = 61;
+const GAUGE_TICKS = Array.from({ length: GAUGE_TICK_COUNT }, (_, i) => ({
+  score: (100 * i) / (GAUGE_TICK_COUNT - 1),
+  angle: GAUGE_START_ANGLE + (GAUGE_SWEEP_ANGLE * i) / (GAUGE_TICK_COUNT - 1),
+  major: i % 6 === 0,
+}));
 
 function RecommendationPage() {
   const { token } = useAuth();
@@ -98,14 +108,19 @@ function RecommendationPage() {
       return;
     }
 
-    const duration = 600;
+    // 바로 값으로 튀지 않고, 계기판이 값을 "찾아나가듯" 몇 번 오갔다가 잦아들며 멈추게 한다.
+    const duration = 2000;
+    const searchCycles = 3;
+    const searchAmplitude = 11;
     const startTime = performance.now();
     let frame: number;
 
     const tick = (now: number) => {
       const t = Math.min((now - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
-      const value = Math.round(start + (end - start) * eased);
+      const base = start + (end - start) * eased;
+      const wobble = Math.sin(t * Math.PI * 2 * searchCycles) * Math.pow(1 - t, 2) * searchAmplitude;
+      const value = Math.round(Math.max(0, Math.min(100, base + wobble)));
       displayedScoreRef.current = value;
       setDisplayedScore(value);
       if (t < 1) frame = requestAnimationFrame(tick);
@@ -182,13 +197,22 @@ function RecommendationPage() {
       {selectedRecommendation && (
         <section className="recommendation-summary">
           <div className="recommendation-summary-title">매칭 요약</div>
-          <div className="recommendation-compatibility-gauge" style={{ "--gauge-percent": `${gaugePercent}%` } as CSSProperties}>
-            <div className="recommendation-gauge-ring">
-              <div className="recommendation-gauge-center">
-                <div className="recommendation-compatibility-score">
-                  <span className="recommendation-compatibility-score-value">{displayedScore}</span>
-                  <span className="recommendation-compatibility-score-unit">점</span>
-                </div>
+          <div className="recommendation-compatibility-gauge">
+            {GAUGE_TICKS.map((gaugeTick) => (
+              <span
+                key={gaugeTick.score}
+                className={`recommendation-gauge-tick${gaugeTick.major ? " is-major" : ""}${gaugeTick.score <= gaugePercent ? " is-on" : ""}`}
+                style={{ transform: `rotate(${gaugeTick.angle}deg)` }}
+              />
+            ))}
+            <div
+              className="recommendation-gauge-needle"
+              style={{ transform: `rotate(${GAUGE_START_ANGLE + (GAUGE_SWEEP_ANGLE * gaugePercent) / 100}deg)` }}
+            />
+            <div className="recommendation-gauge-center">
+              <div className="recommendation-compatibility-score">
+                <span className="recommendation-compatibility-score-value">{displayedScore}</span>
+                <span className="recommendation-compatibility-score-unit">점</span>
               </div>
             </div>
           </div>
@@ -339,21 +363,14 @@ function RecommendationPage() {
                       <p className="comparison-panel-title" id="comparison-title">
                         {comparison.nickname}님과의 궁합
                       </p>
-                      <div
-                        className="comparison-gauge"
-                        style={
-                          {
-                            "--gauge-percent": `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%`,
-                          } as CSSProperties
-                        }
-                      >
-                        <div className="comparison-gauge-ring">
-                          <div className="comparison-gauge-center">
-                            <div className="comparison-gauge-score">
-                              <span className="comparison-gauge-score-value">{comparison.compatibilityScore}</span>
-                              <span className="comparison-gauge-score-unit">점</span>
-                            </div>
-                          </div>
+                      <div className="comparison-score-badge">
+                        <div className="comparison-score-badge-value">{comparison.compatibilityScore}</div>
+                        <div className="comparison-score-badge-unit">점 · 궁합</div>
+                        <div className="comparison-score-badge-track">
+                          <div
+                            className="comparison-score-badge-fill"
+                            style={{ width: `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%` }}
+                          />
                         </div>
                       </div>
                     </div>

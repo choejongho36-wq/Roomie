@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -361,21 +361,14 @@ function ProfileBoardPage() {
                       <p className="comparison-panel-title" id="board-comparison-title">
                         {comparison.nickname}님과의 궁합
                       </p>
-                      <div
-                        className="comparison-gauge"
-                        style={
-                          {
-                            "--gauge-percent": `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%`,
-                          } as CSSProperties
-                        }
-                      >
-                        <div className="comparison-gauge-ring">
-                          <div className="comparison-gauge-center">
-                            <div className="comparison-gauge-score">
-                              <span className="comparison-gauge-score-value">{comparison.compatibilityScore}</span>
-                              <span className="comparison-gauge-score-unit">점</span>
-                            </div>
-                          </div>
+                      <div className="comparison-score-badge">
+                        <div className="comparison-score-badge-value">{comparison.compatibilityScore}</div>
+                        <div className="comparison-score-badge-unit">점 · 궁합</div>
+                        <div className="comparison-score-badge-track">
+                          <div
+                            className="comparison-score-badge-fill"
+                            style={{ width: `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%` }}
+                          />
                         </div>
                       </div>
                     </div>
