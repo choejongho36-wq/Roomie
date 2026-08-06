@@ -17,7 +17,9 @@
   font-size: 14px;
 }
 
+/* 하우스 안의 카드는 상단 내비바 알약과 같은 1224px 폭으로 맞춘다 */
 .house-home-card {
+  max-width: 1224px;
   margin-bottom: 32px;
 }
 
@@ -25,7 +27,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
-  max-width: 980px;
+  max-width: 1224px;
   margin: 0 auto;
 }
 

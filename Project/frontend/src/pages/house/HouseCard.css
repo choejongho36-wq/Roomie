@@ -5,6 +5,8 @@
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
   padding: 24px;
-  max-width: 980px;
+  /* 상단 내비바 알약(.navbar-shell)의 실제 폭 = 1160 + 좌우 padding 32씩 = 1224 */
+  box-sizing: border-box;
+  max-width: 1224px;
   margin: 0 auto 20px;
 }

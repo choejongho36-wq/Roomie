@@ -84,9 +84,9 @@
 /* 본문 2단: 왼쪽 요일·구역, 오른쪽 달력 */
 .house-clean-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 20px;
-  max-width: 980px;
+  max-width: 1224px;
   margin: 0 auto;
 }
 
@@ -299,6 +299,20 @@
   background: #fafafa;
   border-color: #e5e5e5;
   cursor: default;
+}
+
+/* 저장 */
+.house-clean-save {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.house-clean-save-hint {
+  font-size: 12px;
+  color: #aaa;
 }
 
 /* 달력 */
