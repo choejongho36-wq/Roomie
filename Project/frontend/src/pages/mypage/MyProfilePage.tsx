@@ -45,7 +45,7 @@ const formatSmokingLabel = (smoking?: string | null, smokingType?: string | null
   }
   return null;
 };
-const MAX_BIO_LENGTH = 150;
+const MAX_BIO_LENGTH = 70;
 
 function getAge(birthDate: string) {
   const birth = new Date(birthDate);
