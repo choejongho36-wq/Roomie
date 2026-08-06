@@ -455,7 +455,7 @@ function RecommendationPage() {
                       setIsSendConfirmOpen(true);
                     }}
                   >
-                    {comparison.nickname}님에게 채팅 신청하기
+                    채팅 신청하기
                   </button>
                 </div>
               </div>
