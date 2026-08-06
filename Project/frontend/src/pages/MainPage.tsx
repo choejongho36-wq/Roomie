@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { CSSProperties } from "react";
 import "./MainPage.css";
 import logo from "../assets/Roomie_logo2.png";
 import sampleAvatar from "../assets/Roomie_logo.png";
@@ -17,6 +16,8 @@ const sampleProfile = {
   meta: "27세 · 직장인",
   bio: "평온한 환경에서 함께 지내는 걸 선호해요.",
   tags: ["영화감상", "산책", "요리"],
+  region: "강남구 역삼동",
+  rent: "50~70만 원",
 };
 const sampleAiExplanation =
   "지민 님과 상대방은 생활 패턴, 청결도, 가치관에서 좋은 호흡을 보여 92점의 높은 궁합을 기록했어요. " +
@@ -53,6 +54,17 @@ const steps = [
     icon: <path d="M4 5h16v11H8l-4 4z" />,
     title: "채팅으로 연결",
     body: "채팅으로 서로를 알아가고\n함께 살아볼 수 있어요.",
+  },
+  {
+    icon: (
+      <>
+        <path d="M4 11l8-7 8 7" />
+        <path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" />
+        <path d="M9.5 15.5l2 2 3.5-4" />
+      </>
+    ),
+    title: "확정 후에도 계속",
+    body: "룸메이트가 확정된 뒤에도\n관리비 정산, 청소 당번까지 함께 챙겨요.",
   },
 ];
 
@@ -172,18 +184,8 @@ function MainPage() {
               <div className="ai-match-panel ai-match-panel-compare">
                 <div className="ai-match-panel-header">
                   <p className="ai-match-panel-title">지민님과의 궁합</p>
-                  <div
-                    className="ai-match-gauge"
-                    style={{ "--gauge-percent": `${overallMatch}%` } as CSSProperties}
-                  >
-                    <div className="ai-match-gauge-ring">
-                      <div className="ai-match-gauge-center">
-                        <div className="ai-match-gauge-score">
-                          <span className="ai-match-gauge-score-value">{overallMatch}</span>
-                          <span className="ai-match-gauge-score-unit">점</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="ai-match-score-badge">
+                    <div className="ai-match-score-badge-value">{overallMatch}점</div>
                   </div>
                 </div>
 
@@ -212,6 +214,19 @@ function MainPage() {
               </div>
 
               <div className="ai-match-panel ai-match-panel-profile">
+                <div className="ai-match-profile-preferences">
+                  <span className="ai-match-preference-hover">
+                    희망 조건
+                    <span className="ai-match-preference-tooltip">
+                      <span>
+                        선호지역 : <span className="ai-match-preference-value">{sampleProfile.region}</span>
+                      </span>
+                      <span>
+                        희망 월세 : <span className="ai-match-preference-value">{sampleProfile.rent}</span>
+                      </span>
+                    </span>
+                  </span>
+                </div>
                 <img className="ai-match-profile-avatar" src={sampleAvatar} alt={sampleProfile.name} />
                 <p className="ai-match-profile-name">{sampleProfile.name}</p>
                 <p className="ai-match-profile-meta">{sampleProfile.meta}</p>

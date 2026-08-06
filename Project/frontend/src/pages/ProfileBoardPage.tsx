@@ -362,14 +362,7 @@ function ProfileBoardPage() {
                         {comparison.nickname}님과의 궁합
                       </p>
                       <div className="comparison-score-badge">
-                        <div className="comparison-score-badge-value">{comparison.compatibilityScore}</div>
-                        <div className="comparison-score-badge-unit">점 · 궁합</div>
-                        <div className="comparison-score-badge-track">
-                          <div
-                            className="comparison-score-badge-fill"
-                            style={{ width: `${Math.max(0, Math.min(comparison.compatibilityScore, 100))}%` }}
-                          />
-                        </div>
+                        <div className="comparison-score-badge-value">{comparison.compatibilityScore}점</div>
                       </div>
                     </div>
 
