@@ -449,6 +449,14 @@ export const clearNotifications = async (token: string): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/notifications`, authHeader(token));
 };
 
+export const sendChatRequest = async (token: string, targetUserId: number): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/chat-requests`, { targetUserId }, authHeader(token));
+};
+
+export const respondChatRequest = async (token: string, requestId: number, accept: boolean): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/chat-requests/${requestId}/${accept ? "accept" : "decline"}`, null, authHeader(token));
+};
+
 // 채팅방에서 "룸메이트 확정" 버튼을 누르면 호출 (이미 있으면 기존 페어를 그대로 돌려줌)
 export const createOrGetMatchedPair = async (token: string, partnerUserId: number): Promise<MatchedPair> => {
   const response = await axios.post<MatchedPair>(

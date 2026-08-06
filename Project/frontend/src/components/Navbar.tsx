@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
+import axios from "axios";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 import type { NotificationItem } from "../types/chat";
-import { API_ORIGIN, getMyConfirmedHouse } from "../api";
+import { API_ORIGIN, getMyConfirmedHouse, respondChatRequest } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
 import MatchingLoadingOverlay from "./MatchingLoadingOverlay";
@@ -23,6 +24,9 @@ function Navbar() {
   const { token, user, login, logout } = useAuth();
   const { notifications, unreadCount, removeNotification, clearAllNotifications, chatUnreadCount } = useChat();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [chatRequestModal, setChatRequestModal] = useState<NotificationItem | null>(null);
+  const [isRespondingToChatRequest, setIsRespondingToChatRequest] = useState(false);
+  const [chatRequestRespondError, setChatRequestRespondError] = useState("");
   const [redirectAfterLogin, setRedirectAfterLogin] = useState(false);
   const [pendingNavPath, setPendingNavPath] = useState<string | null>(null);
   const { isRedirecting, goToMatching } = useMatchingRedirect();
@@ -99,17 +103,48 @@ function Navbar() {
   };
 
   const handleNotificationClick = (notification: NotificationItem) => {
+    if (notification.type === "CHAT_REQUEST") {
+      setChatRequestRespondError("");
+      setChatRequestModal(notification);
+      return;
+    }
     removeNotification(notification.notificationId);
     if (notification.type === "COMMENT_REPLY" && notification.targetId) {
       navigate(`/board/${notification.targetId}`);
     } else {
-      navigate(`/mypage/chat?userId=${notification.senderId}`);
+      navigate(`/mypage/chat?userId=${notification.senderId}`, {
+        state: { nickname: notification.senderNickname },
+      });
     }
   };
 
   const handleDeleteNotification = (e: MouseEvent, notificationId: number) => {
     e.stopPropagation();
     removeNotification(notificationId);
+  };
+
+  const respondToChatRequest = (accept: boolean) => {
+    if (!token || !chatRequestModal || !chatRequestModal.targetId) return;
+    setIsRespondingToChatRequest(true);
+    setChatRequestRespondError("");
+    respondChatRequest(token, chatRequestModal.targetId, accept)
+      .then(() => {
+        removeNotification(chatRequestModal.notificationId);
+        const partnerId = chatRequestModal.senderId;
+        const partnerNickname = chatRequestModal.senderNickname;
+        setChatRequestModal(null);
+        if (accept) {
+          navigate(`/mypage/chat?userId=${partnerId}`, { state: { nickname: partnerNickname } });
+        }
+      })
+      .catch((err) => {
+        const message =
+          axios.isAxiosError(err) && typeof err.response?.data === "string"
+            ? err.response.data
+            : "처리에 실패했습니다.";
+        setChatRequestRespondError(message);
+      })
+      .finally(() => setIsRespondingToChatRequest(false));
   };
 
   return (
@@ -351,6 +386,40 @@ function Navbar() {
         />
       )}
       {isRedirecting && <MatchingLoadingOverlay />}
+      {chatRequestModal && (
+        <div className="chat-request-modal-backdrop">
+          <div className="chat-request-modal" role="dialog" aria-modal="true">
+            <img
+              className="chat-request-modal-avatar"
+              src={chatRequestModal.senderProfileImageUrl ? `${API_ORIGIN}${chatRequestModal.senderProfileImageUrl}` : logo}
+              alt=""
+            />
+            <p className="chat-request-modal-title">룸메이트 채팅신청이 도착하였습니다!</p>
+            <p className="chat-request-modal-text">
+              {chatRequestModal.senderNickname}님이 채팅을 신청했습니다. 수락하시겠습니까?
+            </p>
+            {chatRequestRespondError && <p className="chat-request-modal-error">{chatRequestRespondError}</p>}
+            <div className="chat-request-modal-actions">
+              <button
+                type="button"
+                className="btn btn-outline"
+                disabled={isRespondingToChatRequest}
+                onClick={() => respondToChatRequest(false)}
+              >
+                아니오
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={isRespondingToChatRequest}
+                onClick={() => respondToChatRequest(true)}
+              >
+                예
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

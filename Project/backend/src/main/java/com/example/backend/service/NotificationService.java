@@ -30,6 +30,14 @@ public class NotificationService {
         notificationRepository.save(new Notification(recipientId, senderId, preview(content), "COMMENT_REPLY", postId));
     }
 
+    public void createChatRequestNotification(Long recipientId, Long senderId, String content, Long requestId) {
+        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "CHAT_REQUEST", requestId));
+    }
+
+    public void createChatAcceptedNotification(Long recipientId, Long senderId, String content) {
+        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "CHAT_ACCEPTED", null));
+    }
+
     private String preview(String content) {
         return content.length() > PREVIEW_LENGTH ? content.substring(0, PREVIEW_LENGTH) + "..." : content;
     }
