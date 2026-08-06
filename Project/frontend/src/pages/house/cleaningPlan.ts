@@ -31,14 +31,15 @@ export interface Plan {
   rooms: string[];
   days: Day[];
   time: string;
+  weekendOff: boolean;
   holiday: boolean;
 }
 
 export type Plans = Record<Assignee, Plan>;
 
 export const DEFAULT_PLANS: Plans = {
-  me: { rooms: ["방", "화장실"], days: ["월", "목"], time: "20:00", holiday: true },
-  partner: { rooms: ["거실", "부엌"], days: ["화", "금"], time: "20:00", holiday: true },
+  me: { rooms: ["방", "화장실"], days: ["월", "목"], time: "20:00", weekendOff: false, holiday: true },
+  partner: { rooms: ["거실", "부엌"], days: ["화", "금"], time: "20:00", weekendOff: false, holiday: true },
 };
 
 const storageKey = (houseId: string) => `roomie:cleaning:${houseId}`;
@@ -64,10 +65,15 @@ export function savePlans(houseId: string | undefined, plans: Plans) {
   localStorage.setItem(storageKey(houseId), JSON.stringify(plans));
 }
 
-// 그 날짜에 청소 당번인지. 선택한 요일이면서, 공휴일에 쉬기로 했으면 공휴일은 뺀다.
+// 그 날짜에 청소 당번인지. 고른 요일이더라도 쉬기로 체크한 주말/공휴일이면 뺀다.
 export function isDutyOn(plan: Plan, date: Date) {
+  const dow = date.getDay();
   const isHoliday = HOLIDAYS.has(`${date.getMonth() + 1}-${date.getDate()}`);
-  return plan.days.some((day) => DOW_INDEX[day] === date.getDay()) && !(isHoliday && plan.holiday);
+  const isWeekend = dow === 0 || dow === 6;
+
+  if (!plan.days.some((day) => DOW_INDEX[day] === dow)) return false;
+  if (isWeekend && plan.weekendOff) return false;
+  return !(isHoliday && plan.holiday);
 }
 
 export const timeLabel = (time: string) => {

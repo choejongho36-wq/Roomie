@@ -10,9 +10,9 @@ import "./HouseCleaningPage.css";
 import {
   CUSTOM_DESC,
   DAYS,
-  DOW_INDEX,
   HOLIDAYS,
   ROOMS,
+  isDutyOn,
   loadPlans,
   savePlans,
   timeLabel,
@@ -58,15 +58,15 @@ function HouseCleaningPage() {
     setSaved(true);
   };
 
-  // 이미 누가 맡은 구역은 후보에서 뺀다.
-  const taken = new Set([...plans.me.rooms, ...plans.partner.rooms]);
-  const available = Object.keys(ROOMS).filter((room) => !taken.has(room));
+  // 한 구역을 둘이 같이 맡을 수 있으므로, 후보에서는 본인이 이미 가진 구역만 뺀다.
+  const mine = new Set(plan.rooms);
+  const available = Object.keys(ROOMS).filter((room) => !mine.has(room));
 
   const addRoom = (room: string) => updatePlan({ rooms: [...plan.rooms, room] });
 
   const addCustomRoom = () => {
     const room = customRoom.trim();
-    if (!room || taken.has(room)) return;
+    if (!room || mine.has(room)) return;
     addRoom(room);
     setCustomRoom("");
   };
@@ -81,22 +81,15 @@ function HouseCleaningPage() {
   const year = calMonth.getFullYear();
   const month = calMonth.getMonth();
   const today = new Date();
-  const dutyDows = new Set(plan.days.map((d) => DOW_INDEX[d]));
 
+  // 당번 판정은 청소당번 페이지와 같은 isDutyOn 하나만 쓴다.
   const cells = Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, i) => {
-    const date = i + 1;
-    const dow = new Date(year, month, date).getDay();
-    // 주말은 요일 토글에서 직접 고르므로 별도 규칙이 없다. 공휴일은 실제 공휴일만 본다.
-    const isHoliday = HOLIDAYS.has(`${month + 1}-${date}`);
-
-    const duty = dutyDows.has(dow) && !(isHoliday && plan.holiday);
-
+    const date = new Date(year, month, i + 1);
     return {
-      date,
-      isRed: isHoliday || dow === 0, // 달력에 빨갛게 칠할 날 (표시용)
-      duty,
-      isToday:
-        date === today.getDate() && month === today.getMonth() && year === today.getFullYear(),
+      date: i + 1,
+      isRed: HOLIDAYS.has(`${month + 1}-${i + 1}`) || date.getDay() === 0, // 달력에 빨갛게 칠할 날
+      duty: isDutyOn(plan, date),
+      isToday: date.toDateString() === today.toDateString(),
     };
   });
 
@@ -163,6 +156,14 @@ function HouseCleaningPage() {
               <label>
                 <input
                   type="checkbox"
+                  checked={plan.weekendOff}
+                  onChange={(e) => updatePlan({ weekendOff: e.target.checked })}
+                />
+                <span>주말은 쉬기</span>
+              </label>
+              <label>
+                <input
+                  type="checkbox"
                   checked={plan.holiday}
                   onChange={(e) => updatePlan({ holiday: e.target.checked })}
                 />
@@ -216,7 +217,7 @@ function HouseCleaningPage() {
                 <button
                   type="button"
                   className="house-clean-add"
-                  disabled={!customRoom.trim() || taken.has(customRoom.trim())}
+                  disabled={!customRoom.trim() || mine.has(customRoom.trim())}
                   onClick={addCustomRoom}
                 >
                   추가
