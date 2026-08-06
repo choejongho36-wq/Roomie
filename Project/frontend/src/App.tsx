@@ -37,6 +37,10 @@ import HouseLayout from "./pages/house/HouseLayout";
 import HousePage from "./pages/house/HousePage";
 import HouseBillsPage from "./pages/house/HouseBillsPage";
 import HouseCleaningPage from "./pages/house/HouseCleaningPage";
+import HouseRulesPage from "./pages/house/HouseRulesPage";
+import HouseContractPage from "./pages/house/HouseContractPage";
+import HouseSuppliesPage from "./pages/house/HouseSuppliesPage";
+import HouseAlbumPage from "./pages/house/HouseAlbumPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
@@ -73,8 +77,12 @@ function App() {
               <Route path="/house" element={<HouseEntryPage />} />
               <Route path="/house/:id" element={<HouseLayout />}>
                 <Route index element={<HousePage />} />
+                <Route path="rules" element={<HouseRulesPage />} />
+                <Route path="contract" element={<HouseContractPage />} />
                 <Route path="bills" element={<HouseBillsPage />} />
+                <Route path="supplies" element={<HouseSuppliesPage />} />
                 <Route path="cleaning" element={<HouseCleaningPage />} />
+                <Route path="album" element={<HouseAlbumPage />} />
               </Route>
               <Route path="/mypage" element={<MyPageLayout />}>
                 <Route index element={<MyProfilePage />} />
