@@ -48,10 +48,25 @@
   }
 }
 
+.survey-weights-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .survey-weights-category {
   font-size: 14px;
   font-weight: 700;
   color: #3e2c23;
+}
+
+.survey-weights-answer {
+  font-size: 12px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .survey-weights-tiers {

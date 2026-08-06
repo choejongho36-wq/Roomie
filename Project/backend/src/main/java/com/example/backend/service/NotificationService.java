@@ -5,6 +5,7 @@ import com.example.backend.domain.User;
 import com.example.backend.dto.NotificationResponse;
 import com.example.backend.repository.NotificationRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,21 +22,38 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final WebSocketSessionRegistry sessionRegistry;
 
     public void createChatNotification(Long recipientId, Long senderId, String content) {
-        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "CHAT", null));
+        saveAndPush(recipientId, senderId, content, "CHAT", null);
     }
 
     public void createCommentReplyNotification(Long recipientId, Long senderId, String content, Long postId) {
-        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "COMMENT_REPLY", postId));
+        saveAndPush(recipientId, senderId, content, "COMMENT_REPLY", postId);
     }
 
     public void createChatRequestNotification(Long recipientId, Long senderId, String content, Long requestId) {
-        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "CHAT_REQUEST", requestId));
+        saveAndPush(recipientId, senderId, content, "CHAT_REQUEST", requestId);
     }
 
     public void createChatAcceptedNotification(Long recipientId, Long senderId, String content) {
-        notificationRepository.save(new Notification(recipientId, senderId, preview(content), "CHAT_ACCEPTED", null));
+        saveAndPush(recipientId, senderId, content, "CHAT_ACCEPTED", null);
+    }
+
+    // 저장 직후, 받는 사람이 지금 웹소켓에 연결돼 있으면 바로 알림 프레임을 밀어넣는다
+    // (연결이 안 돼 있으면 조용히 무시 — 다음 로그인/새로고침 때 REST로 받아간다).
+    private void saveAndPush(Long recipientId, Long senderId, String content, String type, Long targetId) {
+        Notification saved = notificationRepository.save(new Notification(recipientId, senderId, preview(content), type, targetId));
+        userRepository.findById(senderId).ifPresent(sender -> sessionRegistry.send(recipientId, new NotificationResponse(
+                saved.getNotificationId(),
+                sender.getUserId(),
+                sender.getNickname(),
+                sender.getProfileImageUrl(),
+                saved.getContent(),
+                saved.getType(),
+                saved.getTargetId(),
+                saved.isRead(),
+                saved.getCreatedAt())));
     }
 
     private String preview(String content) {
