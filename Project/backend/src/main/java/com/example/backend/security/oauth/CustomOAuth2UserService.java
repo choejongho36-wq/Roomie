@@ -6,7 +6,6 @@ import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.UserSocialLinkRepository;
 import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -16,18 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.security.SecureRandom;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private static final String LOGIN_ID_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserSocialLinkRepository userSocialLinkRepository;
     private final JwtProvider jwtProvider;
 
@@ -115,6 +107,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return user;
     }
 
+    // 신규 소셜가입은 여기서 바로 DB에 저장하지 않는다. "추가정보 입력"까지 다 끝내야 진짜 회원이므로,
+    // 카카오한테서 받은 정보를 15분짜리 티켓에 담아 돌려주고, /complete-profile에서 제출할 때 계정을 만든다.
+    // (예전엔 로그인 시도만으로 바로 계정이 생겨서, 추가정보 입력을 취소해도 껍데기 계정이 DB에 남는 문제가 있었음)
     private User registerNewSocialUser(String provider, String providerId, OAuth2UserInfo userInfo) {
         String email = userInfo.getEmail();
 
@@ -127,54 +122,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     new OAuth2Error("account_link_required", ticket, null));
         }
 
-        String loginId = generateUniqueLoginId(provider);
         String rawNickname = (userInfo.getNickname() != null && !userInfo.getNickname().isBlank())
                 ? userInfo.getNickname()
                 : provider + "유저";
-        // nickname 컬럼 길이 제한(30자) 안에 들어오도록, 뒤에 붙일 숫자 자리(최대 3자리)를 감안해 잘라둠
         if (rawNickname.length() > 25) {
             rawNickname = rawNickname.substring(0, 25);
         }
-        String nickname = generateUniqueNickname(rawNickname);
-        // 소셜 로그인 계정은 비밀번호를 절대 직접 쓰지 않으니, 아무도 모르는 랜덤 값으로 채워둠
-        String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
-        // 카카오/네이버가 이메일을 안 준 경우를 대비해, 임시 고유 이메일을 부여
-        // (나중에 "추가정보 입력" 화면에서 실제 이메일로 교체 가능)
-        String finalEmail = (email != null && !email.isBlank())
+        // 이메일이 없는 경우, 나중에 티켓을 다시 파싱할 때 subject로 쓸 값이 필요해서 임시 고유값을 넣어둠
+        String ticketEmail = (email != null && !email.isBlank())
                 ? email
                 : provider.toLowerCase() + "_" + providerId + "@social.roomie.local";
 
-        User user = new User(provider, providerId, loginId, finalEmail, randomPassword, nickname,
-                userInfo.getProfileImageUrl());
-        return userRepository.save(user);
-    }
-
-    // "kakao_9f3ac21b4e" 같은 형태로, 사용자가 절대 직접 입력할 일 없는 내부용 로그인 아이디를 생성
-    private String generateUniqueLoginId(String provider) {
-        String prefix = provider.toLowerCase() + "_";
-        String candidate;
-        do {
-            candidate = prefix + randomAlnum(10);
-        } while (userRepository.existsByLoginId(candidate));
-        return candidate;
-    }
-
-    // 닉네임이 이미 있으면 뒤에 숫자를 붙여서 유니크할 때까지 반복
-    private String generateUniqueNickname(String base) {
-        String candidate = base;
-        int suffix = 1;
-        while (userRepository.existsByNickname(candidate)) {
-            candidate = base + suffix;
-            suffix++;
-        }
-        return candidate;
-    }
-
-    private String randomAlnum(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(LOGIN_ID_CHARSET.charAt(RANDOM.nextInt(LOGIN_ID_CHARSET.length())));
-        }
-        return sb.toString();
+        String signupTicket = jwtProvider.createSocialSignupTicket(
+                provider, providerId, ticketEmail, rawNickname, userInfo.getProfileImageUrl());
+        throw new OAuth2AuthenticationException(
+                new OAuth2Error("new_social_signup", signupTicket, null));
     }
 }

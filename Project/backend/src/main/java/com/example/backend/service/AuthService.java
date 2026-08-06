@@ -11,6 +11,7 @@ import com.example.backend.dto.FindIdResponse;
 import com.example.backend.dto.PasswordResetRequest;
 import com.example.backend.dto.PasswordResetConfirmRequest;
 import com.example.backend.dto.AccountLinkRequest;
+import com.example.backend.dto.SocialSignupRequest;
 import com.example.backend.domain.UserSocialLink;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.UserSocialLinkRepository;
@@ -19,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.format.DateTimeFormatter;
+import java.security.SecureRandom;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -194,5 +197,80 @@ public class AuthService {
         User user = userRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         return jwtProvider.createLinkIntentTicket(user.getUserId());
+    }
+
+    // ===== 소셜 신규가입 완료 =====
+
+    // /complete-profile에서 "완료"를 눌렀을 때 호출. 이 시점에 처음으로 실제 계정이 DB에 만들어짐
+    // (그 전까지는 카카오 인증만 통과한 상태라 아무것도 저장 안 돼있었음)
+    public LoginResponse completeSocialSignup(SocialSignupRequest request) {
+        var claims = jwtProvider.parseSocialSignupTicket(request.ticket());
+        if (claims == null) {
+            throw new IllegalArgumentException("가입 요청이 만료됐어요. 처음부터 다시 시도해주세요.");
+        }
+        String provider = claims.get("provider", String.class);
+        String providerId = claims.get("providerId", String.class);
+        String email = claims.getSubject();
+        String nickname = claims.get("nickname", String.class);
+        String profileImageUrl = claims.get("profileImageUrl", String.class);
+        if (profileImageUrl != null && profileImageUrl.isBlank()) {
+            profileImageUrl = null;
+        }
+
+        // 티켓 발급 이후 시간이 좀 지났을 수 있으니, 그 사이 다른 경로로 이미 가입/연동됐는지 다시 확인
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+        }
+        if (userRepository.findByProviderAndProviderId(provider, providerId).isPresent()
+                || userSocialLinkRepository.findByProviderAndProviderId(provider, providerId).isPresent()) {
+            throw new IllegalArgumentException("이미 가입 처리된 계정입니다. 다시 로그인해주세요.");
+        }
+
+        if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
+            throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
+        }
+        if ("SMOKER".equals(request.smoking())
+                && (request.smokingType() == null || request.smokingType().isBlank())) {
+            throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
+        }
+
+        String loginId = generateUniqueLoginId(provider);
+        String uniqueNickname = generateUniqueNickname(nickname);
+        String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+
+        User user = new User(provider, providerId, loginId, email, randomPassword, uniqueNickname, profileImageUrl);
+        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), request.region(),
+                request.job(), request.smoking(), request.smokingType());
+        userRepository.save(user);
+
+        return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
+    }
+
+    // "kakao_9f3ac21b4e" 같은 형태로, 사용자가 절대 직접 입력할 일 없는 내부용 로그인 아이디를 생성
+    private static final String LOGIN_ID_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private String generateUniqueLoginId(String provider) {
+        String prefix = provider.toLowerCase() + "_";
+        String candidate;
+        do {
+            StringBuilder sb = new StringBuilder(10);
+            for (int i = 0; i < 10; i++) {
+                sb.append(LOGIN_ID_CHARSET.charAt(RANDOM.nextInt(LOGIN_ID_CHARSET.length())));
+            }
+            candidate = prefix + sb;
+        } while (userRepository.existsByLoginId(candidate));
+        return candidate;
+    }
+
+    // 닉네임이 이미 있으면 뒤에 숫자를 붙여서 유니크할 때까지 반복
+    private String generateUniqueNickname(String base) {
+        String candidate = base;
+        int suffix = 1;
+        while (userRepository.existsByNickname(candidate)) {
+            candidate = base + suffix;
+            suffix++;
+        }
+        return candidate;
     }
 }

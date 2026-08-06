@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { completeAdditionalInfo } from "../api";
+import { completeAdditionalInfo, completeSocialSignup } from "../api";
 import { useAuth } from "../context/AuthContext";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import "./CompleteProfilePage.css";
@@ -23,7 +23,10 @@ const getDaysInMonth = (year: number, month: number): number => {
 
 function CompleteProfilePage() {
   const navigate = useNavigate();
-  const { token, setUser, logout } = useAuth();
+  const { token, setUser, logout, login } = useAuth();
+  const [searchParams] = useSearchParams();
+  // ticket이 있으면 "아직 계정 자체가 없는" 신규 소셜가입 상태 (카카오 인증만 통과한 상태)
+  const ticket = searchParams.get("ticket");
 
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -75,26 +78,28 @@ function CompleteProfilePage() {
       setError("흡연 종류를 선택해주세요.");
       return;
     }
-    if (!token) {
+    if (!token && !ticket) {
       setError("로그인 정보가 없습니다. 다시 로그인해주세요.");
       return;
     }
 
     const birthDate = `${birthYear}-${birthMonth.padStart(2, "0")}-${birthDay.padStart(2, "0")}`;
+    const regionValue = regionTokens.map((t) => t.label).join(", ");
 
     try {
       setSubmitting(true);
-      const updatedUser = await completeAdditionalInfo(
-        token,
-        gender,
-        birthDate,
-        phone,
-        regionTokens.map((token) => token.label).join(", "),
-        job,
-        smoking,
-        smoking === "SMOKER" ? smokingType : null
-      );
-      setUser(updatedUser);
+      if (ticket) {
+        // 신규 소셜가입: 이 요청이 성공해야 그제서야 DB에 계정이 만들어짐
+        const issuedToken = await completeSocialSignup(
+          ticket, gender, birthDate, phone, regionValue, job, smoking, smoking === "SMOKER" ? smokingType : null
+        );
+        login(issuedToken);
+      } else {
+        const updatedUser = await completeAdditionalInfo(
+          token!, gender, birthDate, phone, regionValue, job, smoking, smoking === "SMOKER" ? smokingType : null
+        );
+        setUser(updatedUser);
+      }
       navigate("/", { replace: true });
     } catch (err) {
       const message =
@@ -107,6 +112,11 @@ function CompleteProfilePage() {
   };
 
   const handleCancel = () => {
+    if (ticket) {
+      // 티켓만 있고 아직 로그인/계정 자체가 없는 상태라, 그냥 화면만 나가면 됨 (DB엔 애초에 아무것도 안 만들어졌음)
+      navigate("/", { replace: true });
+      return;
+    }
     // 여기서 만든 계정 자체는 DB에 남지만(다음에 같은 소셜 계정으로 로그인하면 이어서 계속할 수 있음),
     // 지금 로그인 상태만 끊어서 "가입 중" 상태로 사이트를 돌아다니는 걸 막음
     logout();
@@ -257,7 +267,7 @@ function CompleteProfilePage() {
           onClick={handleCancel}
           disabled={submitting}
         >
-          취소하고 홈으로
+          철회하기
         </button>
       </form>
     </div>

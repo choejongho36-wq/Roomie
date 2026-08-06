@@ -249,6 +249,30 @@ export const completeAdditionalInfo = async (
   return response.data;
 };
 
+// 카카오 인증만 통과하고 아직 계정이 없는 상태(티켓만 있음)에서, 추가정보와 함께 실제 계정을 만들 때 사용
+export const completeSocialSignup = async (
+  ticket: string,
+  gender: string,
+  birthDate: string,
+  phone: string,
+  region: string,
+  job: string,
+  smoking: string,
+  smokingType: string | null
+): Promise<string> => {
+  const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/complete-social-signup`, {
+    ticket,
+    gender,
+    birthDate,
+    phone: phone || null,
+    region,
+    job,
+    smoking,
+    smokingType,
+  });
+  return response.data.token;
+};
+
 export const uploadProfileImage = async (token: string, file: File): Promise<User> => {
   const formData = new FormData();
   formData.append("file", file);
