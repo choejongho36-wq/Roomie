@@ -75,6 +75,10 @@ function ChatPage() {
     onConfirm: () => Promise<void> | void;
   } | null>(null);
   const [acknowledgedPartners, setAcknowledgedPartners] = useState<Set<number>>(loadAcknowledgedPartners);
+  const [isListMenuOpen, setIsListMenuOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedPartnerIds, setSelectedPartnerIds] = useState<Set<number>>(new Set());
+  const [leavingSelected, setLeavingSelected] = useState(false);
   const messageListRef = useRef<HTMLDivElement>(null);
 
   const myUserId = user?.userId ?? null;
@@ -225,6 +229,52 @@ function ChatPage() {
     });
   };
 
+  const enterEditMode = () => {
+    setIsEditMode(true);
+    setIsListMenuOpen(false);
+    setSelectedPartnerIds(new Set());
+  };
+
+  const cancelEditMode = () => {
+    setIsEditMode(false);
+    setSelectedPartnerIds(new Set());
+  };
+
+  const toggleSelectPartner = (partnerId: number) => {
+    setSelectedPartnerIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(partnerId)) next.delete(partnerId);
+      else next.add(partnerId);
+      return next;
+    });
+  };
+
+  const handleLeaveSelected = () => {
+    if (selectedPartnerIds.size === 0) return;
+    const targetIds = selectedPartnerIds;
+    setConfirmModal({
+      message: `선택한 채팅방 ${targetIds.size}개를 나가시겠어요? 대화 상대에게는 연결이 끊겼다고 표시돼요.`,
+      confirmLabel: "나가기",
+      onConfirm: async () => {
+        if (!token) return;
+        setLeavingSelected(true);
+        try {
+          await Promise.all([...targetIds].map((partnerId) => leaveChat(token, partnerId)));
+          setConversations((prev) => prev?.filter((c) => !targetIds.has(c.partnerId)) ?? prev);
+          if (activePartner && targetIds.has(activePartner.userId)) {
+            setActivePartner(null);
+            setSearchParams({});
+          }
+          cancelEditMode();
+        } catch {
+          setError("채팅방을 나가지 못했습니다. 잠시 후 다시 시도해주세요.");
+        } finally {
+          setLeavingSelected(false);
+        }
+      },
+    });
+  };
+
   const sortedConversations = useMemo(
     () => conversations ?? [],
     [conversations]
@@ -237,39 +287,96 @@ function ChatPage() {
 
       <div className="chat-layout">
         <aside className="chat-sidebar">
+          <div className="chat-sidebar-header">
+            <span className="chat-sidebar-title">채팅</span>
+            <div className="chat-list-menu-wrapper">
+              <button
+                type="button"
+                className="chat-list-menu-btn"
+                aria-label="채팅 목록 메뉴"
+                onClick={() => setIsListMenuOpen((prev) => !prev)}
+              >
+                <svg width="4" height="18" viewBox="0 0 4 18" fill="currentColor" aria-hidden="true">
+                  <circle cx="2" cy="2" r="2" />
+                  <circle cx="2" cy="9" r="2" />
+                  <circle cx="2" cy="16" r="2" />
+                </svg>
+              </button>
+              {isListMenuOpen && (
+                <div className="chat-list-menu">
+                  <button type="button" className="chat-list-menu-item" onClick={enterEditMode}>
+                    편집
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="chat-conversation-list">
             {conversations === null && <p className="chat-empty-hint">불러오는 중...</p>}
             {conversations !== null && sortedConversations.length === 0 && (
               <p className="chat-empty-hint">아직 대화가 없어요.</p>
             )}
-            {sortedConversations.map((conversation) => (
-              <button
-                key={conversation.partnerId}
-                type="button"
-                className={`chat-conversation-item${
-                  activePartner?.userId === conversation.partnerId ? " is-active" : ""
-                }`}
-                onClick={() =>
-                  openConversation({
-                    userId: conversation.partnerId,
-                    nickname: conversation.partnerNickname,
-                    profileImageUrl: conversation.partnerProfileImageUrl,
-                    isVerified: conversation.partnerVerified,
-                  })
-                }
-              >
-                <img
-                  src={getAvatarSrc(conversation.partnerProfileImageUrl)}
-                  alt=""
-                  className="chat-avatar"
-                />
-                <span className="chat-conversation-info">
-                  <span className="chat-conversation-name">{conversation.partnerNickname}</span>
-                  <span className="chat-conversation-preview">{conversation.lastMessage}</span>
-                </span>
-              </button>
-            ))}
+            {sortedConversations.map((conversation) => {
+              const isSelected = selectedPartnerIds.has(conversation.partnerId);
+              return (
+                <button
+                  key={conversation.partnerId}
+                  type="button"
+                  className={`chat-conversation-item${
+                    activePartner?.userId === conversation.partnerId ? " is-active" : ""
+                  }`}
+                  onClick={() =>
+                    isEditMode
+                      ? toggleSelectPartner(conversation.partnerId)
+                      : openConversation({
+                          userId: conversation.partnerId,
+                          nickname: conversation.partnerNickname,
+                          profileImageUrl: conversation.partnerProfileImageUrl,
+                          isVerified: conversation.partnerVerified,
+                        })
+                  }
+                >
+                  {isEditMode && (
+                    <span className={`chat-conversation-checkbox${isSelected ? " is-checked" : ""}`} aria-hidden="true">
+                      {isSelected && (
+                        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                          <path d="M1 5l3.5 3.5L11 1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </span>
+                  )}
+                  <img
+                    src={getAvatarSrc(conversation.partnerProfileImageUrl)}
+                    alt=""
+                    className="chat-avatar"
+                  />
+                  <span className="chat-conversation-info">
+                    <span className="chat-conversation-name">{conversation.partnerNickname}</span>
+                    <span className="chat-conversation-preview">{conversation.lastMessage}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
+
+          {isEditMode && (
+            <div className="chat-edit-actions">
+              <button type="button" className="btn btn-outline chat-edit-cancel-btn" onClick={cancelEditMode}>
+                취소
+              </button>
+              <button
+                type="button"
+                className="chat-edit-leave-btn"
+                onClick={handleLeaveSelected}
+                disabled={selectedPartnerIds.size === 0 || leavingSelected}
+              >
+                {leavingSelected
+                  ? "나가는 중..."
+                  : `채팅방 나가기${selectedPartnerIds.size > 0 ? ` (${selectedPartnerIds.size})` : ""}`}
+              </button>
+            </div>
+          )}
         </aside>
 
         <section className="chat-thread">
@@ -294,7 +401,20 @@ function ChatPage() {
               <div className="chat-thread-header">
                 <img src={getAvatarSrc(activePartner.profileImageUrl)} alt="" className="chat-avatar" />
                 <strong>{activePartner.nickname}</strong>
-                {activePartner.isVerified && <span className="chat-verified-badge">✓ 인증</span>}
+                {activePartner.isVerified && (
+                  <span className="chat-verified-badge" title="이메일 인증 완료" aria-label="이메일 인증 완료">
+                    <svg width="16" height="18" viewBox="0 0 18 20" fill="none" aria-hidden="true">
+                      <path d="M9 1l7 2.6v5.2c0 5-3 8.4-7 10.2-4-1.8-7-5.2-7-10.2V3.6L9 1z" fill="currentColor" />
+                      <path
+                        d="M5.8 9.6l2.3 2.3L12.4 7"
+                        stroke="#fff"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                )}
                 {!leftByPartner && (
                   <button
                     type="button"
