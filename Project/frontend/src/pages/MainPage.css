@@ -590,23 +590,6 @@
   line-height: 1.65;
 }
 
-.ai-match-badge {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #fff1e8;
-  color: #f16526;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.ai-match-note {
-  margin: 10px 0 0;
-  font-size: 13px;
-  color: #888;
-}
-
 @media (max-width: 640px) {
   .ai-match-grid {
     grid-template-columns: 1fr;

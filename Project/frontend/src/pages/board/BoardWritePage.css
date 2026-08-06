@@ -298,32 +298,6 @@
   color: #fff;
 }
 
-.board-write-recruit-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  padding: 16px 20px;
-  background: #fafafa;
-}
-
-.board-write-field-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.board-write-field-label {
-  flex-shrink: 0;
-  width: 56px;
-  padding-top: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #444;
-}
-
-
 .range-slider {
   flex: 1;
   min-width: 0;

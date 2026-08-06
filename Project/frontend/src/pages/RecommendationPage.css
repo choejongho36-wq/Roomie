@@ -167,24 +167,6 @@
   line-height: 1;
 }
 
-.recommendation-compatibility-label {
-  margin-top: 8px;
-  font-size: 14px;
-  color: #666;
-}
-
-.recommendation-summary-note {
-  background: #fff4e6;
-  border: 1px solid #ffd5a6;
-  border-radius: 8px;
-  padding: 16px;
-  color: #8a5a20;
-  margin-bottom: 22px;
-  font-size: 15px;
-  line-height: 1.45;
-  text-align: center;
-}
-
 .recommendation-summary-compare-button {
   align-self: center;
   width: 70%;
@@ -301,37 +283,6 @@
   flex-shrink: 0;
 }
 
-.recommendation-card-score-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-  background: rgba(245, 233, 216, 0.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(245, 233, 216, 0.85);
-  border-radius: 999px;
-  padding: 6px 13px;
-}
-
-.recommendation-card-score-badge strong {
-  font-variant-numeric: tabular-nums;
-  font-size: 16px;
-  font-weight: 800;
-  color: #ff6600;
-}
-
-.recommendation-card-score-badge em {
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(62, 44, 35, 0.7);
-}
-
-
 .recommendation-card-info {
   flex: 1;
   min-width: 0;
@@ -409,23 +360,6 @@
 
 .recommendation-card-tag.is-empty {
   color: #999;
-}
-
-.profile-compare-button {
-  border: 0;
-  background: transparent;
-  color: #6b3f2a;
-  padding: 0;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: color 180ms ease;
-}
-
-.profile-compare-button:hover {
-  color: #ff6600;
-  text-decoration: underline;
 }
 
 .recommendation-more-cta {
@@ -660,21 +594,6 @@
   font-size: 11px;
   font-weight: 700;
   color: #c98a4b;
-}
-
-.comparison-score-badge-track {
-  margin-top: 10px;
-  height: 6px;
-  border-radius: 999px;
-  background: #ffe0c2;
-  overflow: hidden;
-}
-
-.comparison-score-badge-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ffb066, #ff6600);
-  transition: width 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .comparison-points-grid {
