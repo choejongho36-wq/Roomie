@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -59,9 +60,15 @@ public class SurveyComparisonExplanationService {
     }
 
     private LocalDateTime latestCompletedAt(Long userId) {
+        // survey_result.completed_at은 마이크로초 단위까지 저장되는데, 우리 캐시 테이블의
+        // *_survey_completed_at 컬럼은 초 단위(DATETIME)까지만 저장된다. 그래서 저장했다가 다시
+        // 읽은 값(초 단위로 잘림)과, 매번 새로 조회하는 값(마이크로초까지 살아있음)을 그대로
+        // equals()로 비교하면 항상 다르다고 나와서 캐시가 매번 무효 처리되는 버그가 있었다.
+        // 초 단위로 잘라서 비교 기준을 맞춘다.
         return surveyResultRepository.findByUserIdOrderByCompletedAtDesc(userId).stream()
                 .findFirst()
                 .map(SurveyResult::getCompletedAt)
+                .map(dt -> dt.truncatedTo(ChronoUnit.SECONDS))
                 .orElse(null);
     }
 
