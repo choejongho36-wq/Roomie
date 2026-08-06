@@ -86,23 +86,40 @@ public class SurveySummaryService {
             throw new IllegalStateException("Groq API 키가 설정되지 않았습니다.");
         }
 
-        String topReasonsText = topReasons.isEmpty()
-                ? "특별히 두드러지는 항목 없음"
-                : topReasons.stream().map(SurveyComparisonHighlightResponse::category).collect(Collectors.joining(", "));
-        String differencesText = differences.isEmpty()
-                ? "특별히 차이 나는 항목 없음"
-                : differences.stream().map(SurveyComparisonHighlightResponse::category).collect(Collectors.joining(", "));
+        // 카테고리 이름만 넘기면 모델이 "A, B, C 같은 부분에서 잘 맞아요" 식으로 화면에 이미 태그로
+        // 떠 있는 항목 이름을 그대로 되풀이하는 문장을 만든다. 실제 두 사람의 답변 문장(myAnswer/
+        // otherAnswer)까지 함께 넘겨서, 그 내용을 근거로 진짜 생활 장면을 설명하게 한다.
+        String topReasonsText = formatHighlightsForPrompt(topReasons, "특별히 두드러지는 항목 없음");
+        String differencesText = formatHighlightsForPrompt(differences, "특별히 차이 나는 항목 없음");
 
-        String systemPrompt = "너는 룸메이트 매칭 앱의 궁합 설명가입니다. 두 사람의 설문 비교 결과(궁합 점수, 잘 맞는 항목, 다른 항목)를 보고 "
-                + "왜 그런 점수가 나왔는지 이유를 설명하고, 다른 항목에 대해서는 어떻게 하면 좋을지 짧은 조언을 함께 제시하세요. "
-                + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. 접두사 없이 설명 문장만 출력하세요.";
+        String systemPrompt = "너는 룸메이트 매칭 앱의 궁합 설명가입니다. "
+                + "화면에는 이미 '맞는 포인트'와 '다른 포인트'가 항목 이름 태그로 따로 표시되고 있으니, "
+                + "그 항목 이름들을 다시 나열하거나 'A, B, C 같은 부분에서'처럼 목록을 읽어주는 문장은 쓰지 마세요. "
+                + "대신 아래 실제 답변 내용을 근거로, 두 사람이 실제로 함께 살 때 어떤 장면일지 구체적으로 그려주듯 자연스럽게 설명하세요. "
+                + "잘 맞는 부분 중 인상적인 것 한두 가지를 짚어 왜 편할지 이야기하고, 다른 부분 중 가장 중요해 보이는 하나에 대해서는 "
+                + "구체적이고 실질적인 조언을 한 문장으로 제안하세요. "
+                + "한국어 존댓말로 2~3문장, 공백 포함 200자 이내로 다정하고 자연스럽게 작성하세요. "
+                + "문장이 끝날 때마다(마침표 뒤) 실제로 줄을 바꿔서 한 줄에 한 문장씩만 오도록 하세요. "
+                + "글자 그대로의 백슬래시 n(\\n)이라는 문자열을 출력하지 말고, 진짜 줄바꿈으로만 문장을 나누세요. "
+                + "한자(漢字)는 절대 섞어 쓰지 말고 순 한글로만 작성하세요. 접두사 없이 설명 문장만 출력하세요.";
         String userPrompt = "닉네임: " + nickname
                 + "\n궁합 점수: " + compatibilityScore + "점"
-                + "\n잘 맞는 항목: " + topReasonsText
-                + "\n다른 항목: " + differencesText
-                + "\n\n위 정보를 바탕으로 두 사람의 궁합을 설명해주세요.";
+                + "\n\n[잘 맞는 부분의 실제 답변]\n" + topReasonsText
+                + "\n\n[다른 부분의 실제 답변]\n" + differencesText
+                + "\n\n위 실제 답변 내용을 근거로 두 사람의 궁합을 자연스럽게 설명해주세요.";
 
         return callGroq(apiKey, systemPrompt, userPrompt, 600, "궁합 설명 생성에 실패했습니다.");
+    }
+
+    // "코골이: 나는 '골지 않아.', 상대는 '심하게 골아.'" 처럼 실제 답변 문장을 그대로 보여줘서
+    // 모델이 카테고리 이름만 되풀이하지 않고 구체적인 근거를 가지고 설명을 쓰게 한다.
+    private String formatHighlightsForPrompt(List<SurveyComparisonHighlightResponse> highlights, String emptyText) {
+        if (highlights.isEmpty()) {
+            return emptyText;
+        }
+        return highlights.stream()
+                .map(h -> "- " + h.category() + ": 나는 \"" + h.myAnswer() + "\", 상대는 \"" + h.otherAnswer() + "\"")
+                .collect(Collectors.joining("\n"));
     }
 
     private String callGroq(String apiKey, String systemPrompt, String userPrompt, int maxTokens, String failureMessage) {
@@ -270,7 +287,21 @@ public class SurveySummaryService {
             throw new IllegalStateException("Groq 응답에 content가 없습니다.");
         }
 
-        return content.trim().replaceAll("\\s+", " ");
+        // 궁합 설명(explainComparison)은 문장마다 줄바꿈을 넣어달라고 프롬프트에 지시하는데,
+        // 예전에는 \s+(줄바꿈 포함) 전부를 공백 하나로 뭉개버려서 줄바꿈이 사라졌었다.
+        // 가로 공백(스페이스/탭)만 하나로 뭉치고, 줄바꿈은 살리되 연속된 빈 줄만 한 줄로 정리한다.
+        // 모델이 실제 줄바꿈 대신 "\n"이라는 문자 두 글자(백슬래시+n)를 그대로 출력하는 경우가 있어서,
+        // 그 리터럴 표기도 진짜 줄바꿈으로 바꿔준다(공백에 둘러싸인 경우까지 포함).
+        // 프롬프트에서 순 한글로만 쓰라고 지시해도 모델이 가끔 "이해(理解)"처럼 한자를 괄호로
+        // 병기하는 경우가 있어서, 한자가 들어간 괄호 전체를 통째로 지우고(빈 괄호가 안 남게),
+        // 괄호 밖에 남은 한자(CJK 통합 한자 + 확장 A)도 방어적으로 전부 제거한다.
+        return content.trim()
+                .replaceAll("\\s*[(（][^()（）]*[\\u4E00-\\u9FFF\\u3400-\\u4DBF][^()（）]*[)）]", "")
+                .replaceAll("[\\u4E00-\\u9FFF\\u3400-\\u4DBF]+", "")
+                .replaceAll("\\s*\\\\n\\s*", "\n")
+                .replaceAll("[ \\t\\x0B\\f\\r]+", " ")
+                .replaceAll(" *\\n *", "\n")
+                .replaceAll("\\n{2,}", "\n");
     }
 
     private List<Integer> parseAnswers(String answersJson) {

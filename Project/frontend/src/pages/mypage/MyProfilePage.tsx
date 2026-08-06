@@ -45,7 +45,7 @@ const formatSmokingLabel = (smoking?: string | null, smokingType?: string | null
   }
   return null;
 };
-const MAX_BIO_LENGTH = 150;
+const MAX_BIO_LENGTH = 70;
 
 function getAge(birthDate: string) {
   const birth = new Date(birthDate);
@@ -914,7 +914,7 @@ function MyProfilePage() {
           {/* ---------- 회원탈퇴 ---------- */}
 
           {!showWithdrawConfirm ? (
-            <div className="flex justify-end mt-5">
+            <div className="absolute bottom-5 right-6">
               <button
                 type="button"
                 onClick={() => {
