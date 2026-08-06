@@ -62,7 +62,10 @@ public class MatchedPairController {
     }
 
     private User findUser(Authentication authentication) {
-        return userRepository.findByLoginId(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    if (authentication == null) {
+        throw new IllegalArgumentException("로그인이 필요합니다.");
     }
+    return userRepository.findByLoginId(authentication.getName())
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+}
 }
