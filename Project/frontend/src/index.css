@@ -1,3 +1,13 @@
+/* Tailwind는 마이프로필 페이지(.profile-page) 한 곳에서만 쓴다.
+   기본 @import "tailwindcss"는 Preflight(전역 리셋: margin/padding/border/box-sizing 등을
+   모든 요소에 강제 초기화)까지 포함해서 사이트 전체 레이아웃에 영향을 준다
+   (예: box-sizing이 border-box로 바뀌면서 width+padding을 함께 쓰는 다른 페이지들이 좁아짐).
+   그래서 Preflight는 빼고 theme/utilities만 가져오고, Preflight와 동일한 리셋은
+   MyProfilePage.css에서 .profile-page 안으로만 스코프를 좁혀 재현한다. */
+@layer theme, base, utilities;
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -57,39 +67,48 @@
 
 .app-main {
   flex: 1;
+  /* min-height:0이 없으면 콘텐츠가 넘칠 때 이 요소가 flex:1을 무시하고 콘텐츠 높이만큼
+     커져버려서, #root에 overflow:hidden을 건 뷰포트 고정 페이지(예: 프로필 게시판)에서
+     내부 목록 스크롤이 동작하지 않고 그냥 아래쪽이 잘려 보이는 문제가 생긴다. */
+  min-height: 0;
 }
 
 body {
   margin: 0;
 }
 
-h1,
-h2 {
-  font-family: inherit;
-  font-weight: 800;
-  color: var(--text-h);
-}
+/* @layer 없이 두면 utilities 레이어(Tailwind)보다 항상 우선 적용돼서
+   .profile-page 안의 Tailwind margin 유틸(m-0, mb-6 등)이 무시된다.
+   base 레이어에 넣어야 "theme, base, utilities" 순서대로 utilities가 이걸 덮어쓸 수 있다. */
+@layer base {
+  h1,
+  h2 {
+    font-family: inherit;
+    font-weight: 800;
+    color: var(--text-h);
+  }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+  h1 {
+    font-size: 56px;
+    letter-spacing: -1.68px;
+    margin: 32px 0;
+    @media (max-width: 1024px) {
+      font-size: 36px;
+      margin: 20px 0;
+    }
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+  h2 {
+    font-size: 24px;
+    line-height: 118%;
+    letter-spacing: -0.24px;
+    margin: 0 0 8px;
+    @media (max-width: 1024px) {
+      font-size: 20px;
+    }
   }
-}
-p {
-  margin: 0;
+  p {
+    margin: 0;
+  }
 }
 
 code {

@@ -8,6 +8,8 @@
   justify-content: center;
   gap: 24px;
   background: linear-gradient(135deg, #f16526 0%, #f4834f 45%, #ffc79b 100%);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .matching-loading-stack {
@@ -70,6 +72,21 @@
   font-size: 37px;
   font-weight: 600;
   margin-top: 60px;
+  /* index.css의 :root가 font-size 18px 기준으로 line-height를 %(145%)로 줘서
+     약 26px짜리 고정값으로 상속되는데, 37px 폰트가 그걸 그대로 물려받으면
+     좁은 화면에서 문장이 줄바꿈될 때 두 줄이 겹쳐 보인다. 폰트 크기에 비례하는
+     배수로 직접 지정해서 고침(MainPage.css .hero-tagline과 같은 문제/같은 해법). */
+  line-height: 1.35;
+  text-align: center;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .matching-loading-overlay p {
+    font-size: 24px;
+    margin-top: 40px;
+  }
 }
 
 .matching-loading-highlight {

@@ -1,10 +1,21 @@
+/* 이 페이지가 떠 있는 동안(ProfileBoardPage.tsx가 마운트 시 #root에 이 클래스를 붙였다 뗌)
+   페이지 전체 스크롤 대신 뷰포트 높이에 맞춰서 헤더~푸터가 한 화면에 다 보이게 한다. */
+#root.profile-board-viewport-lock {
+  height: 100svh;
+  overflow: hidden;
+}
+
 .profile-board-page {
   width: min(900px, calc(100% - 48px));
+  height: 100%;
   margin: 0 auto;
-  padding: 40px 0 72px;
+  padding: 24px 0 24px;
   box-sizing: border-box;
   text-align: left;
   font-family: "Pretendard", sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .profile-board-header {
@@ -13,6 +24,7 @@
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .profile-board-header h1 {
@@ -30,9 +42,17 @@
 .profile-board-region-field {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .profile-board-region-field .region-picker-panel {
+  left: auto;
+  right: 0;
+}
+
+.profile-board-region-field .rent-range-panel {
   left: auto;
   right: 0;
 }
@@ -46,10 +66,20 @@
 }
 
 .profile-board-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  display: flex;
   gap: 20px;
   align-items: stretch;
+  /* 남는 뷰포트 공간을 억지로 채우지 않고, 목록(항목 6개 + 페이지 버튼) 내용 높이에
+     맞춰 이 줄 자체의 높이가 정해지도록 한다. align-items:stretch 덕분에 오른쪽
+     프로필 카드도 이 높이에 자동으로 맞춰진다. */
+  flex: 0 0 auto;
+}
+
+.profile-board-list-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .profile-board-list {
@@ -59,7 +89,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 760px;
+  flex: 0 1 auto;
+  /* 항목(68px) 6개 + gap(8px) 5개 기준 높이를 최소 높이로 고정해서, 마지막 페이지처럼
+     항목이 6개보다 적게 남았을 때도 목록 높이가 줄어들지 않고 페이지 번호 위치가
+     항상 같은 자리에 오도록 한다. (PAGE_SIZE를 바꾸면 이 값도 같이 조정 필요) */
+  min-height: 448px;
   overflow-y: auto;
   padding-right: 2px;
 }
@@ -143,8 +177,9 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  width: 420px;
-  min-height: 560px;
+  flex: 0 0 420px;
+  min-height: 0;
+  overflow: hidden;
   background: #ffffff;
   border: 1px solid rgba(255, 102, 0, 0.2);
   border-radius: 16px;
@@ -239,6 +274,22 @@
 }
 
 @media (max-width: 720px) {
+  /* "헤더~목록~상세 카드가 스크롤 없이 한 화면에 다 보이게" 하려고 #root 자체를
+     100svh로 고정하고 overflow:hidden을 걸어둔 건데, 이건 헤더/목록/상세가
+     가로로 나란히 있는 데스크톱 레이아웃 기준이다. 720px 이하에서는 이게 전부
+     세로로 쌓이면서 총 높이가 폰 화면보다 훨씬 커지는데, 페이지 스크롤 자체가
+     막혀 있어서 목록 아래(자기소개/태그/비교 버튼 등)가 화면에 아예 안 보이고
+     스크롤할 방법도 없었다. 모바일에서는 이 잠금을 풀어서 그냥 페이지 스크롤로
+     다 보이게 한다. */
+  #root.profile-board-viewport-lock {
+    height: auto;
+    overflow: visible;
+  }
+
+  .profile-board-page {
+    height: auto;
+  }
+
   .profile-board-header {
     flex-direction: column;
     align-items: stretch;
@@ -249,17 +300,27 @@
     right: auto;
   }
 
+  .profile-board-region-field .rent-range-panel {
+    left: 0;
+    right: auto;
+  }
+
   .profile-board-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .profile-board-list {
+    flex: 0 0 auto;
+    /* 데스크톱용 min-height: 448px가 그대로 남아있으면 min이 항상 max보다
+       우선이라 아래 max-height: 280px가 무시되고 목록이 그대로 448px로
+       나온다 — min부터 같이 풀어줘야 한다. */
+    min-height: 0;
     max-height: 280px;
   }
 
   .profile-board-detail {
+    flex: 1 1 auto;
     width: 100%;
-    min-height: auto;
   }
 
   .profile-board-detail-header {

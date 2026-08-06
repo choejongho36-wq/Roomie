@@ -4,12 +4,14 @@ import com.example.backend.domain.Inquiry;
 import com.example.backend.domain.Post;
 import com.example.backend.domain.PostReport;
 import com.example.backend.domain.User;
+import com.example.backend.dto.InquiryRequest;
 import com.example.backend.dto.PostRequest;
 import com.example.backend.repository.CommentRepository;
 import com.example.backend.repository.InquiryRepository;
 import com.example.backend.repository.PostReportRepository;
 import com.example.backend.repository.PostRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.service.InquiryService;
 import com.example.backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -48,6 +50,7 @@ public class AdminController {
     private final InquiryRepository inquiryRepository;
     private final PostReportRepository postReportRepository;
     private final PostService postService;
+    private final InquiryService inquiryService;
 
     // ===== 대시보드 =====
 
@@ -108,7 +111,7 @@ public class AdminController {
 
     // duration: "7", "30", "PERMANENT"
     @PostMapping("/admin/users/{id}/suspend")
-    public String suspendUser(@PathVariable("id") Long id, @RequestParam String duration) {
+    public String suspendUser(@PathVariable("id") Long id, @RequestParam(name = "duration") String duration) {
         userRepository.findById(id).ifPresent(user -> {
             LocalDateTime until = switch (duration) {
                 case "7" -> LocalDateTime.now().plusDays(7);
@@ -198,7 +201,22 @@ public class AdminController {
     @GetMapping("/admin/notices")
     public String notices(@RequestParam(required = false) String type, Model model) {
         List<String> boardTypes = (type != null && !type.isBlank()) ? List.of(type) : List.of("공지사항", "이벤트");
-        List<Post> notices = postRepository.findByBoardTypeInOrderByCreatedAtDesc(boardTypes);
+        List<Post> notices = new ArrayList<>(postRepository.findByBoardTypeInOrderByCreatedAtDesc(boardTypes));
+        // 고정된 글을 pinOrder 오름차순(같으면 postId 오름차순)으로 맨 위에 먼저 보여주고,
+        // 그 아래는 기존처럼 최신순. postId 2차 기준은 고정된 글끼리 비교할 때만 적용해서,
+        // 고정 안 된 글들의 "최신순" 정렬에는 영향이 없게 한다.
+        notices.sort((a, b) -> {
+            if (a.isPinned() != b.isPinned()) {
+                return a.isPinned() ? -1 : 1;
+            }
+            if (a.isPinned()) {
+                int byOrder = Integer.compare(
+                        a.getPinOrder() == null ? Integer.MAX_VALUE : a.getPinOrder(),
+                        b.getPinOrder() == null ? Integer.MAX_VALUE : b.getPinOrder());
+                return byOrder != 0 ? byOrder : Long.compare(a.getPostId(), b.getPostId());
+            }
+            return b.getCreatedAt().compareTo(a.getCreatedAt());
+        });
         model.addAttribute("notices", notices);
         model.addAttribute("authorNames", authorNameMap(notices.stream().map(Post::getUserId).toList()));
         model.addAttribute("type", type == null ? "" : type);
@@ -206,7 +224,10 @@ public class AdminController {
     }
 
     @GetMapping("/admin/notices/write")
-    public String noticeWriteForm() {
+    public String noticeWriteForm(@RequestParam(required = false) String type, Model model) {
+        // 공지사항/이벤트 목록에서 필터를 걸어둔 채로 "새 글쓰기"를 누르면, 그 카테고리가
+        // 미리 선택된 채로 글쓰기 폼이 열리게 한다.
+        model.addAttribute("presetBoardType", type == null ? "" : type);
         return "notice-write";
     }
 
@@ -229,6 +250,44 @@ public class AdminController {
     public String deleteNotice(@PathVariable("id") Long id) {
         postService.adminDelete(id);
         return "redirect:/admin/notices";
+    }
+
+    @GetMapping("/admin/notices/{id}/edit")
+    public String noticeEditForm(@PathVariable("id") Long id, Model model) {
+        Post notice = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지입니다."));
+        model.addAttribute("notice", notice);
+        return "notice-write";
+    }
+
+    @PostMapping("/admin/notices/{id}/edit")
+    public String updateNotice(@PathVariable("id") Long id,
+            @RequestParam String title,
+            @RequestParam String boardType,
+            @RequestParam String content,
+            @RequestParam(required = false) String tags) {
+        PostRequest request = new PostRequest(
+                title, null, null, null, null, null, null, null, null,
+                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
+        postService.adminUpdate(id, request);
+        return "redirect:/admin/notices";
+    }
+
+    @PostMapping("/admin/notices/{id}/pin")
+    public String togglePinNotice(@PathVariable("id") Long id,
+            @RequestParam(required = false) String type) {
+        Post notice = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지입니다."));
+        postService.adminSetPinned(id, !notice.isPinned());
+        return "redirect:/admin/notices" + (type != null && !type.isBlank() ? "?type=" + type : "");
+    }
+
+    @PostMapping("/admin/notices/{id}/pin-order")
+    public String moveNoticePinOrder(@PathVariable("id") Long id,
+            @RequestParam String direction,
+            @RequestParam(required = false) String type) {
+        postService.adminMovePinOrder(id, "up".equals(direction));
+        return "redirect:/admin/notices" + (type != null && !type.isBlank() ? "?type=" + type : "");
     }
 
     // ===== 문의 관리 =====
@@ -261,12 +320,28 @@ public class AdminController {
     }
 
     @PostMapping("/admin/inquiries/{id}/answer")
-    public String answerInquiry(@PathVariable("id") Long id, @RequestParam String answer) {
+    public String answerInquiry(@PathVariable("id") Long id, @RequestParam(name = "answer") String answer) {
         Inquiry inquiry = inquiryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문의입니다."));
         inquiry.answer(answer);
         inquiryRepository.save(inquiry);
         return "redirect:/admin/inquiries/" + id;
+    }
+
+    @PostMapping("/admin/inquiries/{id}/edit")
+    public String updateInquiry(@PathVariable("id") Long id,
+            @RequestParam String title,
+            @RequestParam String category,
+            @RequestParam String content) {
+        // 관리자 편집 화면엔 비밀글 체크박스가 없어 4번째 값은 쓰이지 않는다 (adminUpdate가 기존 값을 그대로 유지함).
+        inquiryService.adminUpdate(id, new InquiryRequest(title, category, content, false));
+        return "redirect:/admin/inquiries/" + id;
+    }
+
+    @PostMapping("/admin/inquiries/{id}/delete")
+    public String deleteInquiry(@PathVariable("id") Long id) {
+        inquiryService.adminDelete(id);
+        return "redirect:/admin/inquiries";
     }
 
     // ===== SB Admin 데모 페이지 =====
@@ -308,17 +383,22 @@ public class AdminController {
 
     @GetMapping("/admin/401")
     public String error401() {
-        return "401";
+        return "error/401";
+    }
+
+    @GetMapping("/admin/403")
+    public String error403() {
+        return "error/403";
     }
 
     @GetMapping("/admin/404")
     public String error404() {
-        return "404";
+        return "error/404";
     }
 
     @GetMapping("/admin/500")
     public String error500() {
-        return "500";
+        return "error/500";
     }
 
     // Post/Inquiry의 userId는 User와 JPA 연관관계가 없어 직접 조회해 매핑한다.

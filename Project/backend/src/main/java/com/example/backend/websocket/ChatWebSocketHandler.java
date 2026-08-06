@@ -12,24 +12,21 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-// ponytail: 세션을 서버 프로세스 메모리에만 들고 있음 — 인스턴스를 여러 대로 늘리면
-// (Redis pub/sub 같은) 공유 브로커가 필요해짐. 지금은 단일 인스턴스라 충분.
 @Component
 @RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     private final ChatService chatService;
     private final NotificationService notificationService;
+    private final WebSocketSessionRegistry sessionRegistry;
     private final ObjectMapper objectMapper;
-    private final Map<Long, WebSocketSession> sessionsByUserId = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         Long userId = userIdOf(session);
         if (userId != null) {
-            sessionsByUserId.put(userId, session);
+            sessionRegistry.register(userId, session);
         }
     }
 
@@ -37,7 +34,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         Long userId = userIdOf(session);
         if (userId != null) {
-            sessionsByUserId.remove(userId, session);
+            sessionRegistry.unregister(userId, session);
         }
     }
 
@@ -54,10 +51,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             if (session.isOpen()) {
                 session.sendMessage(new TextMessage(json));
             }
-            WebSocketSession receiverSession = sessionsByUserId.get(saved.receiverId());
-            if (receiverSession != null && receiverSession.isOpen()) {
-                receiverSession.sendMessage(new TextMessage(json));
-            }
+            sessionRegistry.send(saved.receiverId(), saved);
 
             // 알림 생성은 부가 기능이라, 여기서 실패해도 이미 보낸 메시지나 소켓 연결에는
             // 영향을 주면 안 된다 (실패 시 커넥션이 통째로 끊기던 문제의 원인이었음).

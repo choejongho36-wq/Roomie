@@ -10,7 +10,10 @@ import com.example.backend.dto.SignupRequest;
 import com.example.backend.dto.FindIdResponse;
 import com.example.backend.dto.PasswordResetRequest;
 import com.example.backend.dto.PasswordResetConfirmRequest;
+import com.example.backend.dto.AccountLinkRequest;
+import com.example.backend.domain.UserSocialLink;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.repository.UserSocialLinkRepository;
 import com.example.backend.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +27,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final UserSocialLinkRepository userSocialLinkRepository;
     private final EmailVerificationService emailVerificationService;
 
     public void signup(SignupRequest request) {
@@ -40,6 +44,13 @@ public class AuthService {
         if (!emailVerificationService.isVerified(request.email())) {
             throw new IllegalArgumentException("이메일 인증을 완료해주세요.");
         }
+        if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
+            throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
+        }
+        if ("SMOKER".equals(request.smoking())
+                && (request.smokingType() == null || request.smokingType().isBlank())) {
+            throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
+        }
         User user = new User(
                 request.loginId(),
                 request.email(),
@@ -49,8 +60,12 @@ public class AuthService {
                 request.birthDate(),
                 request.phone(),
                 request.region(),
-                request.job()
+                request.job(),
+                request.smoking(),
+                request.smokingType()
         );
+        // 위에서 이미 이메일 인증 완료를 확인했으니 가입과 동시에 인증 상태로 저장
+        user.markEmailVerified();
         userRepository.save(user);
     }
 
@@ -143,5 +158,41 @@ public class AuthService {
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         emailVerificationService.invalidate(request.email());
+    }
+
+    // ===== 소셜 계정 연동 =====
+
+    // 카카오 인증 직후 발급된 5분짜리 티켓 + 기존 계정 비밀번호를 함께 확인한 뒤에만 연동함.
+    // (티켓 = "방금 그 카카오 계정 주인" 증명, 비밀번호 = "기존 일반계정 주인" 증명. 둘 다 통과해야 안전)
+    public LoginResponse linkAccount(AccountLinkRequest request) {
+        var claims = jwtProvider.parseLinkTicket(request.ticket());
+        if (claims == null) {
+            throw new IllegalArgumentException("연동 요청이 만료됐어요. 카카오 로그인을 다시 시도해주세요.");
+        }
+        String email = claims.getSubject();
+        String provider = claims.get("provider", String.class);
+        String providerId = claims.get("providerId", String.class);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("연동할 계정을 찾을 수 없습니다."));
+        if ("WITHDRAWN".equals(user.getStatus())) {
+            throw new IllegalArgumentException("탈퇴한 계정입니다.");
+        }
+        if (user.getPassword() == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+        if (userSocialLinkRepository.existsByUserIdAndProvider(user.getUserId(), provider)) {
+            throw new IllegalArgumentException("이미 " + provider + " 계정이 연동되어 있습니다.");
+        }
+
+        userSocialLinkRepository.save(new UserSocialLink(user.getUserId(), provider, providerId));
+        return new LoginResponse(jwtProvider.createToken(user.getLoginId()));
+    }
+
+    // 마이페이지에서 "카카오 연동하기" 버튼을 눌렀을 때, 지금 로그인된 사용자 확인 후 발급
+    public String createLinkIntent(String loginId) {
+        User user = userRepository.findByLoginId(loginId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return jwtProvider.createLinkIntentTicket(user.getUserId());
     }
 }

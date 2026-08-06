@@ -11,12 +11,16 @@ import com.example.backend.dto.EmailVerificationConfirmRequest;
 import com.example.backend.dto.FindIdResponse;
 import com.example.backend.dto.PasswordResetRequest;
 import com.example.backend.dto.PasswordResetConfirmRequest;
+import com.example.backend.dto.AccountLinkRequest;
 import com.example.backend.service.AuthService;
 import com.example.backend.service.EmailVerificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,17 +42,17 @@ public class AuthController {
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam String email) {
+    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam(name = "email") String email) {
         return ResponseEntity.ok(authService.checkEmail(email));
     }
 
     @GetMapping("/check-login-id")
-    public ResponseEntity<LoginIdCheckResponse> checkLoginId(@RequestParam String loginId) {
+    public ResponseEntity<LoginIdCheckResponse> checkLoginId(@RequestParam(name = "loginId") String loginId) {
         return ResponseEntity.ok(authService.checkLoginId(loginId));
     }
 
     @GetMapping("/check-nickname")
-    public ResponseEntity<NicknameCheckResponse> checkNickname(@RequestParam String nickname) {
+    public ResponseEntity<NicknameCheckResponse> checkNickname(@RequestParam(name = "nickname") String nickname) {
         return ResponseEntity.ok(authService.checkNickname(nickname));
     }
 
@@ -77,7 +81,7 @@ public class AuthController {
     // 인증번호 확인은 위의 공용 /email/verify-confirm 을 그대로 재사용함
 
     @GetMapping("/find-id/result")
-    public ResponseEntity<FindIdResponse> findIdResult(@RequestParam String email) {
+    public ResponseEntity<FindIdResponse> findIdResult(@RequestParam(name = "email") String email) {
         return ResponseEntity.ok(authService.findLoginId(email));
     }
 
@@ -95,5 +99,18 @@ public class AuthController {
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
         authService.resetPassword(request);
         return ResponseEntity.ok().build();
+    }
+
+    // ===== 소셜 계정 연동 (일반가입 계정에 카카오 연결) =====
+
+    @PostMapping("/link-account")
+    public ResponseEntity<LoginResponse> linkAccount(@Valid @RequestBody AccountLinkRequest request) {
+        return ResponseEntity.ok(authService.linkAccount(request));
+    }
+
+    @PostMapping("/link-intent")
+    public ResponseEntity<Map<String, String>> createLinkIntent(Authentication authentication) {
+        String ticket = authService.createLinkIntent(authentication.getName());
+        return ResponseEntity.ok(Map.of("ticket", ticket));
     }
 }

@@ -1,7 +1,10 @@
 package com.example.backend.repository;
 
 import com.example.backend.domain.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -15,4 +18,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // 공지/이벤트 관리 목록용.
     List<Post> findByBoardTypeInOrderByCreatedAtDesc(List<String> boardTypes);
+
+    // 공지사항/이벤트를 통틀어 고정된 글만 고정 순서대로. 고정 순서 편집/새 고정 순번 계산에 사용.
+    List<Post> findByBoardTypeInAndPinnedTrueOrderByPinOrderAsc(List<String> boardTypes);
+
+    // 일반 사용자용 목록/조회에서 탈퇴한 작성자의 글을 걸러내기 위한 쿼리.
+    // Post/User 사이에 JPA 연관관계를 안 쓰는 컨벤션이라, 서브쿼리로 직접 걸러냄.
+    // (관리자 화면은 이 메서드를 안 쓰므로 여전히 탈퇴 회원 글도 다 보임)
+    @Query("SELECT p FROM Post p WHERE p.userId NOT IN " +
+            "(SELECT u.userId FROM User u WHERE u.status = 'WITHDRAWN')")
+    Page<Post> findAllActive(Pageable pageable);
 }

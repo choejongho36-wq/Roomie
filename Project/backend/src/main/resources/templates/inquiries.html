@@ -69,7 +69,7 @@
                     </div>
                     <div class="sb-sidenav-footer">
                         <div class="small">Logged in as:</div>
-                        관리자
+                        <span th:text="${adminNickname}">관리자</span>
                     </div>
                 </nav>
             </div>
@@ -142,7 +142,11 @@
                                             </td>
                                             <td th:text="${#temporals.format(q.createdAt, 'yyyy-MM-dd')}">2026-01-01</td>
                                             <td>
-                                                <a class="btn btn-sm btn-outline-primary" th:href="@{'/admin/inquiries/' + ${q.inquiryId}}">보기</a>
+                                                <a class="btn btn-sm btn-roomie-warning me-1" th:href="@{'/admin/inquiries/' + ${q.inquiryId}}">수정</a>
+                                                <form th:action="@{'/admin/inquiries/' + ${q.inquiryId} + '/delete'}" method="post" class="d-inline">
+                                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('이 문의를 삭제할까요?');">삭제</button>
+                                                </form>
                                             </td>
                                         </tr>
                                     </tbody>

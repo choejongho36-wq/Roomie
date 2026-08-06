@@ -11,6 +11,11 @@ const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
 const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
+const SMOKING_TYPE_OPTIONS = [
+  { value: "CIGARETTE", label: "연초" },
+  { value: "HEATED", label: "궐련형" },
+  { value: "LIQUID", label: "액상" },
+];
 
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
@@ -18,7 +23,7 @@ const getDaysInMonth = (year: number, month: number): number => {
 
 function CompleteProfilePage() {
   const navigate = useNavigate();
-  const { token, setUser } = useAuth();
+  const { token, setUser, logout } = useAuth();
 
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
@@ -27,6 +32,8 @@ function CompleteProfilePage() {
   const [phone, setPhone] = useState("");
   const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
   const [job, setJob] = useState("");
+  const [smoking, setSmoking] = useState("");
+  const [smokingType, setSmokingType] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,7 +55,7 @@ function CompleteProfilePage() {
       setError("생년월일을 모두 선택해주세요.");
       return;
     }
-    if (phone && !PHONE_PATTERN.test(phone)) {
+    if (!PHONE_PATTERN.test(phone)) {
       setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
       return;
     }
@@ -58,6 +65,14 @@ function CompleteProfilePage() {
     }
     if (!job) {
       setError("직업을 선택해주세요.");
+      return;
+    }
+    if (!smoking) {
+      setError("흡연 여부를 선택해주세요.");
+      return;
+    }
+    if (smoking === "SMOKER" && !smokingType) {
+      setError("흡연 종류를 선택해주세요.");
       return;
     }
     if (!token) {
@@ -74,8 +89,10 @@ function CompleteProfilePage() {
         gender,
         birthDate,
         phone,
-        regionTokens[0].label,
-        job
+        regionTokens.map((token) => token.label).join(", "),
+        job,
+        smoking,
+        smoking === "SMOKER" ? smokingType : null
       );
       setUser(updatedUser);
       navigate("/", { replace: true });
@@ -87,6 +104,13 @@ function CompleteProfilePage() {
       setError(message);
       setSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    // 여기서 만든 계정 자체는 DB에 남지만(다음에 같은 소셜 계정으로 로그인하면 이어서 계속할 수 있음),
+    // 지금 로그인 상태만 끊어서 "가입 중" 상태로 사이트를 돌아다니는 걸 막음
+    logout();
+    navigate("/", { replace: true });
   };
 
   return (
@@ -150,13 +174,14 @@ function CompleteProfilePage() {
         </label>
 
         <label>
-          휴대폰 번호 <span className="complete-profile-optional">(선택)</span>
+          휴대폰 번호
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
-            placeholder="숫자만 입력"
+            placeholder="숫자만 입력 (예: 01012345678)"
             maxLength={11}
+            required
           />
         </label>
 
@@ -165,10 +190,12 @@ function CompleteProfilePage() {
           <RegionPicker
             selected={regionTokens}
             onChange={setRegionTokens}
-            multiple={false}
+            multiple={true}
+            maxSelect={3}
             variant="inline"
             triggerLabel="지역 선택"
-            emptyHint="지역을 선택해주세요."
+            placeholder="지역명 검색 예) 강남, 역삼동, 강남구 역삼동"
+            emptyHint="희망 지역을 최대 3개까지 선택해주세요."
           />
         </label>
 
@@ -186,10 +213,51 @@ function CompleteProfilePage() {
           </select>
         </label>
 
+        <label>
+          흡연 여부
+          <select
+            value={smoking}
+            onChange={(e) => {
+              setSmoking(e.target.value);
+              if (e.target.value !== "SMOKER") setSmokingType("");
+            }}
+            required
+          >
+            <option value="" disabled>
+              선택해주세요
+            </option>
+            <option value="NON_SMOKER">비흡연자</option>
+            <option value="SMOKER">흡연자</option>
+          </select>
+        </label>
+        {smoking === "SMOKER" && (
+          <label>
+            흡연 종류
+            <select value={smokingType} onChange={(e) => setSmokingType(e.target.value)} required>
+              <option value="" disabled>
+                선택해주세요
+              </option>
+              {SMOKING_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         {error && <p className="complete-profile-error">{error}</p>}
 
         <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? "저장 중..." : "완료"}
+        </button>
+        <button
+          type="button"
+          className="complete-profile-cancel-btn"
+          onClick={handleCancel}
+          disabled={submitting}
+        >
+          취소하고 홈으로
         </button>
       </form>
     </div>

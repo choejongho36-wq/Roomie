@@ -38,5 +38,7 @@ public record SignupRequest(
                 )
                 String phone,
                 @NotBlank(message = "지역을 선택해주세요.") String region,
-                @NotBlank(message = "직업을 선택해주세요.") String job) {
+                @NotBlank(message = "직업을 선택해주세요.") String job,
+                @NotBlank(message = "흡연 여부를 선택해주세요.") String smoking,
+                String smokingType) {
 }

@@ -14,12 +14,15 @@ public record UserResponse(
         String phone,
         String region,
         String job,
+        String smoking,
+        String smokingType,
         LocalDateTime createdAt,
         String profileImageUrl,
         List<String> tags,
         String bio,
         String provider,
         Boolean emailVerified,
-        Boolean isAdmin
+        Boolean isAdmin,
+        Boolean needsAdditionalInfo,
+        List<String> linkedProviders
 ) {}
-

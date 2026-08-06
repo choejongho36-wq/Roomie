@@ -6,6 +6,8 @@ export interface User {
   birthDate: string;
   region: string | null;
   job: string | null;
+  smoking: string | null;
+  smokingType: string | null;
   createdAt: string;
   profileImageUrl: string | null;
   tags: string[];
@@ -13,4 +15,6 @@ export interface User {
   provider: string;
   emailVerified: boolean;
   isAdmin: boolean;
+  needsAdditionalInfo: boolean;
+  linkedProviders: string[];
 }

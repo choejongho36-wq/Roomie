@@ -1,11 +1,16 @@
 .complete-profile-page {
-  min-height: calc(100vh - 72px);
+  margin-top: -110px;
+  min-height: 100vh;
   display: flex;
-  align-items: center;
+  /* SignupPage.css와 동일한 이유 — center로 두면 폼이 뷰포트보다 길어질 때
+     박스 윗부분이 네비바 뒤로 밀려 올라간다. flex-start로 항상 위에서부터 쌓아서
+     padding-top만큼은 늘 네비바 아래에서 시작하게 한다. */
+  align-items: flex-start;
   justify-content: center;
-  background: #f7f7f7;
-  padding: 24px;
+  background: linear-gradient(135deg, #e8763f 0%, #f4834f 45%, #ffc79b 100%);
+  padding: 130px;
   font-family: "Pretendard", sans-serif;
+  box-sizing: border-box;
 }
 
 .complete-profile-box {
@@ -19,19 +24,31 @@
   flex-direction: column;
   gap: 16px;
   text-align: left;
+  box-sizing: border-box;
+}
+
+/* SignupPage.css와 동일한 이유(Navbar.css 참고) — 접힌 네비바가 76px라 margin-top도
+   짝을 맞추고, 130px 고정 padding은 좁은 화면에서 카드가 거의 안 보일 정도라 줄인다. */
+@media (max-width: 768px) {
+  .complete-profile-page {
+    margin-top: -76px;
+    padding: 96px 16px 24px;
+  }
+
+  .complete-profile-box {
+    padding: 28px 24px;
+  }
 }
 
 .complete-profile-box h1 {
-  font-size: 22px;
-  margin: 0 0 4px;
+  font-size: 24px;
+  margin: 0 0 8px;
   text-align: center;
 }
 
 .complete-profile-box p {
   text-align: center;
   color: #555;
-  font-size: 14px;
-  margin: 0 0 8px;
 }
 
 .complete-profile-box label {
@@ -74,4 +91,19 @@
   color: #e03131;
   font-size: 13px;
   margin: 0;
+}
+
+.complete-profile-cancel-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+  align-self: center;
+}
+
+.complete-profile-cancel-btn:hover {
+  color: #666;
 }

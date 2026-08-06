@@ -3,10 +3,12 @@ import { AuthProvider } from "./context/AuthContext";
 import { ChatProvider } from "./context/ChatContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ProfileCompletionGuard from "./components/ProfileCompletionGuard";
 import MainPage from "./pages/MainPage";
 import SignupPage from "./pages/SignupPage";
 import FindIdPage from "./pages/FindIdPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import LinkAccountPage from "./pages/LinkAccountPage";
 import OAuth2RedirectPage from "./pages/OAuth2RedirectPage";
 import CompleteProfilePage from "./pages/CompleteProfilePage";
 import MyPageLayout from "./pages/mypage/MyPageLayout";
@@ -34,7 +36,6 @@ import HouseEntryPage from "./pages/house/HouseEntryPage";
 import HouseLayout from "./pages/house/HouseLayout";
 import HousePage from "./pages/house/HousePage";
 import HouseBillsPage from "./pages/house/HouseBillsPage";
-import HouseChoresPage from "./pages/house/HouseChoresPage";
 import HouseCleaningPage from "./pages/house/HouseCleaningPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -45,11 +46,13 @@ function App() {
         <ChatProvider>
           <Navbar />
           <main className="app-main">
-            <Routes>
+            <ProfileCompletionGuard>
+              <Routes>
               <Route path="/" element={<MainPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/find-id" element={<FindIdPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/link-account" element={<LinkAccountPage />} />
               <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
               <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/survey" element={<SurveyPage />} />
@@ -71,7 +74,6 @@ function App() {
               <Route path="/house/:id" element={<HouseLayout />}>
                 <Route index element={<HousePage />} />
                 <Route path="bills" element={<HouseBillsPage />} />
-                <Route path="chores" element={<HouseChoresPage />} />
                 <Route path="cleaning" element={<HouseCleaningPage />} />
               </Route>
               <Route path="/mypage" element={<MyPageLayout />}>
@@ -85,6 +87,7 @@ function App() {
               </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </ProfileCompletionGuard>
           </main>
           <Footer />
         </ChatProvider>

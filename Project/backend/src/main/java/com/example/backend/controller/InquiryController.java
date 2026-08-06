@@ -21,13 +21,15 @@ public class InquiryController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public List<InquiryResponse> getInquiries() {
-        return inquiryService.getInquiries();
+    public List<InquiryResponse> getInquiries(Authentication authentication) {
+        User viewer = findUser(authentication);
+        return inquiryService.getInquiries(viewer.getUserId(), viewer.isAdmin());
     }
 
     @GetMapping("/{inquiryId}")
-    public InquiryResponse getInquiry(@PathVariable Long inquiryId) {
-        return inquiryService.getInquiry(inquiryId);
+    public InquiryResponse getInquiry(Authentication authentication, @PathVariable Long inquiryId) {
+        User viewer = findUser(authentication);
+        return inquiryService.getInquiry(inquiryId, viewer.getUserId(), viewer.isAdmin());
     }
 
     @PostMapping
@@ -56,6 +58,15 @@ public class InquiryController {
             throw new IllegalArgumentException("관리자만 답변을 작성할 수 있습니다.");
         }
         return inquiryService.answer(inquiryId, request.answer());
+    }
+
+    @DeleteMapping("/{inquiryId}/answer")
+    public InquiryResponse deleteAnswer(Authentication authentication, @PathVariable Long inquiryId) {
+        User user = findUser(authentication);
+        if (!user.isAdmin()) {
+            throw new IllegalArgumentException("관리자만 답변을 삭제할 수 있습니다.");
+        }
+        return inquiryService.deleteAnswer(inquiryId);
     }
 
     private User findUser(Authentication authentication) {

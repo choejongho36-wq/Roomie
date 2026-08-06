@@ -4,15 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { createInquiry, getInquiry, updateInquiry } from "../../api";
 import "../board/BoardWritePage.css";
 
-const DRAFT_STORAGE_KEY = "roomie_inquiry_write_draft";
-
 const CATEGORY_OPTIONS = ["버그", "신고", "문의", "제안"];
-
-const FORMAT_BUTTONS = [
-  { label: <strong>B</strong>, title: "굵게", marker: "**" },
-  { label: <em>I</em>, title: "기울임", marker: "*" },
-  { label: <span style={{ textDecoration: "underline" }}>U</span>, title: "밑줄", marker: "++" },
-];
 
 function InquiryWritePage() {
   const { token } = useAuth();
@@ -20,23 +12,27 @@ function InquiryWritePage() {
   const location = useLocation();
   const { inquiryId } = useParams();
   const isEdit = Boolean(inquiryId);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
 
   const presetCategory = (location.state as { category?: string } | null)?.category ?? null;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(presetCategory);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const [isSecret, setIsSecret] = useState(false);
   const [error, setError] = useState("");
+
+  const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
 
   useEffect(() => {
     if (!isEdit || !token) return;
     getInquiry(token, Number(inquiryId)).then((inquiry) => {
       setTitle(inquiry.title);
-      setContent(inquiry.content);
       setSelectedCategory(inquiry.category ?? null);
+      setIsSecret(inquiry.secret);
+      if (contentRef.current) {
+        contentRef.current.innerHTML = inquiry.content ?? "";
+      }
     });
   }, [isEdit, inquiryId]);
 
@@ -50,6 +46,27 @@ function InquiryWritePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    // 브라우저에 따라 execCommand의 볼드/이탤릭/밑줄 토글이 인라인 span과 <b>/<i>/<u> 태그를
+    // 섞어 쓰면서 꼬이는 경우가 있어, 항상 시맨틱 태그만 쓰도록 강제한다.
+    document.execCommand("styleWithCSS", false, false as unknown as string);
+
+    const syncActiveFormats = () => {
+      if (!contentRef.current) return;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+      if (!contentRef.current.contains(selection.anchorNode)) return;
+      setActiveFormats({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+      });
+    };
+
+    document.addEventListener("selectionchange", syncActiveFormats);
+    return () => document.removeEventListener("selectionchange", syncActiveFormats);
+  }, []);
+
   if (!token) {
     return (
       <div className="page board-write-page">
@@ -58,47 +75,36 @@ function InquiryWritePage() {
     );
   }
 
-  const applyFormat = (marker: string) => {
-    const el = textareaRef.current;
-    if (!el) return;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const selected = content.slice(start, end);
-    const next = content.slice(0, start) + marker + selected + marker + content.slice(end);
-    setContent(next);
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + marker.length;
-      el.setSelectionRange(cursor, cursor + selected.length);
-    });
-  };
-
   const showError = (message: string) => {
     setError(message);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSaveDraft = () => {
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ title, category: selectedCategory, content }));
-    setError("");
-    setStatusMessage("임시저장되었습니다. (이 브라우저에만 저장돼요)");
+  const applyStyle = (command: string, value?: string) => {
+    contentRef.current?.focus();
+    document.execCommand(command, false, value);
+    setActiveFormats({
+      bold: document.queryCommandState("bold"),
+      italic: document.queryCommandState("italic"),
+      underline: document.queryCommandState("underline"),
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatusMessage("");
 
     if (!selectedCategory) {
       showError("분류를 선택해주세요.");
       return;
     }
 
+    const content = contentRef.current?.innerHTML ?? "";
     setError("");
     try {
       if (isEdit) {
-        await updateInquiry(token, Number(inquiryId), { title, category: selectedCategory, content });
+        await updateInquiry(token, Number(inquiryId), { title, category: selectedCategory, content, secret: isSecret });
       } else {
-        await createInquiry(token, { title, category: selectedCategory, content });
+        await createInquiry(token, { title, category: selectedCategory, content, secret: isSecret });
       }
       navigate("/inquiry");
     } catch (err: any) {
@@ -144,7 +150,6 @@ function InquiryWritePage() {
       </div>
 
       {error && <p className="mypage-error">{error}</p>}
-      {statusMessage && <p className="board-write-status">{statusMessage}</p>}
 
       <form onSubmit={handleSubmit} className="board-write-form">
         <input
@@ -157,37 +162,48 @@ function InquiryWritePage() {
         />
 
         <div className="board-write-toolbar">
-          {FORMAT_BUTTONS.map((btn) => (
-            <button
-              key={btn.marker}
-              type="button"
-              className="board-write-toolbar-button"
-              title={btn.title}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => applyFormat(btn.marker)}
-            >
-              {btn.label}
-            </button>
-          ))}
+          <button
+            type="button"
+            className={`board-write-toolbar-button${activeFormats.bold ? " is-active" : ""}`}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => applyStyle("bold")}
+          >
+            <strong>B</strong>
+          </button>
+          <button
+            type="button"
+            className={`board-write-toolbar-button${activeFormats.italic ? " is-active" : ""}`}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => applyStyle("italic")}
+          >
+            <em>I</em>
+          </button>
+          <button
+            type="button"
+            className={`board-write-toolbar-button${activeFormats.underline ? " is-active" : ""}`}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => applyStyle("underline")}
+          >
+            <span style={{ textDecoration: "underline" }}>U</span>
+          </button>
         </div>
 
-        <textarea
-          ref={textareaRef}
+        <div
+          ref={contentRef}
           className="board-write-content"
-          rows={10}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="내용을 입력해주세요."
-          maxLength={2000}
-          required
+          contentEditable
+          data-placeholder="내용을 입력해주세요."
+          suppressContentEditableWarning
         />
 
+        <label className="inquiry-secret-checkbox">
+          <input type="checkbox" checked={isSecret} onChange={(e) => setIsSecret(e.target.checked)} />
+          비밀글로 작성 (작성자 본인과 관리자만 내용을 볼 수 있어요)
+        </label>
+
         <div className="board-write-actions">
-          <button type="button" className="btn btn-outline" onClick={handleSaveDraft}>
-            임시저장
-          </button>
           <button type="submit" className="btn btn-primary">
-            {isEdit ? "수정하기" : "등록하기"}
+            등록
           </button>
         </div>
       </form>

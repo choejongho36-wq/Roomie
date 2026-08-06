@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHAT_WS_URL } from "../api";
-import type { ChatMessage } from "../types/chat";
+import type { ChatMessage, NotificationItem } from "../types/chat";
 
 export function useChatSocket(token: string | null) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<ChatMessage | null>(null);
+  const [lastNotification, setLastNotification] = useState<NotificationItem | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -20,6 +21,8 @@ export function useChatSocket(token: string | null) {
         const data = JSON.parse(event.data);
         if (data && typeof data.messageId === "number") {
           setLastMessage(data as ChatMessage);
+        } else if (data && typeof data.notificationId === "number") {
+          setLastNotification(data as NotificationItem);
         }
       } catch {
         // 잘못된 프레임은 무시
@@ -39,5 +42,5 @@ export function useChatSocket(token: string | null) {
     return true;
   }, []);
 
-  return { isConnected, lastMessage, sendMessage };
+  return { isConnected, lastMessage, lastNotification, sendMessage };
 }

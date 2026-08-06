@@ -11,6 +11,17 @@
   font-family: "Pretendard", sans-serif;
 }
 
+@media (max-width: 640px) {
+  .board-detail-page {
+    margin: 20px auto 56px;
+    padding: 24px 16px;
+  }
+
+  .board-detail-header h1 {
+    font-size: 21px;
+  }
+}
+
 .info-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -187,6 +198,32 @@
 .board-detail-bookmark-button.is-own-post:hover {
   border-color: #eee;
   background: #fff;
+}
+
+.board-detail-recommend-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #eee;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+}
+
+.board-detail-recommend-button:hover {
+  border-color: #ddd;
+  background: #fafafa;
+}
+
+.board-detail-recommend-button.is-active {
+  border-color: #a6c8ff;
+  background: #eaf2ff;
+  color: #2f6fed;
 }
 
 .board-detail-avatar {

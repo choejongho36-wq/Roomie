@@ -8,6 +8,17 @@
   font-family: "Pretendard", sans-serif;
 }
 
+@media (max-width: 640px) {
+  .board-write-page {
+    padding: 24px 16px 56px;
+  }
+
+  .board-write-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .board-write-header {
   width: 100%;
   box-sizing: border-box;
@@ -100,16 +111,6 @@
   font-weight: 800;
 }
 
-.board-write-status {
-  color: #2e7d32;
-  background: #edf7ed;
-  border: 1px solid #cdeacd;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
 .board-write-form {
   width: 100%;
   min-width: 0;
@@ -128,6 +129,15 @@
   font-size: 18px;
   font-weight: 700;
   font-family: inherit;
+}
+
+.inquiry-secret-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .board-write-toolbar {

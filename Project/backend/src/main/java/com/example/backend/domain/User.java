@@ -50,6 +50,12 @@ public class User {
     @Column(length = 100)
     private String job;
 
+    @Column(length = 20)
+    private String smoking; // "SMOKER" / "NON_SMOKER"
+
+    @Column(name = "smoking_type", length = 20)
+    private String smokingType; // 흡연자일 때만: "CIGARETTE"(연초) / "HEATED"(궐련형) / "LIQUID"(액상)
+
     @Column(name = "profile_image_url", length = 255)
     private String profileImageUrl;
 
@@ -126,7 +132,8 @@ public class User {
         this.password = password;
     }
 
-    public void withdraw() {
+    // 실제 파일 삭제는 컨트롤러(파일 I/O 담당)가 하므로, 지워야 할 URL을 반환해서 넘겨줌
+    public String withdraw() {
         this.status = "WITHDRAWN";
         // 탈퇴해도 행은 남겨야 다른 테이블(채팅/게시글/매칭 등)의 참조가 안 깨지지만,
         // login_id/email/nickname은 UNIQUE 제약이라 그대로 두면 원래 값으로 재가입이 영영 불가능해짐.
@@ -134,24 +141,27 @@ public class User {
         this.loginId = "withdrawn_" + this.userId;
         this.email = "withdrawn_" + this.userId + "@roomie.local";
         this.nickname = "탈퇴회원" + this.userId;
-    }
+        if (this.providerId != null) {
+            // provider_id까지 익명화해서, 같은 소셜 계정으로 다시 로그인해도 이 행을 다시는 못 찾게 함
+            // -> 다시 로그인하면 완전히 새로운 user_id로 신규가입되고, 탈퇴 전 활동 기록과는 연결이 끊김
+            this.providerId = "withdrawn_" + this.userId;
+        }
 
-    // 탈퇴했던 계정이 같은 소셜 계정으로 다시 로그인을 시도하면, 영구 차단하는 대신
-    // 이 행을 재활용해서 신규가입처럼 다시 시작하게 해줌 (user_id는 유지되지만 겉보기엔 새 계정)
-    public void reactivateAsSocialUser(String loginId, String email, String nickname, String profileImageUrl) {
-        this.status = "ACTIVE";
-        this.loginId = loginId;
-        this.email = email;
-        this.nickname = nickname;
-        this.profileImageUrl = profileImageUrl;
-        // 예전 정보가 남아있으면 "추가정보 입력"을 건너뛰게 되니, 전부 비워서 새로 입력받게 함
+        // 여기부터는 "신원 확인용"이 아니라 "개인정보/노출정보"라, 탈퇴 시 진짜로 비움
+        // (채팅/게시글 등 다른 테이블은 이 user_id를 계속 참조하지만, 정작 이 사람이 어떤 사람인지 보여주는
+        // 정보는 하나도 안 남아있게 되어 "탈퇴한 사용자"로만 보이게 됨)
+        String oldProfileImageUrl = this.profileImageUrl;
         this.gender = null;
         this.birthDate = null;
         this.phone = null;
         this.region = null;
         this.job = null;
-        this.isVerified = false;
-        this.emailVerified = true; // 소셜 서비스가 이미 검증해준 이메일이므로
+        this.smoking = null;
+        this.smokingType = null;
+        this.tags = null;
+        this.bio = null;
+        this.profileImageUrl = null;
+        return oldProfileImageUrl;
     }
 
     /**
@@ -184,7 +194,8 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
-    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone, String region, String job) {
+    public void completeAdditionalInfo(String gender, LocalDate birthDate, String phone, String region, String job,
+            String smoking, String smokingType) {
         this.gender = gender;
         this.birthDate = birthDate;
         if (phone != null && !phone.isBlank()) {
@@ -196,11 +207,29 @@ public class User {
         if (job != null && !job.isBlank()) {
             this.job = job;
         }
+        if (smoking != null && !smoking.isBlank()) {
+            this.smoking = smoking;
+            // 비흡연자로 바뀌면 예전에 골랐던 흡연 종류는 의미가 없어지니 같이 비워줌
+            this.smokingType = "SMOKER".equals(smoking) ? smokingType : null;
+        }
+    }
+
+    public void updateSmoking(String smoking, String smokingType) {
+        this.smoking = smoking;
+        this.smokingType = "SMOKER".equals(smoking) ? smokingType : null;
     }
 
     public void updateRegionAndJob(String region, String job) {
         this.region = region;
         this.job = job;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
+    }
+
+    public void markEmailVerified() {
+        this.emailVerified = true;
     }
 
     // 회원가입용 생성자
@@ -216,12 +245,14 @@ public class User {
     }
 
     public User(String loginId, String email, String password, String nickname, String gender,
-            LocalDate birthDate, String phone, String region, String job) {
+            LocalDate birthDate, String phone, String region, String job, String smoking, String smokingType) {
         this(email, password, nickname, gender, birthDate);
         this.loginId = loginId;
         this.phone = phone;
         this.region = region;
         this.job = job;
+        this.smoking = smoking;
+        this.smokingType = "SMOKER".equals(smoking) ? smokingType : null;
     }
 
     public User(String provider, String providerId, String loginId, String email,
@@ -243,6 +274,7 @@ public class User {
     }
 
     public boolean needsAdditionalInfo() {
-        return this.gender == null || this.birthDate == null || this.region == null || this.job == null;
+        return this.gender == null || this.birthDate == null || this.region == null || this.job == null
+                || this.smoking == null;
     }
 }

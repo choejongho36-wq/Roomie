@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getMatchedPair } from "../../api";
+import { API_ORIGIN, getMatchedPair } from "../../api";
 import type { MatchedPair } from "../../types/matchedPair";
 import "../mypage/MyPageContent.css";
 import "./HouseCard.css";
@@ -18,6 +18,8 @@ import {
   timeLabel,
 } from "./cleaningPlan";
 import type { Assignee, Day, Plan, Plans } from "./cleaningPlan";
+
+const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : null);
 
 // input[type=time]은 크롬에서 분 칸을 60개 다 돌려야 해서 고르기 번거롭다. 30분 단위 목록으로 대신한다.
 const TIMES = Array.from({ length: 48 }, (_, i) => {
@@ -45,6 +47,11 @@ function HouseCleaningPage() {
   const names: Record<Assignee, string> = {
     me: pair?.me.nickname ?? "나",
     partner: pair?.partner.nickname ?? "룸메이트",
+  };
+
+  const avatars: Record<Assignee, string | null> = {
+    me: getAvatarSrc(pair?.me.profileImageUrl ?? null),
+    partner: getAvatarSrc(pair?.partner.profileImageUrl ?? null),
   };
 
   const plan = plans[selected];
@@ -97,7 +104,7 @@ function HouseCleaningPage() {
 
   return (
     <div className="mypage-panel">
-      <h1 className="mypage-panel-title">청소 구역</h1>
+      <h1 className="mypage-panel-title">청소당번</h1>
       <p className="mypage-panel-desc">누가 어디를, 무슨 요일에 치울지 나눠보세요.</p>
 
       <div className="house-card house-clean-members">
@@ -108,7 +115,11 @@ function HouseCleaningPage() {
             className={`house-clean-member${selected === who ? " house-clean-member-active" : ""}`}
             onClick={() => setSelected(who)}
           >
-            <span className={`house-clean-avatar house-clean-avatar-${who}`}>{names[who][0]}</span>
+            {avatars[who] ? (
+              <img className="house-clean-avatar" src={avatars[who]!} alt="" />
+            ) : (
+              <span className={`house-clean-avatar house-clean-avatar-${who}`}>{names[who][0]}</span>
+            )}
             <span className="house-clean-member-text">
               <span className="house-clean-member-name">{names[who]}</span>
               <span className="house-clean-member-rooms">

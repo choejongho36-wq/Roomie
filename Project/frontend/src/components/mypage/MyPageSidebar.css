@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   z-index: 10;
-  width: 40px;
+  width: 60px;
   flex-shrink: 0;
   background: #fff;
   border-right: 1px solid #eee;
@@ -76,4 +76,59 @@
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* ===== 768px 이하: hover로 펼쳐지는 왼쪽 사이드바(터치 기기엔 hover가 없어 못 씀) 대신
+   화면 하단 탭바로 전환. DOM 구조는 그대로 두고 배치만 가로/하단으로 바꾼다. ===== */
+@media (max-width: 768px) {
+  .mypage-sidebar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    /* 로그아웃 버튼은 .mypage-nav 바깥의 형제 요소라, nav만 flex:1로 채우고
+       그 안에서만 space-around를 주면 로그아웃은 분배 대상에서 빠져 남는
+       자리에 억지로 끼어 들어가 간격이 애매하고 잘릴랑말랑했다.
+       .mypage-nav를 display:contents로 없애서 그 안의 5개 링크가 이 sidebar의
+       직접 자식이 되게 하고, 로그아웃 버튼까지 총 6개를 여기서 한 번에 고르게 분배한다. */
+    justify-content: space-around;
+    gap: 0;
+    padding: 6px 4px;
+    border-right: none;
+    border-top: 1px solid #eee;
+    border-radius: 0;
+    overflow: visible;
+    z-index: 20;
+  }
+
+  .mypage-sidebar:hover {
+    width: 100%;
+  }
+
+  .mypage-nav {
+    display: contents;
+  }
+
+  .mypage-nav-item,
+  .mypage-nav-item-logout {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 4px;
+    border-left: none;
+    font-size: 10px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .mypage-nav-item-active {
+    border-left-color: transparent;
+  }
+
+  .mypage-nav-label {
+    opacity: 1;
+  }
 }

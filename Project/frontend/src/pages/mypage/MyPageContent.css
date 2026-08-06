@@ -577,6 +577,7 @@
   gap: 16px;
   padding: 14px 20px;
   border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
 }
 
 .activity-history-date {

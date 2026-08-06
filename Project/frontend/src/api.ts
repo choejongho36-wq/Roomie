@@ -12,6 +12,28 @@ import type {
 } from "./types/survey";
 import type { ChatMessage, Conversation, NotificationItem } from "./types/chat";
 import type { MatchedPair } from "./types/matchedPair";
+import { showToast } from "./components/Toast";
+
+// 세션 만료 처리가 짧은 시간에 중복으로 여러 번 실행되는 걸 막는 플래그
+// (401이 한꺼번에 여러 요청에서 터질 수 있어서, 토스트/리다이렉트가 여러 번 안 뜨게 함)
+let handlingSessionExpiry = false;
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const hadToken = Boolean(sessionStorage.getItem("token"));
+    if (axios.isAxiosError(error) && error.response?.status === 401 && hadToken && !handlingSessionExpiry) {
+      handlingSessionExpiry = true;
+      showToast("로그인이 만료됐어요. 다시 로그인해주세요.");
+      // 실제 로그아웃 처리(토큰/유저 상태 정리)는 AuthContext가, 모달/리다이렉트는 Navbar가 이 이벤트를 듣고 처리함
+      window.dispatchEvent(new CustomEvent("session-expired"));
+      setTimeout(() => {
+        handlingSessionExpiry = false;
+      }, 3000);
+    }
+    return Promise.reject(error);
+  }
+);
 
 const authHeader = (token: string) => ({ headers: { Authorization: `Bearer ${token}` } });
 
@@ -63,6 +85,15 @@ export const getMyComments = async (token: string): Promise<MyComment[]> => {
 export const toggleBookmark = async (token: string, postId: number): Promise<Post> => {
   const response = await axios.post<Post>(
     `${API_BASE_URL}/posts/${postId}/bookmark`,
+    {},
+    authHeader(token)
+  );
+  return response.data;
+};
+
+export const toggleRecommend = async (token: string, postId: number): Promise<Post> => {
+  const response = await axios.post<Post>(
+    `${API_BASE_URL}/posts/${postId}/recommend`,
     {},
     authHeader(token)
   );
@@ -146,12 +177,34 @@ export const answerInquiry = async (token: string, inquiryId: number, answer: st
   return response.data;
 };
 
+export const deleteInquiryAnswer = async (token: string, inquiryId: number): Promise<Inquiry> => {
+  const response = await axios.delete<Inquiry>(`${API_BASE_URL}/inquiries/${inquiryId}/answer`, authHeader(token));
+  return response.data;
+};
+
 export const login = async (loginId: string, password: string): Promise<string> => {
   const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/login`, {
     loginId,
     password,
   });
   return response.data.token;
+};
+
+export const linkAccount = async (ticket: string, password: string): Promise<string> => {
+  const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/link-account`, {
+    ticket,
+    password,
+  });
+  return response.data.token;
+};
+
+export const createLinkIntent = async (token: string): Promise<string> => {
+  const response = await axios.post<{ ticket: string }>(
+    `${API_BASE_URL}/auth/link-intent`,
+    null,
+    authHeader(token)
+  );
+  return response.data.ticket;
 };
 
 export const signup = async (
@@ -163,11 +216,13 @@ export const signup = async (
   birthDate: string,
   phone: string,
   region: string,
-  job: string
+  job: string,
+  smoking: string,
+  smokingType: string | null
 ): Promise<void> => {
   await axios.post(`${API_BASE_URL}/auth/signup`, {
     loginId, email, password, nickname,
-    gender, birthDate, phone, region, job,
+    gender, birthDate, phone, region, job, smoking, smokingType,
   });
 };
 
@@ -182,11 +237,13 @@ export const completeAdditionalInfo = async (
   birthDate: string,
   phone: string,
   region: string,
-  job: string
+  job: string,
+  smoking: string,
+  smokingType: string | null
 ): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/additional-info`,
-    { gender, birthDate, phone: phone || null, region, job },
+    { gender, birthDate, phone: phone || null, region, job, smoking, smokingType },
     authHeader(token)
   );
   return response.data;
@@ -208,6 +265,28 @@ export const updateTags = async (token: string, tags: string[]): Promise<User> =
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/tags`,
     { tags },
+    authHeader(token)
+  );
+  return response.data;
+};
+
+export const updateSmoking = async (
+  token: string,
+  smoking: string,
+  smokingType: string | null
+): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/smoking`,
+    { smoking, smokingType },
+    authHeader(token)
+  );
+  return response.data;
+};
+
+export const updateRegion = async (token: string, region: string): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/region`,
+    { region },
     authHeader(token)
   );
   return response.data;
@@ -368,6 +447,14 @@ export const deleteNotification = async (token: string, notificationId: number):
 
 export const clearNotifications = async (token: string): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/notifications`, authHeader(token));
+};
+
+export const sendChatRequest = async (token: string, targetUserId: number): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/chat-requests`, { targetUserId }, authHeader(token));
+};
+
+export const respondChatRequest = async (token: string, requestId: number, accept: boolean): Promise<void> => {
+  await axios.post(`${API_BASE_URL}/chat-requests/${requestId}/${accept ? "accept" : "decline"}`, null, authHeader(token));
 };
 
 // 채팅방에서 "룸메이트 확정" 버튼을 누르면 호출 (이미 있으면 기존 페어를 그대로 돌려줌)

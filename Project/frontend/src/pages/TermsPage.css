@@ -5,6 +5,16 @@
   font-family: "Pretendard", sans-serif;
 }
 
+@media (max-width: 480px) {
+  .terms-page {
+    padding: 32px 16px;
+  }
+
+  .terms-title {
+    font-size: 24px;
+  }
+}
+
 .terms-inner {
   max-width: 720px;
   margin: 0 auto;

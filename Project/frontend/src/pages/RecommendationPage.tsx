@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, MouseEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
   getRecommendations,
   getSurveyComparison,
   getSurveyComparisonAiExplanation,
+  sendChatRequest,
 } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
 import defaultAvatar from "../assets/Roomie_logo.png";
@@ -22,12 +24,15 @@ const getProfileImageSrc = (url: string | null) => {
 
 function RecommendationPage() {
   const { token } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [comparison, setComparison] = useState<SurveyComparisonResult | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [isSendConfirmOpen, setIsSendConfirmOpen] = useState(false);
+  const [isRequestSending, setIsRequestSending] = useState(false);
+  const [isRequestSent, setIsRequestSent] = useState(false);
+  const [requestSendError, setRequestSendError] = useState("");
   const [comparisonLoadingUserId, setComparisonLoadingUserId] = useState<number | null>(null);
   const [comparisonError, setComparisonError] = useState("");
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
@@ -74,6 +79,7 @@ function RecommendationPage() {
     setAiExplanationLoading(false);
   }, [location.key]);
 
+  const hasRecommendations = recommendations !== null && recommendations.length > 0;
   const visibleRecommendations = recommendations?.slice(0, RECOMMENDATION_CARD_LIMIT) ?? [];
   const selectedRecommendation = visibleRecommendations.find((item) => item.userId === selectedUserId) ?? null;
   const selectedScore = selectedRecommendation?.compatibilityScore ?? 0;
@@ -117,8 +123,7 @@ function RecommendationPage() {
     setSelectedUserId(userId);
   };
 
-  const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
-    event.stopPropagation();
+  const loadComparison = (item: RecommendationResult) => {
     if (!token) return;
 
     setSelectedUserId(item.userId);
@@ -143,6 +148,25 @@ function RecommendationPage() {
       .finally(() => setComparisonLoadingUserId(null));
   };
 
+  const openComparison = (event: MouseEvent<HTMLButtonElement>, item: RecommendationResult) => {
+    event.stopPropagation();
+    loadComparison(item);
+  };
+
+  const selectedIndex = visibleRecommendations.findIndex((item) => item.userId === selectedUserId);
+  const hasPrevProfile = selectedIndex > 0;
+  const hasNextProfile = selectedIndex !== -1 && selectedIndex < visibleRecommendations.length - 1;
+
+  const goToPrevProfile = () => {
+    if (!hasPrevProfile) return;
+    loadComparison(visibleRecommendations[selectedIndex - 1]);
+  };
+
+  const goToNextProfile = () => {
+    if (!hasNextProfile) return;
+    loadComparison(visibleRecommendations[selectedIndex + 1]);
+  };
+
   const closeComparison = () => {
     setIsComparisonOpen(false);
     setComparisonError("");
@@ -150,6 +174,7 @@ function RecommendationPage() {
     setAiExplanation(null);
     setAiExplanationError("");
     setAiExplanationLoading(false);
+    setIsSendConfirmOpen(false);
   };
 
   return (
@@ -186,104 +211,113 @@ function RecommendationPage() {
         ) : recommendations.length === 0 ? (
           <p className="recommendation-empty">추천 결과가 없습니다.</p>
         ) : (
-          <>
-            <div className="recommendation-stage">
-              <div className="recommendation-header">
-                <h1>점수 높은 순</h1>
-                <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
-              </div>
-              <div className="recommendation-cards">
-                {visibleRecommendations.map((item) => {
-                  const imageSrc = getProfileImageSrc(item.profileImageUrl);
-                  const isSelected = selectedRecommendation?.userId === item.userId;
+          <div className="recommendation-stage">
+            <div className="recommendation-header">
+              <h1>점수 높은 순</h1>
+              <p className="recommendation-hint">프로필 카드를 선택하면 궁합 점수를 확인할 수 있어요.</p>
+            </div>
+            <div className="recommendation-cards">
+              {visibleRecommendations.map((item) => {
+                const imageSrc = getProfileImageSrc(item.profileImageUrl);
+                const isSelected = selectedRecommendation?.userId === item.userId;
 
-                  return (
-                    <article
-                      key={item.userId}
-                      className={`recommendation-card${isSelected ? " is-selected" : ""}`}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={isSelected}
-                      aria-label={`${item.nickname} 추천 카드 선택`}
-                      onClick={() => setSelectedUserId(item.userId)}
-                      onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
-                    >
-                      <div className="recommendation-card-main">
-                        <img className="recommendation-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
+                return (
+                  <article
+                    key={item.userId}
+                    className={`recommendation-card${isSelected ? " is-selected" : ""}`}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    aria-label={`${item.nickname} 추천 카드 선택`}
+                    onClick={() => setSelectedUserId(item.userId)}
+                    onKeyDown={(event) => handleCardKeyDown(event, item.userId)}
+                  >
+                    <div className="recommendation-card-main">
+                      <img className="recommendation-card-avatar" src={imageSrc ?? defaultAvatar} alt={item.nickname} />
 
-                        <div className="recommendation-card-info">
-                          <h2>
-                            {item.nickname}
-                            {item.emailVerified && (
-                              <span className="verified-badge" title="이메일 인증 완료" aria-label="이메일 인증 완료">
-                                <svg width="16" height="18" viewBox="0 0 18 20" fill="none" aria-hidden="true">
-                                  <path
-                                    d="M9 1l7 2.6v5.2c0 5-3 8.4-7 10.2-4-1.8-7-5.2-7-10.2V3.6L9 1z"
-                                    fill="currentColor"
-                                  />
-                                  <path
-                                    d="M5.8 9.6l2.3 2.3L12.4 7"
-                                    stroke="#fff"
-                                    strokeWidth="1.6"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </span>
-                            )}
-                          </h2>
-                          <p className="recommendation-card-meta">
-                            {item.age}세
-                            {" · "}
-                            {item.job ?? "직업 정보 준비 중"}
-                            {" · "}
-                            {item.region ?? "지역 정보 준비 중"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <p className="recommendation-card-bio">
-                        {item.bio && item.bio.trim() ? item.bio : "아직 소개글이 없어요."}
-                      </p>
-
-                      <div className="recommendation-card-tags">
-                        {item.tags.length > 0 ? (
-                          item.tags.map((tag) => (
-                            <span key={tag} className="recommendation-card-tag">
-                              {tag}
+                      <div className="recommendation-card-info">
+                        <h2>
+                          {item.nickname}
+                          {item.emailVerified && (
+                            <span className="verified-badge" title="이메일 인증 완료" aria-label="이메일 인증 완료">
+                              <svg width="16" height="18" viewBox="0 0 18 20" fill="none" aria-hidden="true">
+                                <path
+                                  d="M9 1l7 2.6v5.2c0 5-3 8.4-7 10.2-4-1.8-7-5.2-7-10.2V3.6L9 1z"
+                                  fill="currentColor"
+                                />
+                                <path
+                                  d="M5.8 9.6l2.3 2.3L12.4 7"
+                                  stroke="#fff"
+                                  strokeWidth="1.6"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
                             </span>
-                          ))
-                        ) : (
-                          <span className="recommendation-card-tag is-empty">태그 준비 중</span>
-                        )}
+                          )}
+                        </h2>
+                        <p className="recommendation-card-meta">
+                          {item.age}세
+                          {" · "}
+                          {item.job ?? "직업 정보 준비 중"}
+                          {" · "}
+                          {item.region ?? "지역 정보 준비 중"}
+                        </p>
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
+                    </div>
 
-            <div className="recommendation-more-cta">
-              <div>
-                <strong>더 많은 추천을 보고 싶으신가요?</strong>
-                <p>모집 게시판에서 다양한 프로필과 방 정보를 더 둘러볼 수 있어요.</p>
-              </div>
-              <Link to="/profiles" className="btn btn-primary recommendation-more-link">
-                더 많은 프로필 보기
-              </Link>
+                    <p className="recommendation-card-bio">
+                      {item.bio && item.bio.trim() ? item.bio : "아직 소개글이 없어요."}
+                    </p>
+
+                    <div className="recommendation-card-tags">
+                      {item.tags.length > 0 ? (
+                        item.tags.map((tag) => (
+                          <span key={tag} className="recommendation-card-tag">
+                            {tag}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="recommendation-card-tag is-empty">태그 준비 중</span>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-          </>
+          </div>
         )}
       </section>
 
+      {hasRecommendations && (
+        <div className="recommendation-more-cta">
+          <div>
+            <strong>더 많은 추천을 보고 싶으신가요?</strong>
+            <p>모집 게시판에서 다양한 프로필과 방 정보를 더 둘러볼 수 있어요.</p>
+          </div>
+          <Link to="/profiles" className="btn btn-primary recommendation-more-link">
+            더 많은 프로필 보기
+          </Link>
+        </div>
+      )}
+
       {isComparisonOpen && (
-        <div className="comparison-modal-backdrop" onClick={closeComparison}>
+        <div className="comparison-modal-backdrop">
+          <button
+            type="button"
+            className="comparison-nav-arrow comparison-nav-prev"
+            onClick={goToPrevProfile}
+            disabled={!hasPrevProfile}
+            aria-label="이전 프로필 보기"
+          >
+            ◀
+          </button>
+
           <section
             className="comparison-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="comparison-title"
-            onClick={(event) => event.stopPropagation()}
           >
             <div className="comparison-modal-header">
               <button type="button" className="comparison-modal-close" onClick={closeComparison}>
@@ -352,6 +386,28 @@ function RecommendationPage() {
                   </div>
 
                   <div className="comparison-panel comparison-panel-profile">
+                    <div className="comparison-profile-preferences">
+                      <span className="comparison-preference-hover">
+                        희망 조건
+                        <span className="comparison-preference-tooltip">
+                          <span>
+                            선호지역 :{" "}
+                            <span className="comparison-preference-value">
+                              {selectedRecommendation?.region ?? "정보 없음"}
+                            </span>
+                          </span>
+                          <span>
+                            희망 월세 :{" "}
+                            <span className="comparison-preference-value">
+                              {comparisonLoadingUserId !== null
+                                ? "불러오는 중..."
+                                : comparison.items.find((item) => item.category === "월 생활비")?.otherAnswer ??
+                                  "정보 없음"}
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </div>
                     <img
                       className="comparison-profile-avatar"
                       src={getProfileImageSrc(selectedRecommendation?.profileImageUrl ?? null) ?? defaultAvatar}
@@ -359,7 +415,7 @@ function RecommendationPage() {
                     />
                     <p className="comparison-profile-name">{comparison.nickname}</p>
                     <p className="comparison-profile-meta">
-                      {selectedRecommendation?.age}세 · {selectedRecommendation?.job} · {selectedRecommendation?.region}
+                      {selectedRecommendation?.age}세 · {selectedRecommendation?.job}
                     </p>
                     <p className="comparison-profile-bio">
                       {selectedRecommendation?.bio && selectedRecommendation.bio.trim()
@@ -393,18 +449,87 @@ function RecommendationPage() {
                   <button
                     type="button"
                     className="btn btn-primary comparison-start-chat-button"
-                    onClick={() =>
-                      navigate(`/mypage/chat?userId=${comparison.userId}`, {
-                        state: { nickname: comparison.nickname },
-                      })
-                    }
+                    onClick={() => {
+                      setIsRequestSent(false);
+                      setRequestSendError("");
+                      setIsSendConfirmOpen(true);
+                    }}
                   >
-                    {comparison.nickname}님에게 첫 메시지 보내기
+                    채팅 신청하기
                   </button>
                 </div>
               </div>
             )}
           </section>
+
+          <button
+            type="button"
+            className="comparison-nav-arrow comparison-nav-next"
+            onClick={goToNextProfile}
+            disabled={!hasNextProfile}
+            aria-label="다음 프로필 보기"
+          >
+            ▶
+          </button>
+
+          {isSendConfirmOpen && comparison && (
+            <div className="send-confirm-backdrop">
+              <div className="send-confirm-box" role="dialog" aria-modal="true">
+                {isRequestSent ? (
+                  <>
+                    <p className="send-confirm-text">채팅 신청을 보냈습니다!</p>
+                    <p className="send-confirm-subtext">상대가 수락하면 채팅방이 열려요.</p>
+                    <div className="send-confirm-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => setIsSendConfirmOpen(false)}
+                      >
+                        확인
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="send-confirm-text">채팅을 신청하시겠어요?</p>
+                    {requestSendError && <p className="send-confirm-error">{requestSendError}</p>}
+                    <div className="send-confirm-actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => setIsSendConfirmOpen(false)}
+                        disabled={isRequestSending}
+                      >
+                        취소
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={isRequestSending}
+                        onClick={() => {
+                          if (!token) return;
+                          setIsRequestSending(true);
+                          setRequestSendError("");
+                          sendChatRequest(token, comparison.userId)
+                            .then(() => setIsRequestSent(true))
+                            .catch((err) => {
+                              const message =
+                                axios.isAxiosError(err) && typeof err.response?.data === "string"
+                                  ? err.response.data
+                                  : "채팅 신청에 실패했습니다.";
+                              setRequestSendError(message);
+                            })
+                            .finally(() => setIsRequestSending(false));
+                        }}
+                      >
+                        신청 보내기
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

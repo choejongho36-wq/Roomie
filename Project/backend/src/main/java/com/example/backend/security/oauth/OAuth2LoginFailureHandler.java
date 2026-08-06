@@ -27,6 +27,18 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
+        // "계정 연동 필요"는 실패가 아니라 다음 단계 안내라서, 에러 화면 대신 연동 페이지로 보냄
+        if (exception instanceof OAuth2AuthenticationException oAuth2Ex
+                && "account_link_required".equals(oAuth2Ex.getError().getErrorCode())) {
+            String ticket = oAuth2Ex.getError().getDescription(); // 티켓을 description에 실어 보냈음
+            String linkUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/link-account")
+                    .queryParam("ticket", ticket)
+                    .build()
+                    .toUriString();
+            getRedirectStrategy().sendRedirect(request, response, linkUrl);
+            return;
+        }
+
         String message;
         if (exception instanceof OAuth2AuthenticationException oAuth2Exception
                 && oAuth2Exception.getError().getDescription() != null) {

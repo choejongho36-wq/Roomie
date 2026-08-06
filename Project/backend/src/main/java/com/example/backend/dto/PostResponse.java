@@ -25,5 +25,9 @@ public record PostResponse(
         Long bookmarkCount,
         Boolean bookmarked,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Boolean pinned,
+        Integer pinOrder,
+        Long recommendCount,
+        Boolean recommended
 ) {}

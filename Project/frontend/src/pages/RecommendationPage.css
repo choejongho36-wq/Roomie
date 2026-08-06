@@ -23,6 +23,7 @@
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   animation: recommendation-summary-in 380ms ease;
 }
 
@@ -34,6 +35,20 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* 900px 이하에서는 요약 패널이 카드 목록 왼쪽이 아니라 위로 올라오는 구조라
+   (아래 900px 미디어쿼리에서 1열로 바뀜), 왼쪽에서 들어오는 느낌 대신
+   위에서 아래로 슬라이딩해 들어오는 느낌으로 바꾼다. */
+@keyframes recommendation-summary-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -371,7 +386,7 @@
 }
 
 .recommendation-more-cta {
-  margin-top: 24px;
+  grid-column: 1 / -1;
   background: #ffffff;
   border: 1px solid #f0ece8;
   border-radius: 8px;
@@ -412,10 +427,12 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(16, 13, 10, 0.48);
+  font-family: "Pretendard", var(--sans);
+  background: rgba(16, 13, 10, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   padding: 32px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -426,13 +443,84 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin: auto;
+}
+
+.comparison-nav-arrow {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.comparison-nav-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.comparison-nav-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.send-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(16, 13, 10, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.send-confirm-box {
+  width: min(320px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.send-confirm-text {
+  margin: 0 0 20px;
+  color: #222;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.send-confirm-subtext {
+  margin: -12px 0 20px;
+  color: #888;
+  font-size: 13px;
+}
+
+.send-confirm-error {
+  margin: -12px 0 16px;
+  color: #e0393e;
+  font-size: 13px;
+}
+
+.send-confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.send-confirm-actions .btn {
+  flex: 1;
 }
 
 .comparison-modal-header {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
   padding: 0 4px;
 }
 
@@ -602,6 +690,54 @@
   justify-content: center;
 }
 
+.comparison-profile-preferences {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.comparison-preference-hover {
+  position: relative;
+  border-radius: 999px;
+  background: #ff6600;
+  color: #fff;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: default;
+}
+
+.comparison-preference-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  white-space: nowrap;
+  background: #222;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 1;
+}
+
+.comparison-preference-hover:hover .comparison-preference-tooltip {
+  opacity: 1;
+}
+
+.comparison-preference-value {
+  color: #ff6600;
+  font-weight: 700;
+}
+
 .comparison-profile-avatar {
   width: 84px;
   height: 84px;
@@ -673,6 +809,7 @@
   color: #4a3a2a;
   font-size: 16px;
   line-height: 1.65;
+  white-space: pre-line;
 }
 
 .comparison-ai-loading {
@@ -754,10 +891,7 @@
   .recommendation-summary {
     width: 100%;
     box-sizing: border-box;
-  }
-
-  .recommendation-more-cta {
-    margin-top: 0;
+    animation-name: recommendation-summary-in-top;
   }
 }
 
@@ -790,12 +924,24 @@
     padding: 16px;
   }
 
+  /* 부모를 align-items:stretch로 바꾸면서(모달 카드가 세로로 꽉 차게 하려던 것),
+     고정 크기(44px)라 실제로는 안 늘어나는 화살표 버튼도 늘어난 것처럼 취급돼
+     세로 중앙이 아니라 맨 위(cross-axis 시작점)에 붙어버렸다. 화살표만 다시
+     중앙 정렬로 되돌린다. */
+  .comparison-nav-arrow {
+    align-self: center;
+  }
+
   .comparison-modal {
     width: 100%;
   }
 
   .comparison-modal-grid {
     grid-template-columns: 1fr;
+  }
+
+  .comparison-panel-compare {
+    border-right: none;
   }
 
   .comparison-panel-profile {

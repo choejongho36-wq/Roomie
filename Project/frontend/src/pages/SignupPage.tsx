@@ -83,6 +83,11 @@ const PASSWORD_RULES: PasswordRule[] = [
 type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
 const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
+const SMOKING_TYPE_OPTIONS = [
+  { value: "CIGARETTE", label: "연초" },
+  { value: "HEATED", label: "궐련형" },
+  { value: "LIQUID", label: "액상" },
+];
 
 const EMAIL_DOMAIN_OPTIONS = [
   "gmail.com",
@@ -123,6 +128,8 @@ function SignupPage() {
   const [birthDay, setBirthDay] = useState("");
   const [regionTokens, setRegionTokens] = useState<RegionToken[]>([]);
   const [job, setJob] = useState("");
+  const [smoking, setSmoking] = useState(""); // "" | "SMOKER" | "NON_SMOKER"
+  const [smokingType, setSmokingType] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -306,6 +313,14 @@ function SignupPage() {
       setError("직업을 선택해주세요.");
       return;
     }
+    if (!smoking) {
+      setError("흡연 여부를 선택해주세요.");
+      return;
+    }
+    if (smoking === "SMOKER" && !smokingType) {
+      setError("흡연 종류를 선택해주세요.");
+      return;
+    }
     if (!agreeTerms || !agreePrivacy) {
       setError("이용약관과 개인정보처리방침에 모두 동의해주세요.");
       return;
@@ -325,7 +340,9 @@ function SignupPage() {
         birthDate,
         phone,
         regionTokens.map((token) => token.label).join(", "),
-        job
+        job,
+        smoking,
+        smoking === "SMOKER" ? smokingType : null
       );
       setSuccess(true);
     } catch (err) {
@@ -695,6 +712,38 @@ function SignupPage() {
             ))}
           </select>
         </label>
+        <label>
+          흡연 여부
+          <select
+            value={smoking}
+            onChange={(e) => {
+              setSmoking(e.target.value);
+              if (e.target.value !== "SMOKER") setSmokingType(""); // 비흡연자로 바꾸면 종류 선택은 초기화
+            }}
+            required
+          >
+            <option value="" disabled>
+              선택해주세요
+            </option>
+            <option value="NON_SMOKER">비흡연자</option>
+            <option value="SMOKER">흡연자</option>
+          </select>
+        </label>
+        {smoking === "SMOKER" && (
+          <label>
+            흡연 종류
+            <select value={smokingType} onChange={(e) => setSmokingType(e.target.value)} required>
+              <option value="" disabled>
+                선택해주세요
+              </option>
+              {SMOKING_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="signup-terms">
           <label className="signup-terms-all">
             <input
