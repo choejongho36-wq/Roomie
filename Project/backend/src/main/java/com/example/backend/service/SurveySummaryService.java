@@ -95,7 +95,9 @@ public class SurveySummaryService {
 
         String systemPrompt = "너는 룸메이트 매칭 앱의 궁합 설명가입니다. 두 사람의 설문 비교 결과(궁합 점수, 잘 맞는 항목, 다른 항목)를 보고 "
                 + "왜 그런 점수가 나왔는지 이유를 설명하고, 다른 항목에 대해서는 어떻게 하면 좋을지 짧은 조언을 함께 제시하세요. "
-                + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. 접두사 없이 설명 문장만 출력하세요.";
+                + "한국어 존댓말로 2~3문장, 공백 포함 150자 이내로 자연스럽고 다정하게 작성하세요. "
+                + "문장이 끝날 때마다(마침표 뒤) 실제로 줄을 바꿔서 한 줄에 한 문장씩만 오도록 하세요. "
+                + "글자 그대로의 백슬래시 n(\\n)이라는 문자열을 출력하지 말고, 진짜 줄바꿈으로만 문장을 나누세요. 접두사 없이 설명 문장만 출력하세요.";
         String userPrompt = "닉네임: " + nickname
                 + "\n궁합 점수: " + compatibilityScore + "점"
                 + "\n잘 맞는 항목: " + topReasonsText
@@ -270,7 +272,16 @@ public class SurveySummaryService {
             throw new IllegalStateException("Groq 응답에 content가 없습니다.");
         }
 
-        return content.trim().replaceAll("\\s+", " ");
+        // 궁합 설명(explainComparison)은 문장마다 줄바꿈을 넣어달라고 프롬프트에 지시하는데,
+        // 예전에는 \s+(줄바꿈 포함) 전부를 공백 하나로 뭉개버려서 줄바꿈이 사라졌었다.
+        // 가로 공백(스페이스/탭)만 하나로 뭉치고, 줄바꿈은 살리되 연속된 빈 줄만 한 줄로 정리한다.
+        // 모델이 실제 줄바꿈 대신 "\n"이라는 문자 두 글자(백슬래시+n)를 그대로 출력하는 경우가 있어서,
+        // 그 리터럴 표기도 진짜 줄바꿈으로 바꿔준다(공백에 둘러싸인 경우까지 포함).
+        return content.trim()
+                .replaceAll("\\s*\\\\n\\s*", "\n")
+                .replaceAll("[ \\t\\x0B\\f\\r]+", " ")
+                .replaceAll(" *\\n *", "\n")
+                .replaceAll("\\n{2,}", "\n");
     }
 
     private List<Integer> parseAnswers(String answersJson) {
