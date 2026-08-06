@@ -337,6 +337,20 @@ export const getMySurveys = async (token: string): Promise<SurveyResult[]> => {
   return response.data;
 };
 
+// 설문 전체를 다시 하지 않고 문항 하나(index, 0부터 시작)의 답만 바꿀 때 사용.
+export const updateSurveyAnswer = async (
+  token: string,
+  index: number,
+  score: number
+): Promise<SurveyResult> => {
+  const response = await axios.patch<SurveyResult>(
+    `${API_BASE_URL}/surveys/me/answers/${index}`,
+    { score },
+    authHeader(token)
+  );
+  return response.data;
+};
+
 export const getMySurveySummary = async (token: string): Promise<SurveySummaryResult> => {
   const response = await axios.get<SurveySummaryResult>(`${API_BASE_URL}/surveys/me/summary`, authHeader(token));
   return response.data;

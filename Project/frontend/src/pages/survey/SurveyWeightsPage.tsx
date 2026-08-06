@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getCategoryWeights, saveCategoryWeights } from "../../api";
 import { surveyQuestions } from "../../data/SurveyQuestions";
@@ -11,6 +11,10 @@ const TIER_LABELS: Record<number, string> = { 1: "낮음", 2: "보통", 3: "높�
 function SurveyWeightsPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  // 내 활동 > 설문 기록 페이지의 "가중치 설정하기" 버튼으로 들어온 경우, 끝나고
+  // 나면 원래 있던 그 페이지로 돌아간다. 그 외(설문 완료 직후 등)는 기존과 동일.
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo ?? "/survey/complete";
 
   const [weights, setWeights] = useState<Record<number, number>>(() =>
     Object.fromEntries(surveyQuestions.map((q) => [q.id, q.defaultWeight]))
@@ -29,14 +33,14 @@ function SurveyWeightsPage() {
 
   const handleFinish = async () => {
     if (!token) {
-      navigate("/survey/complete");
+      navigate(returnTo);
       return;
     }
     setSaving(true);
     setError("");
     try {
       await saveCategoryWeights(token, weights);
-      navigate("/survey/complete");
+      navigate(returnTo);
     } catch {
       setError("저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     } finally {
@@ -76,7 +80,7 @@ function SurveyWeightsPage() {
         {error && <p className="survey-error">{error}</p>}
 
         <div className="survey-weights-actions">
-          <button type="button" className="btn btn-outline" onClick={() => navigate("/survey/complete")}>
+          <button type="button" className="btn btn-outline" onClick={() => navigate(returnTo)}>
             나중에 설정할게요
           </button>
           <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={saving}>

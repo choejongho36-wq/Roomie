@@ -1,0 +1,319 @@
+/* 제목/부제목 밑, 카드 영역 위에 오는 한 줄 — 왼쪽에 "설문 다시하기"/"한눈에 보기" 버튼,
+   오른쪽에 설문 완료 시각을 같은 줄에 배치한다. */
+.survey-record-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 980px;
+  margin: -20px auto 12px;
+}
+
+.survey-record-header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.survey-record-header-actions .survey-record-btn {
+  flex: 0 0 auto;
+  padding: 9px 16px;
+}
+
+.survey-record-date {
+  font-size: 13px;
+  color: #999;
+}
+
+/* 카드를 가로로 늘어놓고 스크롤바로 좌우 이동한다. 카드 3개가 한 화면에
+   들어오도록 폭을 (전체 - gap*2) / 3 로 나눈다. */
+.survey-record-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.survey-record-track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.survey-record-track::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.survey-record-track::-webkit-scrollbar-thumb {
+  background: #f0d9c8;
+  border-radius: 999px;
+}
+
+.survey-record-card {
+  flex: 0 0 calc((100% - 32px) / 3);
+  min-width: 260px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid #f0e4dc;
+  background: #fffdfb;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.survey-record-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.survey-record-category {
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff1e8;
+  color: #f16526;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* 카테고리 옆에 붙는 중요도(가중치) 표시 — 평소엔 배지, "다시 고르기" 중에는
+   낮음/보통/높음 3개짜리 작은 선택 버튼으로 바뀐다(설문 완료 후 가중치 설정
+   화면의 타이어 버튼과 같은 색 규칙을 쓴다). */
+.survey-record-weight-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #999;
+}
+
+.survey-record-weight-editor {
+  display: flex;
+  gap: 4px;
+}
+
+.survey-record-weight-tier {
+  border: 1.5px solid #eee;
+  background: #ffffff;
+  color: #999;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.survey-record-weight-tier:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.survey-record-weight-tier-selected {
+  border-color: #f16526;
+  background: #f16526;
+  color: #ffffff;
+}
+
+.survey-record-question {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #222222;
+}
+
+.survey-record-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 설문 응답 페이지의 옵션 버튼(선택 시 강조되는 효과)을 그대로 가져와
+   읽기 전용 카드에 맞게 축소했다. */
+.survey-record-option {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: default;
+  transition: all 0.2s ease;
+}
+
+.survey-record-option-selected {
+  border-color: #f16526;
+  background: #fff4eb;
+  color: #c94f0f;
+  font-weight: 700;
+}
+
+.survey-record-option-editable {
+  cursor: pointer;
+}
+
+.survey-record-option-editable:not(.survey-record-option-selected):hover {
+  border-color: #f16526;
+  transform: translateY(-1px);
+}
+
+.survey-record-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+/* 카드 안 "다시 고르기" 버튼은 카드 폭에 맞춰 늘어나지 않고, 위쪽 "설문 다시하기"/
+   "한눈에 보기" 버튼과 같은 여백감을 갖도록 패딩을 맞췄다. */
+.survey-record-actions .survey-record-btn {
+  flex: 0 0 auto;
+  padding: 14px 28px;
+}
+
+.survey-record-btn {
+  flex: 1;
+  border: 1px solid #e4e4e4;
+  border-radius: 999px;
+  padding: 9px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: #ffffff;
+  color: #666666;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.survey-record-btn:hover {
+  border-color: #f16526;
+  color: #f16526;
+}
+
+.survey-record-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.survey-record-btn-outline {
+  background: #fff1e8;
+  border-color: #fff1e8;
+  color: #f16526;
+}
+
+.survey-record-btn-outline:hover {
+  background: #ffe3d1;
+  border-color: #ffe3d1;
+  color: #c94f0f;
+}
+
+@media (max-width: 640px) {
+  .survey-record-card {
+    flex: 0 0 82%;
+  }
+}
+
+/* "한눈에 보기" 모달 — 예전 grid/tile 형태를 그대로 재활용한다. */
+.survey-overview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 14, 10, 0.45);
+}
+
+.survey-overview-modal {
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.survey-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #f0f0f0;
+  flex: none;
+}
+
+.survey-overview-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #222;
+}
+
+.survey-overview-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.survey-overview-close:hover {
+  color: #f16526;
+}
+
+.survey-overview-grid {
+  list-style: none;
+  margin: 0;
+  padding: 16px;
+  background: #e5e5e5;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  row-gap: 20px;
+  column-gap: 12px;
+  overflow-y: auto;
+}
+
+.survey-overview-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border: 1.5px solid #f16526;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.survey-overview-tile-category {
+  color: #f16526;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.survey-overview-tile-detail {
+  margin: 0;
+  color: #3e2c23;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
