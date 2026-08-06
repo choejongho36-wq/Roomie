@@ -914,7 +914,7 @@ function MyProfilePage() {
           {/* ---------- 회원탈퇴 ---------- */}
 
           {!showWithdrawConfirm ? (
-            <div className="flex justify-end mt-5">
+            <div className="absolute bottom-5 right-6">
               <button
                 type="button"
                 onClick={() => {
