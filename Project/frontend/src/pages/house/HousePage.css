@@ -22,22 +22,24 @@
   margin-bottom: 32px;
 }
 
+/* 카드 6개를 한 행에 3개씩(2행) 고정으로 배치한다. 가로 폭은 가장 긴 설명
+   ("생필품을 체크리스트로 확인해요." 등)이 여유 있게 한 줄로 들어갈 정도로 줄였다. */
 .house-menu {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 16px;
-  max-width: 980px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
 .house-menu-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 24px 20px;
+  gap: 10px;
+  padding: 32px 24px;
   background: #fff;
   border: 1px solid #eee;
-  border-radius: 12px;
+  border-radius: 16px;
   text-align: left;
   text-decoration: none;
   color: inherit;
@@ -51,12 +53,25 @@
 }
 
 .house-menu-card strong {
-  font-size: 16px;
+  font-size: 19px;
 }
 
 .house-menu-card span {
   color: #888;
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .house-menu {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .house-menu {
+    grid-template-columns: 1fr;
+  }
 }
 
 .house-entry-cta {
