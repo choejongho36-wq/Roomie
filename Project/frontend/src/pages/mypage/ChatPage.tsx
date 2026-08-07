@@ -8,10 +8,12 @@ import {
   getChatMessages,
   getConversations,
   createOrGetMatchedPair,
+  getMatchedPairByPartner,
   getChatStatus,
   leaveChat,
 } from "../../api";
 import type { ChatMessage, Conversation } from "../../types/chat";
+import type { MatchedPair } from "../../types/matchedPair";
 import { Icon } from "../../components/mypage/MyPageSidebar";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
@@ -58,7 +60,7 @@ function ChatPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { lastMessage, sendMessage, refreshChatUnreadCount } = useChat();
+  const { lastMessage, lastMatchedPairUpdate, sendMessage, refreshChatUnreadCount } = useChat();
 
   const [conversations, setConversations] = useState<Conversation[] | null>(null);
   const [activePartner, setActivePartner] = useState<ActivePartner | null>(null);
@@ -66,6 +68,7 @@ function ChatPage() {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [matchedPairStatus, setMatchedPairStatus] = useState<MatchedPair | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [leftByPartner, setLeftByPartner] = useState(false);
@@ -121,6 +124,7 @@ function ChatPage() {
     if (!token || !activePartner) {
       setMessages([]);
       setLeftByPartner(false);
+      setMatchedPairStatus(null);
       return;
     }
     getChatMessages(token, activePartner.userId)
@@ -133,7 +137,19 @@ function ChatPage() {
     getChatStatus(token, activePartner.userId)
       .then((status) => setLeftByPartner(status.leftByPartner))
       .catch(() => setLeftByPartner(false));
+    // 이 상대와 이미 룸메이트 확정된 페어가 있으면, 확정 버튼을 다시 노출하지 않기 위해 조회
+    getMatchedPairByPartner(token, activePartner.userId)
+      .then(setMatchedPairStatus)
+      .catch(() => setMatchedPairStatus(null));
   }, [token, activePartner, refreshChatUnreadCount]);
+
+  // 채팅방을 열어둔 채로 상대방이 확정하면(또는 내가 다른 탭에서 확정하면) 실시간으로 버튼을 숨김
+  useEffect(() => {
+    if (!lastMatchedPairUpdate || !activePartner) return;
+    if (lastMatchedPairUpdate.partner.userId === activePartner.userId) {
+      setMatchedPairStatus(lastMatchedPairUpdate);
+    }
+  }, [lastMatchedPairUpdate, activePartner]);
 
   useEffect(() => {
     if (!lastMessage || !myUserId) return;
@@ -428,7 +444,7 @@ function ChatPage() {
                     </svg>
                   </span>
                 )}
-                {!leftByPartner && (
+                {!leftByPartner && matchedPairStatus?.status !== "CONFIRMED" && (
                   <button
                     type="button"
                     className="btn btn-outline chat-confirm-roommate-btn"

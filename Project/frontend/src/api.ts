@@ -538,6 +538,16 @@ export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair | 
   return response.status === 204 ? null : response.data;
 };
 
+// 채팅방 진입 시, 이 상대와 이미 페어가 있는지(확정됐는지) 조회만 할 때 사용 (없으면 null, 204).
+// createOrGetMatchedPair와 달리 페어를 새로 만들지 않는다 — 채팅방을 열기만 해도 페어가 생기면 안 되므로.
+export const getMatchedPairByPartner = async (token: string, partnerUserId: number): Promise<MatchedPair | null> => {
+  const response = await axios.get<MatchedPair>(
+    `${API_BASE_URL}/matched-pairs/by-partner/${partnerUserId}`,
+    authHeader(token)
+  );
+  return response.status === 204 ? null : response.data;
+};
+
 // ===== 아이디 찾기 =====
 
 export const requestFindId = async (email: string): Promise<void> => {

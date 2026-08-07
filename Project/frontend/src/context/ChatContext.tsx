@@ -3,10 +3,12 @@ import { useAuth } from "./AuthContext";
 import { clearNotifications, deleteNotification, getChatUnreadCount, getNotifications } from "../api";
 import { useChatSocket } from "../hooks/useChatSocket";
 import type { ChatMessage, NotificationItem } from "../types/chat";
+import type { MatchedPair } from "../types/matchedPair";
 
 interface ChatContextValue {
   isConnected: boolean;
   lastMessage: ChatMessage | null;
+  lastMatchedPairUpdate: MatchedPair | null;
   sendMessage: (toUserId: number, content: string) => boolean;
   notifications: NotificationItem[];
   unreadCount: number;
@@ -20,7 +22,7 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { token, user } = useAuth();
-  const { isConnected, lastMessage, lastNotification, sendMessage } = useChatSocket(token);
+  const { isConnected, lastMessage, lastNotification, lastMatchedPairUpdate, sendMessage } = useChatSocket(token);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
@@ -75,6 +77,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       value={{
         isConnected,
         lastMessage,
+        lastMatchedPairUpdate,
         sendMessage,
         notifications,
         unreadCount,

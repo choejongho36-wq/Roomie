@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useChat } from "../context/ChatContext";
 import { API_ORIGIN, confirmMatchedPair, getMatchedPair, updateMatchedPairConditions } from "../api";
 import type { MatchedPair } from "../types/matchedPair";
 import RegionPicker, { type RegionToken, parseRegionToken } from "../components/RegionPicker";
+import defaultAvatar from "../assets/Roomie_logo.png";
 import "./MatchedPairPage.css";
 
 const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : null);
@@ -11,6 +13,7 @@ const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : null
 function MatchedPairPage() {
   const { id } = useParams<{ id: string }>();
   const { token } = useAuth();
+  const { lastMatchedPairUpdate } = useChat();
   const navigate = useNavigate();
 
   const [pair, setPair] = useState<MatchedPair | null>(null);
@@ -61,30 +64,23 @@ function MatchedPairPage() {
     try {
       const updated = await confirmMatchedPair(token, Number(id));
       setPair(updated);
-      if (updated.status === "CONFIRMED") {
-        navigate(`/house/${id}`);
-      }
     } finally {
       setConfirming(false);
     }
   };
 
-  // 나는 확정했는데 상대방이 아직 안 했으면, 상대방이 확정하는 순간 자동으로 하우스로 넘어가게 주기적으로 확인
+  // 상대방이 확정하면 웹소켓으로 즉시 알려줌 (더 이상 폴링하지 않음) — 이 페어에 대한 갱신만 반영
   useEffect(() => {
-    if (!token || !id || !pair) return;
-    if (pair.status === "CONFIRMED" || !pair.myConfirmed) return;
+    if (!lastMatchedPairUpdate || !id || lastMatchedPairUpdate.id !== Number(id)) return;
+    setPair(lastMatchedPairUpdate);
+  }, [lastMatchedPairUpdate, id]);
 
-    const interval = setInterval(() => {
-      getMatchedPair(token, Number(id)).then((updated) => {
-        setPair(updated);
-        if (updated.status === "CONFIRMED") {
-          navigate(`/house/${id}`);
-        }
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [token, id, pair, navigate]);
+  // 두 사람 다 확정되면(내가 방금 확정했든, 웹소켓으로 상대방 확정 소식을 받았든) 3초 뒤 하우스로 이동
+  useEffect(() => {
+    if (!pair || pair.status !== "CONFIRMED" || !id) return;
+    const timer = setTimeout(() => navigate(`/house/${id}`), 3000);
+    return () => clearTimeout(timer);
+  }, [pair?.status, id, navigate]);
 
   if (loadError) {
     return (
@@ -111,11 +107,7 @@ function MatchedPairPage() {
         <div className="matched-pair-avatars">
           {[pair.me, pair.partner].map((person) => (
             <div key={person.userId} className="matched-pair-avatar-item">
-              {getAvatarSrc(person.profileImageUrl) ? (
-                <img src={getAvatarSrc(person.profileImageUrl)!} alt="" />
-              ) : (
-                <div className="matched-pair-avatar-placeholder">{person.nickname.slice(0, 1)}</div>
-              )}
+              <img src={getAvatarSrc(person.profileImageUrl) ?? defaultAvatar} alt="" />
               <span>{person.nickname}</span>
             </div>
           ))}
@@ -198,7 +190,9 @@ function MatchedPairPage() {
             {pair.partner.nickname}: {pair.partnerConfirmed ? "확정함 ✓" : "미확정"}
           </span>
         </div>
-        {pair.myConfirmed ? (
+        {pair.status === "CONFIRMED" ? (
+          <p className="matched-pair-hint">확정됐어요! 잠시 후 하우스로 이동할게요.</p>
+        ) : pair.myConfirmed ? (
           <p className="matched-pair-hint">상대방이 확정하면 자동으로 하우스로 이동해요. 잠시만 기다려주세요.</p>
         ) : (
           <div className="matched-pair-confirm-actions">
