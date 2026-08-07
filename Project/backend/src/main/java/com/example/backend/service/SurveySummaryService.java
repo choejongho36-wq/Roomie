@@ -93,6 +93,12 @@ public class SurveySummaryService {
         String differencesText = formatHighlightsForPrompt(differences, "특별히 차이 나는 항목 없음");
 
         String systemPrompt = "너는 룸메이트 매칭 앱의 궁합 설명가입니다. "
+                + "이 설명에 등장하는 사람은 정확히 두 명뿐입니다: 이 화면을 보고 있는 사용자 본인과, 상대방인 '" + nickname + "'. "
+                + "실제 답변 목록에서 '나'라고 표시된 쪽은 항상 화면을 보는 사용자 본인이고, '상대'라고 표시된 쪽이 '" + nickname + "'입니다. "
+                + "사용자 본인을 가리킬 때는 반드시 '나' 또는 '당신'이라고만 쓰고, 절대로 이름이나 닉네임을 만들어 붙이거나 "
+                + "'" + nickname + "'을 줄인 다른 호칭(예: 이름 뒷글자만 떼어 부르는 식)을 본인에게 사용하지 마세요. "
+                + "상대방을 가리킬 때는 항상 정확히 '" + nickname + "님'이라고 닉네임 전체 뒤에 '님'을 붙여서 쓰고, "
+                + "축약하거나 다른 이름으로 바꿔 부르거나 '님'을 빼고 부르지 마세요. "
                 + "화면에는 이미 '맞는 포인트'와 '다른 포인트'가 항목 이름 태그로 따로 표시되고 있으니, "
                 + "그 항목 이름들을 다시 나열하거나 'A, B, C 같은 부분에서'처럼 목록을 읽어주는 문장은 쓰지 마세요. "
                 + "대신 아래 실제 답변 내용을 근거로, 두 사람이 실제로 함께 살 때 어떤 장면일지 구체적으로 그려주듯 자연스럽게 설명하세요. "
@@ -102,10 +108,10 @@ public class SurveySummaryService {
                 + "문장이 끝날 때마다(마침표 뒤) 실제로 줄을 바꿔서 한 줄에 한 문장씩만 오도록 하세요. "
                 + "글자 그대로의 백슬래시 n(\\n)이라는 문자열을 출력하지 말고, 진짜 줄바꿈으로만 문장을 나누세요. "
                 + "한자(漢字)는 절대 섞어 쓰지 말고 순 한글로만 작성하세요. 접두사 없이 설명 문장만 출력하세요.";
-        String userPrompt = "닉네임: " + nickname
+        String userPrompt = "상대방 닉네임(이 이름은 상대방에게만, 항상 '" + nickname + "님'처럼 '님'을 붙여서 사용하세요): " + nickname
                 + "\n궁합 점수: " + compatibilityScore + "점"
-                + "\n\n[잘 맞는 부분의 실제 답변]\n" + topReasonsText
-                + "\n\n[다른 부분의 실제 답변]\n" + differencesText
+                + "\n\n[잘 맞는 부분의 실제 답변 — '나'=본인, '상대'=" + nickname + "]\n" + topReasonsText
+                + "\n\n[다른 부분의 실제 답변 — '나'=본인, '상대'=" + nickname + "]\n" + differencesText
                 + "\n\n위 실제 답변 내용을 근거로 두 사람의 궁합을 자연스럽게 설명해주세요.";
 
         return callGroq(apiKey, systemPrompt, userPrompt, 600, "궁합 설명 생성에 실패했습니다.");

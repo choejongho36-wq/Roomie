@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>새 글쓰기 - 게시글 고정 관리 - Roomie Admin</title>
+        <title>새 글쓰기 - 게시글 관리 - Roomie Admin</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet" />
         <link th:href="@{/startbootstrap-sb-admin-gh-pages/css/styles.css}" rel="stylesheet" />
@@ -51,7 +51,7 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
                                 회원 관리
                             </a>
-                            <a class="nav-link" th:href="@{/admin/posts}">
+                            <a class="nav-link active" th:href="@{/admin/posts}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-file-alt"></i></div>
                                 게시글 관리
                             </a>
@@ -59,7 +59,7 @@
                                 <div class="sb-nav-link-icon"><i class="fas fa-envelope-open-text"></i></div>
                                 문의 관리
                             </a>
-                            <a class="nav-link active" th:href="@{/admin/notices}">
+                            <a class="nav-link" th:href="@{/admin/notices}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
                                 게시글 고정 관리
                             </a>
@@ -77,7 +77,7 @@
                         <h1 class="mt-4" th:text="${notice != null} ? '공지/이벤트 수정' : '새 글쓰기'">새 글쓰기</h1>
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a th:href="@{/admin/notices}">게시글 고정 관리</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin/posts}">게시글 관리</a></li>
                             <li class="breadcrumb-item active" th:text="${notice != null} ? '수정' : '새 글쓰기'">새 글쓰기</li>
                         </ol>
 
@@ -87,7 +87,7 @@
                                 <span th:text="${notice != null} ? '글 수정' : '새 글 작성'">새 글 작성</span>
                             </div>
                             <div class="card-body">
-                                <form th:action="${notice != null} ? @{'/admin/notices/' + ${notice.postId} + '/edit'} : @{/admin/notices}" method="post" id="noticeForm">
+                                <form th:action="${notice != null} ? @{'/admin/posts/' + ${notice.postId} + '/edit'} : @{/admin/posts}" method="post" id="noticeForm">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                     <div class="row g-3 mb-3">
                                         <div class="col-md-8">
@@ -124,7 +124,7 @@
                                     </div>
 
                                     <button type="submit" class="btn btn-primary" th:text="${notice != null} ? '저장' : '등록'">등록</button>
-                                    <a th:href="@{/admin/notices}" class="btn btn-outline-secondary">취소</a>
+                                    <a th:href="@{/admin/posts}" class="btn btn-outline-secondary">취소</a>
                                 </form>
                             </div>
                         </div>
