@@ -74,7 +74,6 @@ function ChatPage() {
   const [confirming, setConfirming] = useState(false);
   const [matchedPairStatus, setMatchedPairStatus] = useState<MatchedPair | null>(null);
   const [confirmRoommateModalOpen, setConfirmRoommateModalOpen] = useState(false);
-  const [confirmingHouse, setConfirmingHouse] = useState(false);
   const [findRoomPanelOpen, setFindRoomPanelOpen] = useState(false);
   const [findRoomRegionTokens, setFindRoomRegionTokens] = useState<RegionToken[]>([]);
   const [findRoomDepositMax, setFindRoomDepositMax] = useState("");
@@ -113,12 +112,27 @@ function ChatPage() {
   // searchParams 객체 자체는 리렌더마다 참조가 바뀌어 무한루프를 유발할 수 있어 문자열 값만 사용.
   const userIdParam = searchParams.get("userId");
 
+  // 값이 실제로 안 바뀌었으면 기존 객체 참조를 그대로 유지한다 — 그래야 아래쪽의
+  // "activePartner가 바뀔 때만" 실행되는 이펙트들(메시지/방찾기 패널 등)이 대화 목록이
+  // 새로고침될 때마다(메시지를 주고받을 때마다) 불필요하게 재실행되며 방찾기 패널을 닫아버리는 걸 막는다.
+  const setActivePartnerIfChanged = (next: ActivePartner) => {
+    setActivePartner((prev) =>
+      prev &&
+      prev.userId === next.userId &&
+      prev.nickname === next.nickname &&
+      prev.profileImageUrl === next.profileImageUrl &&
+      prev.isVerified === next.isVerified
+        ? prev
+        : next
+    );
+  };
+
   useEffect(() => {
     if (!userIdParam || !conversations) return;
     const partnerId = Number(userIdParam);
     const target = conversations.find((c) => c.partnerId === partnerId);
     if (target) {
-      setActivePartner({
+      setActivePartnerIfChanged({
         userId: target.partnerId,
         nickname: target.partnerNickname,
         profileImageUrl: target.partnerProfileImageUrl,
@@ -131,7 +145,7 @@ function ChatPage() {
     // 대화 목록에 없으므로, 이동할 때 넘겨준 닉네임으로 새 대화를 시작한다.
     const newContactNickname = (location.state as { nickname?: string } | null)?.nickname;
     if (newContactNickname) {
-      setActivePartner({ userId: partnerId, nickname: newContactNickname, profileImageUrl: null, isVerified: false });
+      setActivePartnerIfChanged({ userId: partnerId, nickname: newContactNickname, profileImageUrl: null, isVerified: false });
     }
   }, [conversations, userIdParam, location.state]);
 
@@ -224,13 +238,17 @@ function ChatPage() {
     setInfoModal("현재 미구현 기능입니다.");
   };
 
+  // "확정" 버튼을 누르는 시점에 내 몫까지 바로 확정 처리한다(페어가 없으면 만들면서 동시에 확정).
+  // 그래서 다음에 뜨는 모달에는 항상 "나: 확정함 ✓"이 이미 표시돼 있고, 상대방까지 확정해야만
+  // 하우스로 이동할 수 있게 된다 — 확정 자체와 "확정됐다는 걸 확인하는 것"을 분리하지 않는다.
   const doConfirmRoommate = async () => {
     if (!token || !activePartner) return;
     setConfirming(true);
     setError("");
     try {
       const pair = await createOrGetMatchedPair(token, activePartner.userId);
-      setMatchedPairStatus(pair);
+      const confirmed = await confirmMatchedPair(token, pair.id);
+      setMatchedPairStatus(confirmed);
       setConfirmRoommateModalOpen(true);
     } catch {
       setError("룸메이트 확정에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -246,18 +264,6 @@ function ChatPage() {
       confirmLabel: "확정",
       onConfirm: doConfirmRoommate,
     });
-  };
-
-  // 확정 현황 모달의 "하우스로 이동" 버튼 — 내 몫만 확정 처리(상대방도 확정해야 실제로 CONFIRMED가 됨)
-  const handleConfirmHouse = async () => {
-    if (!token || !matchedPairStatus) return;
-    setConfirmingHouse(true);
-    try {
-      const updated = await confirmMatchedPair(token, matchedPairStatus.id);
-      setMatchedPairStatus(updated);
-    } finally {
-      setConfirmingHouse(false);
-    }
   };
 
   // "방찾기" 버튼 — 채팅 옆 패널을 열고/닫음. 처음 열 때, 아직 페어가 없으면
@@ -769,15 +775,16 @@ function ChatPage() {
               </span>
             </div>
             {matchedPairStatus.status === "CONFIRMED" ? (
-              <p className="matched-pair-hint">확정됐어요! 잠시 후 하우스로 이동할게요.</p>
-            ) : matchedPairStatus.myConfirmed ? (
-              <p className="matched-pair-hint">상대방이 확정하면 자동으로 하우스로 이동해요. 잠시만 기다려주세요.</p>
-            ) : (
               <div className="matched-pair-confirm-actions">
-                <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirmingHouse}>
-                  {confirmingHouse ? "처리 중..." : "하우스로 이동"}
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate(`/house/${matchedPairStatus.id}`)}
+                >
+                  하우스로 이동
                 </button>
               </div>
+            ) : (
+              <p className="matched-pair-hint">상대방이 확정하면 자동으로 하우스로 이동해요. 잠시만 기다려주세요.</p>
             )}
           </div>
         </div>
