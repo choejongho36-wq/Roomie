@@ -113,12 +113,27 @@ function ChatPage() {
   // searchParams 객체 자체는 리렌더마다 참조가 바뀌어 무한루프를 유발할 수 있어 문자열 값만 사용.
   const userIdParam = searchParams.get("userId");
 
+  // 값이 실제로 안 바뀌었으면 기존 객체 참조를 그대로 유지한다 — 그래야 아래쪽의
+  // "activePartner가 바뀔 때만" 실행되는 이펙트들(메시지/방찾기 패널 등)이 대화 목록이
+  // 새로고침될 때마다(메시지를 주고받을 때마다) 불필요하게 재실행되며 방찾기 패널을 닫아버리는 걸 막는다.
+  const setActivePartnerIfChanged = (next: ActivePartner) => {
+    setActivePartner((prev) =>
+      prev &&
+      prev.userId === next.userId &&
+      prev.nickname === next.nickname &&
+      prev.profileImageUrl === next.profileImageUrl &&
+      prev.isVerified === next.isVerified
+        ? prev
+        : next
+    );
+  };
+
   useEffect(() => {
     if (!userIdParam || !conversations) return;
     const partnerId = Number(userIdParam);
     const target = conversations.find((c) => c.partnerId === partnerId);
     if (target) {
-      setActivePartner({
+      setActivePartnerIfChanged({
         userId: target.partnerId,
         nickname: target.partnerNickname,
         profileImageUrl: target.partnerProfileImageUrl,
@@ -131,7 +146,7 @@ function ChatPage() {
     // 대화 목록에 없으므로, 이동할 때 넘겨준 닉네임으로 새 대화를 시작한다.
     const newContactNickname = (location.state as { nickname?: string } | null)?.nickname;
     if (newContactNickname) {
-      setActivePartner({ userId: partnerId, nickname: newContactNickname, profileImageUrl: null, isVerified: false });
+      setActivePartnerIfChanged({ userId: partnerId, nickname: newContactNickname, profileImageUrl: null, isVerified: false });
     }
   }, [conversations, userIdParam, location.state]);
 
