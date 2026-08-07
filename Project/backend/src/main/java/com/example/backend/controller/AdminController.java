@@ -145,11 +145,13 @@ public class AdminController {
     @GetMapping("/admin/posts")
     public String posts(@RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "createdAt") String sort,
             @RequestParam(defaultValue = "desc") String dir,
             Model model) {
         int pageSize = 20;
         boolean hasKeyword = keyword != null && !keyword.isBlank();
+        boolean hasType = type != null && !type.isBlank();
 
         List<Post> matched;
         if (hasKeyword) {
@@ -162,6 +164,13 @@ public class AdminController {
         } else {
             matched = postRepository.findAll();
         }
+
+        // 게시글 고정 관리와 동일한 게시판 버튼(공지·이벤트 / 커뮤니티)으로 이 목록도 게시판별로
+        // 걸러 볼 수 있게 한다. 검색어와 동시에 걸어도 되도록 keyword 필터 결과 위에 추가로 거른다.
+        // "전체"(type 없음)는 게시글 고정 관리와 똑같이 커뮤니티 게시판(고민상담/잡담/정보공유/
+        // 생활 꿀팁)만의 전체를 뜻한다 — 공지사항/이벤트는 포함하지 않고, 각각 따로 골라서 본다.
+        List<String> boardTypeFilter = hasType ? List.of(type) : COMMUNITY_BOARD_TYPES;
+        matched = matched.stream().filter(p -> boardTypeFilter.contains(p.getBoardType())).toList();
 
         List<Long> matchedPostIds = matched.stream().map(Post::getPostId).toList();
         Map<Long, Long> reportCounts = matchedPostIds.isEmpty() ? Map.of()
@@ -191,6 +200,9 @@ public class AdminController {
         model.addAttribute("authorNames", authorNameMap(pageContent.stream().map(Post::getUserId).toList()));
         model.addAttribute("reportCounts", reportCounts);
         model.addAttribute("keyword", keyword == null ? "" : keyword);
+        model.addAttribute("type", type == null ? "" : type);
+        model.addAttribute("noticeBoardTypes", NOTICE_BOARD_TYPES);
+        model.addAttribute("communityBoardTypes", COMMUNITY_BOARD_TYPES);
         model.addAttribute("sort", sort);
         model.addAttribute("dir", dir);
         return "posts";
@@ -200,6 +212,52 @@ public class AdminController {
     public String deletePost(@PathVariable("id") Long id) {
         // 댓글/답글/찜/신고 기록까지 함께 정리하는 로직은 PostService.adminDelete()에 공용으로 있다.
         postService.adminDelete(id);
+        return "redirect:/admin/posts";
+    }
+
+    // 공지사항/이벤트는 관리자가 직접 작성하는 글이라 글쓰기/수정 기능이 필요하다. 원래는
+    // "게시글 고정 관리"(/admin/notices)에 있었는데, 고정/순서 관리와 성격이 다른 기능이라
+    // "게시글 관리"(/admin/posts) 쪽으로 옮겼다. 커뮤니티 게시판(고민상담 등)은 회원이 작성하는
+    // 글이라 여기서는 다루지 않는다(notice-write.html의 게시판 선택란도 공지사항/이벤트뿐).
+    @GetMapping("/admin/posts/write")
+    public String postWriteForm(@RequestParam(required = false) String type, Model model) {
+        model.addAttribute("presetBoardType", type == null ? "" : type);
+        return "notice-write";
+    }
+
+    @PostMapping("/admin/posts")
+    public String createPost(Authentication authentication,
+            @RequestParam String title,
+            @RequestParam String boardType,
+            @RequestParam String content,
+            @RequestParam(required = false) String tags) {
+        User admin = userRepository.findByLoginId(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("관리자 계정을 찾을 수 없습니다."));
+        PostRequest request = new PostRequest(
+                title, null, null, null, null, null, null, null, null,
+                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
+        postService.create(admin.getUserId(), request);
+        return "redirect:/admin/posts";
+    }
+
+    @GetMapping("/admin/posts/{id}/edit")
+    public String postEditForm(@PathVariable("id") Long id, Model model) {
+        Post notice = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+        model.addAttribute("notice", notice);
+        return "notice-write";
+    }
+
+    @PostMapping("/admin/posts/{id}/edit")
+    public String updatePost(@PathVariable("id") Long id,
+            @RequestParam String title,
+            @RequestParam String boardType,
+            @RequestParam String content,
+            @RequestParam(required = false) String tags) {
+        PostRequest request = new PostRequest(
+                title, null, null, null, null, null, null, null, null,
+                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
+        postService.adminUpdate(id, request);
         return "redirect:/admin/posts";
     }
 
@@ -315,53 +373,9 @@ public class AdminController {
                 .orElse(null);
     }
 
-    @GetMapping("/admin/notices/write")
-    public String noticeWriteForm(@RequestParam(required = false) String type, Model model) {
-        // 공지사항/이벤트 목록에서 필터를 걸어둔 채로 "새 글쓰기"를 누르면, 그 카테고리가
-        // 미리 선택된 채로 글쓰기 폼이 열리게 한다.
-        model.addAttribute("presetBoardType", type == null ? "" : type);
-        return "notice-write";
-    }
-
-    @PostMapping("/admin/notices")
-    public String createNotice(Authentication authentication,
-            @RequestParam String title,
-            @RequestParam String boardType,
-            @RequestParam String content,
-            @RequestParam(required = false) String tags) {
-        User admin = userRepository.findByLoginId(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("관리자 계정을 찾을 수 없습니다."));
-        PostRequest request = new PostRequest(
-                title, null, null, null, null, null, null, null, null,
-                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
-        postService.create(admin.getUserId(), request);
-        return "redirect:/admin/notices";
-    }
-
     @PostMapping("/admin/notices/{id}/delete")
     public String deleteNotice(@PathVariable("id") Long id) {
         postService.adminDelete(id);
-        return "redirect:/admin/notices";
-    }
-
-    @GetMapping("/admin/notices/{id}/edit")
-    public String noticeEditForm(@PathVariable("id") Long id, Model model) {
-        Post notice = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지입니다."));
-        model.addAttribute("notice", notice);
-        return "notice-write";
-    }
-
-    @PostMapping("/admin/notices/{id}/edit")
-    public String updateNotice(@PathVariable("id") Long id,
-            @RequestParam String title,
-            @RequestParam String boardType,
-            @RequestParam String content,
-            @RequestParam(required = false) String tags) {
-        PostRequest request = new PostRequest(
-                title, null, null, null, null, null, null, null, null,
-                content, (tags != null && !tags.isBlank()) ? tags : null, boardType);
-        postService.adminUpdate(id, request);
         return "redirect:/admin/notices";
     }
 
