@@ -40,6 +40,10 @@ public class NotificationService {
         saveAndPush(recipientId, senderId, content, "CHAT_ACCEPTED", null);
     }
 
+    public void createHouseDisbandedNotification(Long recipientId, Long senderId, String content) {
+        saveAndPush(recipientId, senderId, content, "HOUSE_DISBANDED", null);
+    }
+
     // 저장 직후, 받는 사람이 지금 웹소켓에 연결돼 있으면 바로 알림 프레임을 밀어넣는다
     // (연결이 안 돼 있으면 조용히 무시 — 다음 로그인/새로고침 때 REST로 받아간다).
     private void saveAndPush(Long recipientId, Long senderId, String content, String type, Long targetId) {

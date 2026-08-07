@@ -109,6 +109,9 @@ function Navbar() {
       setChatRequestModal(notification);
       return;
     }
+    if (notification.type === "HOUSE_DISBANDED") {
+      return;
+    }
     removeNotification(notification.notificationId);
     if (notification.type === "COMMENT_REPLY" && notification.targetId) {
       navigate(`/board/${notification.targetId}`);
