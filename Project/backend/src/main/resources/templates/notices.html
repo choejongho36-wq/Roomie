@@ -130,22 +130,24 @@
                                     </thead>
                                     <tbody>
                                         <tr th:each="n : ${notices}"
-                                            th:classappend="${pinnedBoardsByPost.get(n.postId) != null and !pinnedBoardsByPost.get(n.postId).isEmpty()} ? 'table-warning'">
+                                            th:classappend="${highlightedPostIds.contains(n.postId)} ? 'table-warning'">
                                             <td>
                                                 <div class="d-flex align-items-center gap-1 flex-wrap">
-                                                    <!-- 지금 보고 있는 게시판 안에서 고정된 글일 때만 순서(▲▼) 버튼을 보여준다.
-                                                         "전체"에서는 게시판마다 순서가 따로 있어 여기선 순서변경을 하지 않는다. -->
+                                                    <!-- 지금 보고 있는 스코프(pinScope: 특정 게시판, 또는 "전체")에 고정된 글일 때만
+                                                         순서(▲▼) 버튼을 보여준다. -->
                                                     <form th:action="@{'/admin/notices/' + ${n.postId} + '/pin-order'}" method="post" class="d-inline"
-                                                          th:if="${!#strings.isEmpty(type) and currentBoardPinOrder.get(n.postId) != null}">
+                                                          th:if="${currentBoardPinOrder.get(n.postId) != null}">
                                                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                                         <input type="hidden" name="direction" value="up" />
+                                                        <input type="hidden" name="boardType" th:value="${pinScope}" />
                                                         <input type="hidden" name="type" th:value="${type}" />
                                                         <button type="submit" class="btn btn-sm btn-outline-secondary px-2" title="위로">▲</button>
                                                     </form>
                                                     <form th:action="@{'/admin/notices/' + ${n.postId} + '/pin-order'}" method="post" class="d-inline"
-                                                          th:if="${!#strings.isEmpty(type) and currentBoardPinOrder.get(n.postId) != null}">
+                                                          th:if="${currentBoardPinOrder.get(n.postId) != null}">
                                                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                                         <input type="hidden" name="direction" value="down" />
+                                                        <input type="hidden" name="boardType" th:value="${pinScope}" />
                                                         <input type="hidden" name="type" th:value="${type}" />
                                                         <button type="submit" class="btn btn-sm btn-outline-secondary px-2" title="아래로">▼</button>
                                                     </form>
@@ -155,7 +157,7 @@
                                                     <div class="dropdown">
                                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                                                                 data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                                                            고정 관리
+                                                            고정
                                                         </button>
                                                         <form class="dropdown-menu p-3" style="min-width: 180px;"
                                                               th:action="@{'/admin/notices/' + ${n.postId} + '/pin'}" method="post">
