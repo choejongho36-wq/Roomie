@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getMySurveys, updateSurveyAnswer, getCategoryWeights, saveCategoryWeights } from "../../api";
 import type { SurveyResult } from "../../types/survey";
-import { surveyQuestions } from "../../data/SurveyQuestions";
+import { surveyQuestions, SMOKING_QUESTION_ID } from "../../data/SurveyQuestions";
 import "./MyPageContent.css";
 import "./ActivityPage.css";
 
@@ -130,6 +130,9 @@ function ActivityPage() {
 
               const weightTier = weights[question.id] ?? question.defaultWeight;
               const isSavingWeight = savingWeightId === question.id;
+              // 흡연 문항은 궁합 점수 계산에서 아예 빠지기 때문에(추천 필터링에만 쓰임) 중요도를
+              // 바꿔도 아무 효과가 없다. 다른 가중치 설정 화면과 동일하게 여기서도 숨긴다.
+              const isWeightable = question.id !== SMOKING_QUESTION_ID;
 
               return (
                 <section className="survey-record-card" key={question.id}>
@@ -137,25 +140,26 @@ function ActivityPage() {
                     <span className="survey-record-category">
                       {question.category}
                     </span>
-                    {isEditing ? (
-                      <div className="survey-record-weight-editor">
-                        {[1, 2, 3].map((tier) => (
-                          <button
-                            key={tier}
-                            type="button"
-                            disabled={isSavingWeight}
-                            className={`survey-record-weight-tier${
-                              weightTier === tier ? " survey-record-weight-tier-selected" : ""
-                            }`}
-                            onClick={() => handleWeightChange(question.id, tier)}
-                          >
-                            {TIER_LABELS[tier]}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="survey-record-weight-badge">중요도 {TIER_LABELS[weightTier]}</span>
-                    )}
+                    {isWeightable &&
+                      (isEditing ? (
+                        <div className="survey-record-weight-editor">
+                          {[1, 2, 3].map((tier) => (
+                            <button
+                              key={tier}
+                              type="button"
+                              disabled={isSavingWeight}
+                              className={`survey-record-weight-tier${
+                                weightTier === tier ? " survey-record-weight-tier-selected" : ""
+                              }`}
+                              onClick={() => handleWeightChange(question.id, tier)}
+                            >
+                              {TIER_LABELS[tier]}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="survey-record-weight-badge">중요도 {TIER_LABELS[weightTier]}</span>
+                      ))}
                   </div>
 
                   <p className="survey-record-question">{questionText}</p>

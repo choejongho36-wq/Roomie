@@ -197,7 +197,7 @@ function MatchedPairPage() {
         ) : (
           <div className="matched-pair-confirm-actions">
             <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirming}>
-              {confirming ? "처리 중..." : "하우스로 이동"}
+              {confirming ? "처리 중..." : "매칭 확정하기"}
             </button>
             <button
               className="btn btn-outline"

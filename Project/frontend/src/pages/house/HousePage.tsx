@@ -29,7 +29,7 @@ function HousePage() {
     setIsDisbanding(true);
     try {
       await disbandHouse(token, Number(id));
-      navigate(`/mypage/chat?userId=${pair.partner.userId}`);
+      navigate("/");
     } finally {
       setIsDisbanding(false);
       setShowDisbandConfirm(false);
@@ -77,7 +77,7 @@ function HousePage() {
             <p>
               {pair.partner.nickname}님과의 룸메이트 생활을 마무리할까요?
               <br />
-              하우스를 해산하면 두 분 모두 다시 접근할 수 없고, 채팅방에서 작별인사를 나눌 수 있어요.
+              하우스를 해산하면 두 분 모두 이 하우스에 다시 접근할 수 없어요.
             </p>
             <div className="info-modal-actions">
               <button type="button" className="btn btn-outline" onClick={() => setShowDisbandConfirm(false)}>

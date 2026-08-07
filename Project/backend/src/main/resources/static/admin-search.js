@@ -6,9 +6,9 @@
         { label: "Dashboard", url: "/admin" },
         { label: "회원 관리", url: "/admin/users" },
         { label: "게시글 관리", url: "/admin/posts" },
+        { label: "공지/이벤트 새 글쓰기", url: "/admin/posts/write" },
         { label: "문의 관리", url: "/admin/inquiries" },
-        { label: "공지/이벤트 관리", url: "/admin/notices" },
-        { label: "공지/이벤트 새 글쓰기", url: "/admin/notices/write" },
+        { label: "게시글 고정 관리", url: "/admin/notices" },
     ];
 
     document.addEventListener("DOMContentLoaded", function () {

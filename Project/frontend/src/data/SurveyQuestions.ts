@@ -1,5 +1,11 @@
 import type { SurveyQuestion } from "../types/survey";
 
+// 흡연은 CompatibilityCalculator 채점 루프에서 아예 제외되는 문항이라(실제 흡연 여부는 추천
+// 필터링에만 쓰이고 궁합 점수에는 반영되지 않음) 가중치를 조절해도 점수에 영향이 없다. 그래서
+// 가중치를 만지는 화면(설문 가중치 설정, 마이페이지 설문 기록)에서는 이 문항의 중요도 설정을
+// 노출하지 않는다.
+export const SMOKING_QUESTION_ID = 12;
+
 export const categoryEmoji: Record<string, string> = {
   "청결": "🧹",
   "취침 시간": "🌙",

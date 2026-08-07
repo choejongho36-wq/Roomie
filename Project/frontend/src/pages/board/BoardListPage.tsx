@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types/board";
-import { SPECIAL_BOARDS } from "../../data/BoardCategories";
+import { SPECIAL_BOARDS, FREE_BOARD_CATEGORIES, ALL_BOARD_LABEL } from "../../data/BoardCategories";
 import { useAuth } from "../../context/AuthContext";
 import Pagination from "../../components/Pagination";
 import defaultAvatar from "../../assets/Roomie_logo.png";
@@ -68,25 +68,19 @@ function BoardListPage() {
   const filteredPosts = useMemo(() => {
     if (!posts) return [];
 
-    // 한 글이 여러 게시판에 동시에(중복으로) 고정될 수 있다. 공지사항/이벤트도 다른 게시판과
-    // 동일하게, 지금 보고 있는 그 게시판 안에서만 상단 고정으로 뜬다(더 이상 전역 노출 특례
-    // 없음). 다만 "전체"(boardType 없음) 화면에서는 어느 게시판에든 고정된 글을 다 모아서
-    // 보여준다. 문의 게시판은 이 컴포넌트를 아예 쓰지 않으니 자연히 대상에서 빠진다.
+    // 한 글이 여러 게시판에 동시에(중복으로) 고정될 수 있다. 지금 보고 있는 그 게시판 안에서만
+    // 상단 고정으로 뜬다. "전체"(boardType 없음)는 커뮤니티 드롭다운의 4개 게시판(고민상담/잡담/
+    // 정보공유/생활 꿀팁)만 모아 보여주는 뷰라서, 공지사항/이벤트 글은 고정 여부와 상관없이 아예
+    // 나오면 안 된다. "전체"에서의 고정도 개별 게시판 고정을 끌어모으는 게 아니라, 관리자가 이
+    // 글을 "전체" 스코프에 직접 고정한 경우에만(ALL_BOARD_LABEL) 상단에 뜬다.
+    const pinScope = boardType ?? ALL_BOARD_LABEL;
     const pinnedPosts = posts
       .filter((post) => {
         if (!post.pins || post.pins.length === 0) return false;
-        if (!boardType) return true;
-        return post.pins.some((pin) => pin.boardType === boardType);
+        return post.pins.some((pin) => pin.boardType === pinScope);
       })
       .sort((a, b) => {
-        const orderOf = (post: Post) => {
-          if (boardType) {
-            return post.pins.find((pin) => pin.boardType === boardType)?.pinOrder ?? 0;
-          }
-          // "전체"에서는 게시판마다 고정 순서가 따로 놀아서 하나로 합칠 기준이 없다. 그 글이
-          // 가진 고정 순서 중 가장 작은 값(=어느 게시판에서든 가장 앞쪽인 순서)을 대표로 쓴다.
-          return Math.min(...post.pins.map((pin) => pin.pinOrder));
-        };
+        const orderOf = (post: Post) => post.pins.find((pin) => pin.boardType === pinScope)?.pinOrder ?? 0;
         // 순서가 같은 경우(정상적으로는 안 생기지만 혹시를 대비해) postId로 한 번 더 정렬해서,
         // 관리자 페이지와 항상 같은 순서로 보이게 한다.
         return orderOf(a) - orderOf(b) || a.postId - b.postId;
@@ -96,7 +90,7 @@ function BoardListPage() {
     const rest = posts
       .filter((post) => {
         if (pinnedIds.has(post.postId)) return false; // 위 고정 목록에 이미 포함되므로 중복 방지
-        if (!boardType) return true;
+        if (!boardType) return FREE_BOARD_CATEGORIES.includes(post.boardType ?? ""); // 공지사항/이벤트 제외
         return post.boardType === boardType;
       })
       // 최신 글이 맨 위로 오도록 작성일 기준 내림차순 정렬. (백엔드가 정렬 없이
