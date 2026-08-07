@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import com.example.backend.domain.Inquiry;
 import com.example.backend.domain.Post;
+import com.example.backend.domain.PostPin;
 import com.example.backend.domain.PostReport;
 import com.example.backend.domain.User;
 import com.example.backend.dto.InquiryRequest;
@@ -12,6 +13,7 @@ import com.example.backend.repository.PostReportRepository;
 import com.example.backend.repository.PostRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.InquiryService;
+import com.example.backend.service.PostPinService;
 import com.example.backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +38,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +56,7 @@ public class AdminController {
     private final PostReportRepository postReportRepository;
     private final PostService postService;
     private final InquiryService inquiryService;
+    private final PostPinService postPinService;
 
     // ===== 대시보드 =====
 
@@ -196,31 +202,89 @@ public class AdminController {
         return "redirect:/admin/posts";
     }
 
-    // ===== 공지/이벤트 관리 =====
+    // ===== 게시글 고정 관리 (공지/이벤트 + 커뮤니티 게시판, 모두 동일한 방식으로 처리) =====
+
+    // 고정 기능을 적용하는 게시판 전체 목록(체크박스 다중 선택 옵션 등에 씀). 문의 게시판은
+    // 별도 테이블(Inquiry)이라 고정 컬럼이 없어서 여기 포함하지 않는다.
+    private static final List<String> PINNABLE_BOARD_TYPES =
+            List.of("공지사항", "이벤트", "고민상담", "잡담", "정보공유", "생활 꿀팁");
+
+    // 관리자가 직접 쓰는 공지성 게시판. 커뮤니티 게시판과 구분해서 화면에 따로 보여준다.
+    private static final List<String> NOTICE_BOARD_TYPES = List.of("공지사항", "이벤트");
+
+    // 공지사항/이벤트는 관리자가 직접 쓰는 공지성 게시판이라 커뮤니티 게시판과 구분한다.
+    // "전체"는 이 커뮤니티 게시판들만의 전체를 뜻하고, 공지사항/이벤트는 포함하지 않는다
+    // (공지사항/이벤트는 목록에서 각각 따로 골라서 본다).
+    private static final List<String> COMMUNITY_BOARD_TYPES =
+            List.of("고민상담", "잡담", "정보공유", "생활 꿀팁");
 
     @GetMapping("/admin/notices")
     public String notices(@RequestParam(required = false) String type, Model model) {
-        List<String> boardTypes = (type != null && !type.isBlank()) ? List.of(type) : List.of("공지사항", "이벤트");
+        boolean hasType = type != null && !type.isBlank();
+        List<String> boardTypes = hasType ? List.of(type) : COMMUNITY_BOARD_TYPES;
         List<Post> notices = new ArrayList<>(postRepository.findByBoardTypeInOrderByCreatedAtDesc(boardTypes));
-        // 고정된 글을 pinOrder 오름차순(같으면 postId 오름차순)으로 맨 위에 먼저 보여주고,
-        // 그 아래는 기존처럼 최신순. postId 2차 기준은 고정된 글끼리 비교할 때만 적용해서,
-        // 고정 안 된 글들의 "최신순" 정렬에는 영향이 없게 한다.
-        notices.sort((a, b) -> {
-            if (a.isPinned() != b.isPinned()) {
-                return a.isPinned() ? -1 : 1;
+
+        List<Long> postIds = notices.stream().map(Post::getPostId).toList();
+        Map<Long, List<PostPin>> pinsByPost = postPinService.rawPinsForPosts(postIds);
+
+        if (hasType) {
+            // 지금 보고 있는 게시판 안에서의 고정 순서(pinOrder) 기준으로 맨 위에 먼저 보여주고,
+            // 그 아래는 최신순. postId 2차 기준은 고정된 글끼리 비교할 때만 적용한다.
+            notices.sort((a, b) -> {
+                Integer orderA = pinOrderIn(pinsByPost, a.getPostId(), type);
+                Integer orderB = pinOrderIn(pinsByPost, b.getPostId(), type);
+                if ((orderA != null) != (orderB != null)) {
+                    return orderA != null ? -1 : 1;
+                }
+                if (orderA != null) {
+                    int byOrder = Integer.compare(orderA, orderB);
+                    return byOrder != 0 ? byOrder : Long.compare(a.getPostId(), b.getPostId());
+                }
+                return b.getCreatedAt().compareTo(a.getCreatedAt());
+            });
+        } else {
+            // "전체"에서는 게시판마다 고정 순서가 따로 놀아서 하나로 합칠 기준이 없으니 최신순으로만 보여준다.
+            // (고정 여부/어느 게시판에 고정됐는지는 화면에서 배지로 표시)
+            notices.sort(Comparator.comparing(Post::getCreatedAt).reversed());
+        }
+
+        // 체크박스 미리 체크 상태 표시용: 글마다 지금 고정돼 있는 게시판 이름 집합.
+        Map<Long, Set<String>> pinnedBoardsByPost = pinsByPost.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> e.getValue().stream().map(PostPin::getBoardType).collect(Collectors.toSet())));
+
+        // ▲▼ 순서 버튼은 "지금 보고 있는 게시판" 안에서 고정된 글에만 의미가 있어서, 그 경우에만
+        // (postId -> 그 게시판에서의 pinOrder)를 계산해 화면에 넘긴다.
+        Map<Long, Integer> currentBoardPinOrder = new LinkedHashMap<>();
+        if (hasType) {
+            for (Long postId : postIds) {
+                Integer order = pinOrderIn(pinsByPost, postId, type);
+                if (order != null) {
+                    currentBoardPinOrder.put(postId, order);
+                }
             }
-            if (a.isPinned()) {
-                int byOrder = Integer.compare(
-                        a.getPinOrder() == null ? Integer.MAX_VALUE : a.getPinOrder(),
-                        b.getPinOrder() == null ? Integer.MAX_VALUE : b.getPinOrder());
-                return byOrder != 0 ? byOrder : Long.compare(a.getPostId(), b.getPostId());
-            }
-            return b.getCreatedAt().compareTo(a.getCreatedAt());
-        });
+        }
+
         model.addAttribute("notices", notices);
+        model.addAttribute("pinsByPost", pinsByPost);
+        model.addAttribute("pinnedBoardsByPost", pinnedBoardsByPost);
+        model.addAttribute("currentBoardPinOrder", currentBoardPinOrder);
+        model.addAttribute("pinnableBoardTypes", PINNABLE_BOARD_TYPES);
+        model.addAttribute("noticeBoardTypes", NOTICE_BOARD_TYPES);
+        model.addAttribute("communityBoardTypes", COMMUNITY_BOARD_TYPES);
         model.addAttribute("authorNames", authorNameMap(notices.stream().map(Post::getUserId).toList()));
         model.addAttribute("type", type == null ? "" : type);
         return "notices";
+    }
+
+    // 주어진 게시판(boardType) 기준으로 이 글의 고정 순서를 찾는다. 그 게시판에 고정돼 있지
+    // 않으면 null.
+    private Integer pinOrderIn(Map<Long, List<PostPin>> pinsByPost, Long postId, String boardType) {
+        return pinsByPost.getOrDefault(postId, List.of()).stream()
+                .filter(p -> p.getBoardType().equals(boardType))
+                .map(PostPin::getPinOrder)
+                .findFirst()
+                .orElse(null);
     }
 
     @GetMapping("/admin/notices/write")
@@ -273,21 +337,35 @@ public class AdminController {
         return "redirect:/admin/notices";
     }
 
+    // 체크박스로 고른 게시판(들)에 이 글을 고정한다(중복 선택 허용). 이미 고정돼 있던 게시판인데
+    // 체크가 빠졌으면 그 게시판에서는 고정 해제된다 — 즉 이 글의 전체 고정 상태를 통째로 다시
+    // 지정하는 방식이다.
     @PostMapping("/admin/notices/{id}/pin")
-    public String togglePinNotice(@PathVariable("id") Long id,
+    public String setPostPin(@PathVariable("id") Long id,
+            @RequestParam(name = "boardTypes", required = false) List<String> boardTypes,
             @RequestParam(required = false) String type) {
-        Post notice = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공지입니다."));
-        postService.adminSetPinned(id, !notice.isPinned());
-        return "redirect:/admin/notices" + (type != null && !type.isBlank() ? "?type=" + type : "");
+        postPinService.setPinnedBoards(id, boardTypes == null ? List.of() : boardTypes);
+        return redirectToNotices(type);
     }
 
+    // 지금 필터로 보고 있는 게시판(type) 안에서 고정 순서를 한 칸 위/아래로 바꾼다.
     @PostMapping("/admin/notices/{id}/pin-order")
-    public String moveNoticePinOrder(@PathVariable("id") Long id,
+    public String movePostPinOrder(@PathVariable("id") Long id,
             @RequestParam String direction,
-            @RequestParam(required = false) String type) {
-        postService.adminMovePinOrder(id, "up".equals(direction));
-        return "redirect:/admin/notices" + (type != null && !type.isBlank() ? "?type=" + type : "");
+            @RequestParam String type) {
+        postPinService.movePinOrder(id, type, "up".equals(direction));
+        return redirectToNotices(type);
+    }
+
+    // "게시글 고정 관리" 목록으로 돌아가는 redirect 문자열을 만든다. type에 한글(예: "생활 꿀팁")이
+    // 들어있는데 그대로 문자열로 이어붙이면, HTTP Location 헤더가 ISO-8859-1로 인코딩되는 과정에서
+    // 한글을 표현하지 못해 UnmappableCharacterException이 나면서 500 에러가 난다(실제로 겪은 버그).
+    // 그래서 반드시 URL 인코딩을 거쳐서 붙인다.
+    private String redirectToNotices(String type) {
+        if (type == null || type.isBlank()) {
+            return "redirect:/admin/notices";
+        }
+        return "redirect:/admin/notices?type=" + URLEncoder.encode(type, StandardCharsets.UTF_8);
     }
 
     // ===== 문의 관리 =====

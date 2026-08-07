@@ -20,8 +20,10 @@
                 <h1 class="admin-login-title">Roomie<span>Admin</span></h1>
                 <p class="admin-login-subtitle">관리자 계정으로 로그인하세요</p>
 
+                <!-- 로그아웃은 이제 이 로그인 화면이 아니라 Roomie 서비스(프론트) 홈으로 바로 나가기 때문에
+                     "로그아웃되었습니다" 안내는 더 이상 이 화면에 뜰 일이 없어서 제거함. -->
                 <div class="alert alert-danger py-2" th:if="${param.error}">아이디 또는 비밀번호가 올바르지 않습니다.</div>
-                <div class="alert alert-success py-2" th:if="${param.logout}">로그아웃되었습니다.</div>
+                <div class="alert alert-warning py-2" th:if="${param.expired}">일정 시간 사용이 없어 자동으로 로그아웃되었습니다. 다시 로그인해주세요.</div>
 
                 <form th:action="@{/admin/login}" method="post" class="admin-login-form">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
