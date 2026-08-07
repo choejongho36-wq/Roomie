@@ -151,7 +151,8 @@ public class UserController {
                 .toList();
     }
 
-    // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰/지역/직업을 채워 넣을 때 사용
+    // 소셜 로그인(카카오/네이버) 신규가입 직후, 못 받은 성별/생년월일/휴대폰/직업을 채워 넣을 때 사용
+    // (지역/흡연은 이 단계에서 안 받음 -> 매칭을 시작하려 할 때 마이페이지에서 따로 채우게 함)
     @PutMapping("/me/additional-info")
     public UserResponse completeAdditionalInfo(Authentication authentication,
             @RequestBody AdditionalInfoRequest request) {
@@ -161,23 +162,23 @@ public class UserController {
         if (request.birthDate() == null) {
             throw new IllegalArgumentException("생년월일을 입력해주세요.");
         }
-        if (request.region() == null || request.region().isBlank()) {
-            throw new IllegalArgumentException("지역을 선택해주세요.");
-        }
         if (request.job() == null || request.job().isBlank()) {
             throw new IllegalArgumentException("직업을 선택해주세요.");
         }
-        if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
-            throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
-        }
-        if ("SMOKER".equals(request.smoking())
-                && (request.smokingType() == null || request.smokingType().isBlank())) {
-            throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
-        }
 
         User user = findUser(authentication);
-        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), request.region(),
-                request.job(), request.smoking(), request.smokingType());
+        if (request.nickname() != null && !request.nickname().isBlank()
+                && !request.nickname().equals(user.getNickname())) {
+            if (!request.nickname().matches("^[a-zA-Z0-9가-힣]{2,10}$")) {
+                throw new IllegalArgumentException("닉네임은 한글, 영문, 숫자로 2자 이상 10자 이하여야 합니다.");
+            }
+            if (userRepository.existsByNickname(request.nickname())) {
+                throw new IllegalArgumentException("이미 사용 중인 닉네임이에요.");
+            }
+            user.updateNickname(request.nickname());
+        }
+        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), null,
+                request.job(), null, null);
         userRepository.save(user);
         return toResponse(user);
     }
@@ -402,6 +403,7 @@ public class UserController {
                 user.getEmailVerified(),
                 user.isAdmin(),
                 user.needsAdditionalInfo(),
-                linkedProviders);
+                linkedProviders,
+                user.missingMatchingFields());
     }
 }

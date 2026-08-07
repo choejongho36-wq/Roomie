@@ -233,17 +233,15 @@ export const getMyProfile = async (token: string): Promise<User> => {
 
 export const completeAdditionalInfo = async (
   token: string,
+  nickname: string,
   gender: string,
   birthDate: string,
   phone: string,
-  region: string,
-  job: string,
-  smoking: string,
-  smokingType: string | null
+  job: string
 ): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/additional-info`,
-    { gender, birthDate, phone: phone || null, region, job, smoking, smokingType },
+    { nickname, gender, birthDate, phone: phone || null, job },
     authHeader(token)
   );
   return response.data;
@@ -252,23 +250,19 @@ export const completeAdditionalInfo = async (
 // 카카오 인증만 통과하고 아직 계정이 없는 상태(티켓만 있음)에서, 추가정보와 함께 실제 계정을 만들 때 사용
 export const completeSocialSignup = async (
   ticket: string,
+  nickname: string,
   gender: string,
   birthDate: string,
   phone: string,
-  region: string,
-  job: string,
-  smoking: string,
-  smokingType: string | null
+  job: string
 ): Promise<string> => {
   const response = await axios.post<{ token: string }>(`${API_BASE_URL}/auth/complete-social-signup`, {
     ticket,
+    nickname,
     gender,
     birthDate,
     phone: phone || null,
-    region,
     job,
-    smoking,
-    smokingType,
   });
   return response.data.token;
 };

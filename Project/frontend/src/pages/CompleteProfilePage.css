@@ -81,6 +81,14 @@
   min-width: 0;
 }
 
+.complete-profile-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin: -4px 0 0;
+  line-height: 1.4;
+}
+
 .complete-profile-error {
   color: #e03131;
   font-size: 13px;

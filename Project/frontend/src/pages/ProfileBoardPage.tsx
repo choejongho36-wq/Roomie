@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -14,6 +15,7 @@ import { regionMatchesDistrict, regionMatchesDong } from "../data/SeoulDistricts
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
 import RentRangeDropdown from "../components/RentRangeDropdown";
 import Pagination from "../components/Pagination";
+import { showToast } from "../components/Toast";
 import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 import "./ProfileBoardPage.css";
@@ -41,9 +43,18 @@ const formatSmoking = (smoking?: string | null, smokingType?: string | null): st
 };
 
 function ProfileBoardPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = useState<RecommendationResult[] | null>(null);
   const [error, setError] = useState("");
+
+  // 네비바 버튼 말고 URL로 직접 /recommend에 들어온 경우도 대비 (지역/흡연 등 매칭 필수정보 누락 시 마이페이지로)
+  useEffect(() => {
+    if (user && user.missingMatchingFields.length > 0) {
+      showToast(`매칭을 시작하려면 마이페이지에서 ${user.missingMatchingFields.join(", ")}을(를) 먼저 입력해주세요.`);
+      navigate("/mypage", { replace: true });
+    }
+  }, [user, navigate]);
 
   const [selectedRegions, setSelectedRegions] = useState<RegionToken[]>([]);
   const RENT_MIN = 50;

@@ -1,11 +1,13 @@
 .account-recovery-page {
-  min-height: calc(100vh - 72px);
+  margin-top: -110px;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f7f7f7;
-  padding: 24px;
+  background: linear-gradient(135deg, #e8763f 0%, #f4834f 45%, #ffc79b 100%);
+  padding: 130px 24px;
   font-family: "Pretendard", sans-serif;
+  box-sizing: border-box;
 }
 
 .account-recovery-box {
@@ -24,7 +26,7 @@
 
 @media (max-width: 480px) {
   .account-recovery-page {
-    padding: 16px;
+    padding: 130px 16px;
   }
 
   .account-recovery-box {
@@ -33,16 +35,23 @@
 }
 
 .account-recovery-box h1 {
-  font-size: 22px;
-  margin: 0 0 4px;
+  font-size: 24px;
+  margin: 0 0 8px;
   text-align: center;
 }
 
 .account-recovery-box > p {
   text-align: center;
   color: #555;
-  font-size: 14px;
   margin: 0;
+}
+
+.account-recovery-social-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin: -8px 0 0;
+  line-height: 1.4;
 }
 
 .account-recovery-box label {
@@ -59,6 +68,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 14px;
+  font-weight: 400;
   font-family: inherit;
 }
 
@@ -78,7 +88,7 @@
   text-align: center;
   font-size: 24px;
   font-weight: 700;
-  color: #ff6600;
+  color: #f2793a;
   margin: 4px 0;
 }
 
