@@ -1,8 +1,13 @@
+import { useState } from "react";
 import "./Footer.css";
 import logo from "../assets/Roomie_logo.png";
 import { Link } from "react-router-dom";
 
 function Footer() {
+  // 카카오톡/인스타그램/네이버 아이콘은 실제 채널 연결 전이라, 눌러도 이동시키지 않고
+  // 아직 연결되지 않았다는 안내만 모달로 보여준다.
+  const [showSocialModal, setShowSocialModal] = useState(false);
+
   return (
     <footer className="footer">
       <div className="footer-top">
@@ -27,23 +32,23 @@ function Footer() {
           <div className="footer-business-row">
             <div className="footer-business-name-row">
               <div className="footer-social-icons">
-                <span className="footer-social-icon" aria-label="카카오톡">
+                <button type="button" className="footer-social-icon" aria-label="카카오톡" onClick={() => setShowSocialModal(true)}>
                   <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 4C6.48 4 2 7.35 2 11.5c0 2.65 1.83 4.97 4.58 6.31-.2.73-.73 2.66-.84 3.07-.13.5.18.5.39.36.16-.11 2.6-1.76 3.66-2.48.71.11 1.45.17 2.21.17 5.52 0 10-3.35 10-7.43S17.52 4 12 4z" />
                   </svg>
-                </span>
-                <span className="footer-social-icon" aria-label="인스타그램">
+                </button>
+                <button type="button" className="footer-social-icon" aria-label="인스타그램" onClick={() => setShowSocialModal(true)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <rect x="3" y="3" width="18" height="18" rx="6" />
                     <circle cx="12" cy="12" r="4.2" />
                     <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor" stroke="none" />
                   </svg>
-                </span>
-                <span className="footer-social-icon" aria-label="네이버">
+                </button>
+                <button type="button" className="footer-social-icon" aria-label="네이버" onClick={() => setShowSocialModal(true)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M6 5v14M6 5l12 14M18 5v14" />
                   </svg>
-                </span>
+                </button>
               </div>
               <span className="footer-business-name">(주)병아리반</span>
             </div>
@@ -54,6 +59,27 @@ function Footer() {
         </div>
       </div>
       <p className="footer-copyright">&copy; 2026 Roomie. All rights reserved.</p>
+
+      {showSocialModal && (
+        <div className="footer-social-modal-backdrop" onClick={() => setShowSocialModal(false)}>
+          <div
+            className="footer-social-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="footer-social-modal-close"
+              aria-label="닫기"
+              onClick={() => setShowSocialModal(false)}
+            >
+              ×
+            </button>
+            <p className="footer-social-modal-text">아직 연결이 안됐습니다.</p>
+          </div>
+        </div>
+      )}
     </footer>
   );
 }
