@@ -108,8 +108,12 @@ function ChatPage() {
 
   useEffect(loadConversations, [token]);
 
+  // 사이드바 클릭뿐 아니라 다른 화면(하우스 해산, 확정 취소, 알림 클릭 등)에서 navigate로
+  // ?userId=만 바꿔서 들어오는 경우도 있어서, URL의 userId 값 자체를 의존성으로 잡아야 한다.
+  // searchParams 객체 자체는 리렌더마다 참조가 바뀌어 무한루프를 유발할 수 있어 문자열 값만 사용.
+  const userIdParam = searchParams.get("userId");
+
   useEffect(() => {
-    const userIdParam = searchParams.get("userId");
     if (!userIdParam || !conversations) return;
     const partnerId = Number(userIdParam);
     const target = conversations.find((c) => c.partnerId === partnerId);
@@ -129,8 +133,7 @@ function ChatPage() {
     if (newContactNickname) {
       setActivePartner({ userId: partnerId, nickname: newContactNickname, profileImageUrl: null, isVerified: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations]);
+  }, [conversations, userIdParam, location.state]);
 
   useEffect(() => {
     // 대화 상대를 바꾸면 이전 상대의 방찾기 패널이 그대로 떠 있으면 안 되니 같이 닫는다
@@ -187,7 +190,8 @@ function ChatPage() {
   }, [messages]);
 
   const openConversation = (partner: ActivePartner) => {
-    setActivePartner(partner);
+    // activePartner는 여기서 직접 정하지 않고 URL만 바꾼다 — 위 이펙트가 userId 값을 보고
+    // activePartner를 채워주므로, 다른 화면에서 URL만 바꿔서 들어오는 경우와 동작이 하나로 통일된다.
     setSearchParams({ userId: String(partner.userId) });
     setShowEmojiPicker(false);
     setShowAttachMenu(false);
@@ -633,15 +637,17 @@ function ChatPage() {
 
         {findRoomPanelOpen && matchedPairStatus && (
           <aside className="chat-room-finder-panel">
-            <button
-              type="button"
-              className="chat-feature-modal-close"
-              onClick={() => setFindRoomPanelOpen(false)}
-              aria-label="닫기"
-            >
-              ✕
-            </button>
-            <h2>함께 살 방 찾기</h2>
+            <div className="chat-room-finder-panel-header">
+              <h2>함께 살 방 찾기</h2>
+              <button
+                type="button"
+                className="chat-room-finder-panel-close"
+                onClick={() => setFindRoomPanelOpen(false)}
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
             <div className="matched-pair-reference">
               <span>{matchedPairStatus.me.nickname}: {matchedPairStatus.me.region ?? "설정 안 함"}</span>
               <span>{matchedPairStatus.partner.nickname}: {matchedPairStatus.partner.region ?? "설정 안 함"}</span>
