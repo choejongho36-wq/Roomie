@@ -12,6 +12,7 @@ import logo from "../assets/Roomie_logo.png";
 import logoWhite from "../assets/Roomie_logo2.png";
 import { Icon, NAV_ITEMS } from "./mypage/MyPageSidebar";
 import { useMatchingRedirect } from "../hooks/useMatchingRedirect";
+import { FREE_BOARD_CATEGORIES } from "../data/BoardCategories";
 
 const PROFILE_MENU_ITEMS = NAV_ITEMS.filter((item) => item.icon !== "bell");
 
@@ -226,15 +227,14 @@ function Navbar() {
               커뮤니티
             </button>
             <div className={`navbar-dropdown-menu${openMenu === "community" ? " is-open" : ""}`}>
-              <Link to="/board?type=공지사항" className="navbar-dropdown-item">
-                공지사항
+              <Link to="/board" className="navbar-dropdown-item">
+                전체
               </Link>
-              <Link to="/board?type=이벤트" className="navbar-dropdown-item">
-                이벤트
-              </Link>
-              <Link to="/board?type=자유 게시판" className="navbar-dropdown-item">
-                자유 게시판
-              </Link>
+              {FREE_BOARD_CATEGORIES.map((category) => (
+                <Link key={category} to={`/board?type=${encodeURIComponent(category)}`} className="navbar-dropdown-item">
+                  {category}
+                </Link>
+              ))}
             </div>
           </div>
           <div className="navbar-dropdown">

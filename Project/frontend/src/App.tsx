@@ -26,6 +26,7 @@ import ChatPage from "./pages/mypage/ChatPage";
 import PlaceholderPage from "./pages/mypage/PlaceholderPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import SupportPage from "./pages/SupportPage";
 import BoardListPage from "./pages/board/BoardListPage";
 import BoardDetailPage from "./pages/board/BoardDetailPage";
 import BoardWritePage from "./pages/board/BoardWritePage";
@@ -66,6 +67,7 @@ function App() {
               <Route path="/profiles" element={<ProfileBoardPage />} />
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/support" element={<SupportPage />} />
               <Route path="/board" element={<BoardListPage />} />
               <Route path="/board/write" element={<BoardWritePage />} />
               <Route path="/board/edit/:postId" element={<BoardWritePage />} />

@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { API_ORIGIN, getPosts } from "../../api";
 import type { Post } from "../../types/board";
-import { FREE_BOARD_CATEGORIES, SPECIAL_BOARDS } from "../../data/BoardCategories";
+import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import { useAuth } from "../../context/AuthContext";
 import Pagination from "../../components/Pagination";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardListPage.css";
 
-const FREE_BOARD_LABEL = "자유 게시판";
 // 한 화면에서 스크롤 없이 다 보이도록, 목록에 한 번에 보여주는 글 개수를 제한한다.
 const PAGE_SIZE = 20;
 
@@ -83,11 +82,6 @@ function BoardListPage() {
       .filter((post) => {
         if (pinnedIds.has(post.postId)) return false; // 위 고정 목록에 이미 포함되므로 중복 방지
         if (!boardType) return true;
-        // "자유 게시판"은 별도 boardType 값이 아니라, 공지사항/이벤트를 뺀
-        // 카테고리(고민상담·잡담 등)로 분류된 글 전체를 묶어서 보여준다.
-        if (boardType === FREE_BOARD_LABEL) {
-          return !post.boardType || FREE_BOARD_CATEGORIES.includes(post.boardType);
-        }
         return post.boardType === boardType;
       })
       // 최신 글이 맨 위로 오도록 작성일 기준 내림차순 정렬. (백엔드가 정렬 없이
