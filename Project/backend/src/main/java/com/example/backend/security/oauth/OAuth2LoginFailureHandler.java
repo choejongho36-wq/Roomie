@@ -54,7 +54,7 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
             String nickname = claims != null ? claims.get("nickname", String.class) : "";
             String signupUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/complete-profile")
                     .queryParam("ticket", ticket)
-                    .queryParam("nickname", nickname == null ? "" : nickname)
+                    .queryParam("nickname", URLEncoder.encode(nickname == null ? "" : nickname, StandardCharsets.UTF_8))
                     .build()
                     .toUriString();
             getRedirectStrategy().sendRedirect(request, response, signupUrl);

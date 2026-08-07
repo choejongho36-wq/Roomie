@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { completeAdditionalInfo, completeSocialSignup } from "../api";
+import { completeAdditionalInfo, completeSocialSignup, checkNicknameAvailability } from "../api";
 import { useAuth } from "../context/AuthContext";
 import "./CompleteProfilePage.css";
 
@@ -11,6 +11,8 @@ const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
 const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,10}$/;
 const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
+
+type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
@@ -26,12 +28,16 @@ function CompleteProfilePage() {
   const defaultNickname = searchParams.get("nickname") ?? "";
 
   const [nickname, setNickname] = useState(defaultNickname);
+  const [nicknameCheckStatus, setNicknameCheckStatus] = useState<CheckStatus>("idle");
+  const [checkedNickname, setCheckedNickname] = useState(""); // 마지막으로 중복확인에 통과한 닉네임 값
   const [gender, setGender] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay] = useState("");
   const [phone, setPhone] = useState("");
   const [job, setJob] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,12 +47,39 @@ function CompleteProfilePage() {
     return Array.from({ length: count }, (_, i) => i + 1);
   })();
 
+  const handleNicknameChange = (value: string) => {
+    setNickname(value);
+    if (value !== checkedNickname) {
+      setNicknameCheckStatus("idle");
+    }
+  };
+
+  const handleCheckNickname = async () => {
+    setError("");
+    if (!nickname) {
+      setError("닉네임을 먼저 입력해주세요.");
+      return;
+    }
+    if (!NICKNAME_PATTERN.test(nickname)) {
+      setNicknameCheckStatus("error");
+      return;
+    }
+    setNicknameCheckStatus("checking");
+    try {
+      const available = await checkNicknameAvailability(nickname);
+      setCheckedNickname(nickname);
+      setNicknameCheckStatus(available ? "available" : "taken");
+    } catch {
+      setNicknameCheckStatus("error");
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!NICKNAME_PATTERN.test(nickname)) {
-      setError("닉네임은 한글/영문/숫자 2~10자로 입력해주세요.");
+    if (nicknameCheckStatus !== "available" || nickname !== checkedNickname) {
+      setError("닉네임 중복확인을 완료해주세요.");
       return;
     }
     if (!gender) {
@@ -63,6 +96,10 @@ function CompleteProfilePage() {
     }
     if (!job) {
       setError("직업을 선택해주세요.");
+      return;
+    }
+    if (!agreeTerms || !agreePrivacy) {
+      setError("이용약관과 개인정보처리방침에 모두 동의해주세요.");
       return;
     }
     if (!token && !ticket) {
@@ -113,14 +150,35 @@ function CompleteProfilePage() {
 
         <label>
           닉네임
-          <input
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="2~10자, 한글/영문/숫자"
-            maxLength={10}
-            required
-          />
+          <div className="email-check-group">
+            <input
+              type="text"
+              value={nickname}
+              onChange={(e) => handleNicknameChange(e.target.value)}
+              placeholder="2~10자, 한글/영문/숫자"
+              maxLength={10}
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={handleCheckNickname}
+              disabled={nicknameCheckStatus === "checking"}
+            >
+              {nicknameCheckStatus === "checking" ? "확인 중..." : "중복확인"}
+            </button>
+          </div>
+          {nicknameCheckStatus === "available" && nickname === checkedNickname && (
+            <small className="signup-hint signup-hint-success">사용 가능한 닉네임이에요.</small>
+          )}
+          {nicknameCheckStatus === "taken" && (
+            <small className="signup-hint signup-hint-error">이미 사용 중인 닉네임이에요.</small>
+          )}
+          {nicknameCheckStatus === "error" && (
+            <small className="signup-hint signup-hint-error">
+              닉네임은 한글/영문/숫자 2~10자로 입력해주세요.
+            </small>
+          )}
         </label>
 
         <label>
@@ -206,6 +264,42 @@ function CompleteProfilePage() {
         <p className="complete-profile-hint">
           거주 지역과 흡연 여부는 나중에 마이페이지에서 입력하시면 돼요. (매칭을 시작하려면 그때 필요해요)
         </p>
+
+        <div className="signup-terms">
+          <label className="signup-terms-all">
+            <input
+              type="checkbox"
+              checked={agreeTerms && agreePrivacy}
+              onChange={(e) => {
+                setAgreeTerms(e.target.checked);
+                setAgreePrivacy(e.target.checked);
+              }}
+            />
+            전체 동의합니다
+          </label>
+          <label className="signup-terms-item">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              required
+            />
+            <span>
+              (필수) <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>이용약관</a>에 동의합니다
+            </span>
+          </label>
+          <label className="signup-terms-item">
+            <input
+              type="checkbox"
+              checked={agreePrivacy}
+              onChange={(e) => setAgreePrivacy(e.target.checked)}
+              required
+            />
+            <span>
+              (필수) <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>개인정보처리방침</a>에 동의합니다
+            </span>
+          </label>
+        </div>
 
         {error && <p className="complete-profile-error">{error}</p>}
 

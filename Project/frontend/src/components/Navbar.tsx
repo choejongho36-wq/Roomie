@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 import type { NotificationItem } from "../types/chat";
-import { API_ORIGIN, getMyConfirmedHouse, respondChatRequest } from "../api";
+import { API_ORIGIN, getMyConfirmedHouse, getMyProfile, respondChatRequest } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
 import MatchingLoadingOverlay from "./MatchingLoadingOverlay";
@@ -381,12 +381,14 @@ function Navbar() {
             setRedirectAfterLogin(false);
             setPendingNavPath(null);
           }}
-          onLoginSuccess={(token) => {
+          onLoginSuccess={async (token) => {
             login(token);
             setIsLoginOpen(false);
             if (redirectAfterLogin) {
               setRedirectAfterLogin(false);
-              goToMatching(token);
+              // 방금 로그인해서 AuthContext의 user가 아직 채워지기 전이라, 매칭 가능 여부를 판단하려면 직접 조회해야 함
+              const freshUser = await getMyProfile(token).catch(() => null);
+              goToMatching(token, freshUser?.missingMatchingFields ?? []);
             } else if (pendingNavPath) {
               const path = pendingNavPath;
               setPendingNavPath(null);

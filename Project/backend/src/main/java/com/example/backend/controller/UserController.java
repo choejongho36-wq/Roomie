@@ -318,6 +318,9 @@ public class UserController {
         if (request.newPassword() == null || !PASSWORD_PATTERN.matcher(request.newPassword()).matches()) {
             throw new IllegalArgumentException("새 비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하여야 합니다.");
         }
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 사용중인 비밀번호와 동일합니다.");
+        }
 
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);

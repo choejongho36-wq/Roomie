@@ -109,3 +109,75 @@
 .complete-profile-cancel-btn:hover {
   color: #666;
 }
+
+.signup-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.signup-terms-all {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.signup-terms-item {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #495057;
+}
+
+.signup-terms-item a {
+  color: #1971c2;
+  text-decoration: underline;
+}
+
+.signup-terms input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.email-check-group {
+  display: flex;
+  gap: 8px;
+}
+
+.email-check-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.email-check-group .btn {
+  white-space: nowrap;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.signup-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: #888;
+}
+
+.signup-hint-success {
+  color: #2f9e44;
+}
+
+.signup-hint-error {
+  color: #e03131;
+}

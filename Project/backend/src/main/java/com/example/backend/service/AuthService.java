@@ -171,6 +171,9 @@ public class AuthService {
         if (!user.getEmail().equals(request.email())) {
             throw new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다.");
         }
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 사용중인 비밀번호와 동일합니다.");
+        }
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         emailVerificationService.invalidate(request.email());
@@ -224,10 +227,6 @@ public class AuthService {
         String provider = claims.get("provider", String.class);
         String providerId = claims.get("providerId", String.class);
         String email = claims.getSubject();
-        String profileImageUrl = claims.get("profileImageUrl", String.class);
-        if (profileImageUrl != null && profileImageUrl.isBlank()) {
-            profileImageUrl = null;
-        }
 
         // 티켓 발급 이후 시간이 좀 지났을 수 있으니, 그 사이 다른 경로로 이미 가입/연동됐는지 다시 확인
         if (userRepository.existsByEmail(email)) {
@@ -246,7 +245,8 @@ public class AuthService {
         String uniqueNickname = generateUniqueNickname(request.nickname());
         String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 
-        User user = new User(provider, providerId, loginId, email, randomPassword, uniqueNickname, profileImageUrl);
+        // 카카오/네이버가 주는 프로필 사진은 가져오지 않고, 기본 이미지를 유지한다
+        User user = new User(provider, providerId, loginId, email, randomPassword, uniqueNickname, null);
         // 지역/흡연은 이 단계에서 안 받음 -> 매칭을 시작하려 할 때 마이페이지에서 따로 채우게 함
         user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), null,
                 request.job(), null, null);

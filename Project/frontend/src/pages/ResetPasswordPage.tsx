@@ -2,11 +2,10 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { requestPasswordReset, confirmEmailVerification, resetPassword } from "../api";
+import { PASSWORD_PATTERN, PASSWORD_RULES } from "../utils/passwordRules";
 import "./AccountRecoveryPage.css";
 
 type Step = "identify" | "code" | "newPassword" | "done";
-
-const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -15,9 +14,12 @@ function ResetPasswordPage() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const newPasswordAllValid = PASSWORD_RULES.every((rule) => rule.test(newPassword));
 
   const extractMessage = (err: unknown, fallback: string) =>
     axios.isAxiosError(err) && typeof err.response?.data === "string" ? err.response.data : fallback;
@@ -126,14 +128,33 @@ function ResetPasswordPage() {
             <p>새로 사용할 비밀번호를 입력해주세요.</p>
             <label>
               새 비밀번호
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={8}
-                maxLength={24}
-                required
-              />
+              <div className="password-field-wrapper">
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  onFocus={() => setNewPasswordFocused(true)}
+                  onBlur={() => setNewPasswordFocused(false)}
+                  minLength={8}
+                  maxLength={24}
+                  required
+                />
+                {newPasswordFocused && !newPasswordAllValid && (
+                  <div className="password-checklist-bubble" role="tooltip">
+                    <ul className="password-checklist-list">
+                      {PASSWORD_RULES.map((rule) => {
+                        const met = rule.test(newPassword);
+                        return (
+                          <li key={rule.key} className={`password-checklist-item${met ? " met" : ""}`}>
+                            <span className="password-checklist-icon">{met ? "✓" : "·"}</span>
+                            {rule.label}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </label>
             <label>
               새 비밀번호 확인
