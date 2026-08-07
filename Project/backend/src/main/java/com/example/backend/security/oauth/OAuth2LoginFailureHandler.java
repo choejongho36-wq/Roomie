@@ -1,7 +1,9 @@
 package com.example.backend.security.oauth;
 
+import com.example.backend.security.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -16,10 +18,13 @@ import java.nio.charset.StandardCharsets;
 // CustomOAuth2UserService에서 던진 에러(예: "이미 가입된 이메일") 등
 // 소셜 로그인 도중 발생한 모든 실패를 프론트로 안전하게 전달
 @Component
+@RequiredArgsConstructor
 public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
+
+    private final JwtProvider jwtProvider;
 
     @Override
     public void onAuthenticationFailure(
@@ -40,12 +45,16 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
         }
 
         // 신규 소셜가입도 마찬가지로 실패가 아니라 다음 단계 안내. 이 시점엔 아직 로그인 상태가 아니라서
-        // (DB에 계정 자체가 없음) 토큰 없이 티켓만 들고 추가정보 입력 화면으로 보냄
+        // (DB에 계정 자체가 없음) 토큰 없이 티켓만 들고 추가정보 입력 화면으로 보냄.
+        // 닉네임 입력창에 "카카오에서 가져온 닉네임"을 미리 채워주기 위해, 티켓 안의 닉네임도 같이 꺼내서 보냄
         if (exception instanceof OAuth2AuthenticationException oAuth2Ex
                 && "new_social_signup".equals(oAuth2Ex.getError().getErrorCode())) {
             String ticket = oAuth2Ex.getError().getDescription();
+            var claims = jwtProvider.parseSocialSignupTicket(ticket);
+            String nickname = claims != null ? claims.get("nickname", String.class) : "";
             String signupUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/complete-profile")
                     .queryParam("ticket", ticket)
+                    .queryParam("nickname", URLEncoder.encode(nickname == null ? "" : nickname, StandardCharsets.UTF_8))
                     .build()
                     .toUriString();
             getRedirectStrategy().sendRedirect(request, response, signupUrl);

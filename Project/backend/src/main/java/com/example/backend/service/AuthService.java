@@ -134,6 +134,14 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("가입된 계정을 찾을 수 없습니다."));
         emailVerificationService.invalidate(email); // 한 번 조회했으면 재사용 못 하게 무효화
+
+        // 순수 소셜 가입 계정(연동이 아니라 카카오로 처음 가입한 경우)은 로그인아이디가 랜덤 문자열이라
+        // "찾아준다"는 개념 자체가 안 맞음. 그 계정으로 어떻게 로그인해야 하는지를 대신 안내해줌
+        if (user.isSocialAccount()) {
+            throw new IllegalArgumentException(
+                    user.getProvider() + " 로그인으로 가입하신 계정이에요. 로그인 화면에서 '"
+                            + user.getProvider() + "로 로그인'을 이용해주세요.");
+        }
         return new FindIdResponse(user.getLoginId());
     }
 
@@ -146,6 +154,11 @@ public class AuthService {
         if (!user.getEmail().equals(request.email())) {
             throw new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다.");
         }
+        if (user.isSocialAccount()) {
+            throw new IllegalArgumentException(
+                    user.getProvider() + " 로그인으로 가입하신 계정은 비밀번호가 없어요. 로그인 화면에서 '"
+                            + user.getProvider() + "로 로그인'을 이용해주세요.");
+        }
         emailVerificationService.sendVerificationCodeForAccountRecovery(request.email());
     }
 
@@ -157,6 +170,9 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다."));
         if (!user.getEmail().equals(request.email())) {
             throw new IllegalArgumentException("일치하는 계정을 찾을 수 없습니다.");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 사용중인 비밀번호와 동일합니다.");
         }
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
@@ -211,11 +227,6 @@ public class AuthService {
         String provider = claims.get("provider", String.class);
         String providerId = claims.get("providerId", String.class);
         String email = claims.getSubject();
-        String nickname = claims.get("nickname", String.class);
-        String profileImageUrl = claims.get("profileImageUrl", String.class);
-        if (profileImageUrl != null && profileImageUrl.isBlank()) {
-            profileImageUrl = null;
-        }
 
         // 티켓 발급 이후 시간이 좀 지났을 수 있으니, 그 사이 다른 경로로 이미 가입/연동됐는지 다시 확인
         if (userRepository.existsByEmail(email)) {
@@ -225,22 +236,20 @@ public class AuthService {
                 || userSocialLinkRepository.findByProviderAndProviderId(provider, providerId).isPresent()) {
             throw new IllegalArgumentException("이미 가입 처리된 계정입니다. 다시 로그인해주세요.");
         }
-
-        if (!"SMOKER".equals(request.smoking()) && !"NON_SMOKER".equals(request.smoking())) {
-            throw new IllegalArgumentException("흡연 여부를 선택해주세요.");
-        }
-        if ("SMOKER".equals(request.smoking())
-                && (request.smokingType() == null || request.smokingType().isBlank())) {
-            throw new IllegalArgumentException("흡연 종류를 선택해주세요.");
+        if (!request.nickname().matches("^[a-zA-Z0-9가-힣]{2,10}$")) {
+            throw new IllegalArgumentException("닉네임은 한글, 영문, 숫자로 2자 이상 10자 이하여야 합니다.");
         }
 
         String loginId = generateUniqueLoginId(provider);
-        String uniqueNickname = generateUniqueNickname(nickname);
+        // 카카오 기본 닉네임이 아니라, 사용자가 화면에서 직접 확인/수정한 닉네임을 기준으로 함
+        String uniqueNickname = generateUniqueNickname(request.nickname());
         String randomPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 
-        User user = new User(provider, providerId, loginId, email, randomPassword, uniqueNickname, profileImageUrl);
-        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), request.region(),
-                request.job(), request.smoking(), request.smokingType());
+        // 카카오/네이버가 주는 프로필 사진은 가져오지 않고, 기본 이미지를 유지한다
+        User user = new User(provider, providerId, loginId, email, randomPassword, uniqueNickname, null);
+        // 지역/흡연은 이 단계에서 안 받음 -> 매칭을 시작하려 할 때 마이페이지에서 따로 채우게 함
+        user.completeAdditionalInfo(request.gender(), request.birthDate(), request.phone(), null,
+                request.job(), null, null);
         userRepository.save(user);
 
         return new LoginResponse(jwtProvider.createToken(user.getLoginId()));

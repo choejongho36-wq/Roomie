@@ -17,6 +17,7 @@ import {
 } from "../../data/ProfileTags";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import NicknameModal from "./NicknameModal";
+import { PASSWORD_PATTERN, PASSWORD_RULES } from "../../utils/passwordRules";
 import "./MyProfilePage.css";
 
 // 목업(마이페이지 리디자인)에서 그대로 가져온 팔레트: 크림 배경, 화이트 카드, 오렌지 포인트
@@ -160,6 +161,7 @@ function MyProfilePage() {
   const [editingPassword, setEditingPassword] = useState(false);
   const [draftCurrentPassword, setDraftCurrentPassword] = useState("");
   const [draftNewPassword, setDraftNewPassword] = useState("");
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
   const [draftNewPasswordConfirm, setDraftNewPasswordConfirm] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
@@ -347,6 +349,14 @@ function MyProfilePage() {
   const handleSavePassword = async () => {
     if (!token) return;
     setPasswordError("");
+    if (!PASSWORD_PATTERN.test(draftNewPassword)) {
+      setPasswordError("새 비밀번호는 영문, 숫자, 특수문자를 모두 포함해 8자 이상 24자 이하여야 합니다.");
+      return;
+    }
+    if (draftNewPassword === draftCurrentPassword) {
+      setPasswordError("현재 사용중인 비밀번호와 동일합니다.");
+      return;
+    }
     if (draftNewPassword !== draftNewPasswordConfirm) {
       setPasswordError("새 비밀번호가 일치하지 않습니다.");
       return;
@@ -364,6 +374,9 @@ function MyProfilePage() {
   };
 
   const isSocialAccount = Boolean(user?.provider && user.provider !== "LOCAL");
+  const newPasswordAllValid = PASSWORD_RULES.every((rule) => rule.test(draftNewPassword));
+  const isNewPasswordSameAsCurrent =
+    draftNewPassword.length > 0 && draftCurrentPassword.length > 0 && draftNewPassword === draftCurrentPassword;
 
   const handleLinkKakao = async () => {
     if (!token) return;
@@ -423,6 +436,26 @@ function MyProfilePage() {
               </span>
               <ChevronRight size={18} color="#fff" strokeWidth={2.4} className="shrink-0" />
             </Link>
+          )}
+
+          {/* 매칭에 필요한데 아직 안 채운 항목(지역/흡연 여부)을 알려줌 — 아래 칩에서 바로 채울 수 있음 */}
+          {(user.missingMatchingFields ?? []).length > 0 && (
+            <div
+              className="mb-6 flex items-center gap-3 rounded-2xl px-4 py-3.5"
+              style={{ background: T.accentSoft }}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
+                <MapPin size={18} color={T.accent} strokeWidth={2.2} />
+              </span>
+              <span className="flex-1">
+                <p className="text-[13px] font-bold leading-snug" style={{ color: T.textPrimary }}>
+                  매칭을 시작하려면 {user.missingMatchingFields.join(", ")}을(를) 입력해주세요
+                </p>
+                <p className="text-[12px] leading-snug" style={{ color: T.textMuted }}>
+                  아래 프로필에서 바로 채울 수 있어요
+                </p>
+              </span>
+            </div>
           )}
 
           {/* ---------- 헤더: 아바타 + 이름 + 기본정보 ---------- */}
@@ -814,51 +847,98 @@ function MyProfilePage() {
           <div className="h-px mb-6" style={{ background: T.hairline }} />
 
           {/* ---------- 비밀번호 관리 ---------- */}
-          {!editingPassword ? (
-            <button
-              type="button"
-              onClick={startEditPassword}
-              className="w-full rounded-full py-2 text-[15px] font-bold mb-6 transition-opacity hover:opacity-80"
-              style={{ background: T.accent, color: "#fff" }}
-            >
-              비밀번호 관리
-            </button>
-          ) : (
-            <div className="mb-5 flex flex-col gap-2 text-left">
-              <input
-                type="password"
-                placeholder="현재 비밀번호"
-                value={draftCurrentPassword}
-                onChange={(e) => setDraftCurrentPassword(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
-                style={{ borderColor: T.hairline, color: T.textPrimary }}
-              />
-              <input
-                type="password"
-                placeholder="새 비밀번호"
-                value={draftNewPassword}
-                onChange={(e) => setDraftNewPassword(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
-                style={{ borderColor: T.hairline, color: T.textPrimary }}
-              />
-              <input
-                type="password"
-                placeholder="새 비밀번호 확인"
-                value={draftNewPasswordConfirm}
-                onChange={(e) => setDraftNewPasswordConfirm(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
-                style={{ borderColor: T.hairline, color: T.textPrimary }}
-              />
-              {passwordError && <p className="text-[12px]" style={{ color: T.danger }}>{passwordError}</p>}
-              <div className="flex gap-2">
-                <PillButton onClick={handleSavePassword} disabled={passwordSaving}>
-                  {passwordSaving ? "저장 중..." : "저장"}
-                </PillButton>
-                <PillButton variant="ghost" onClick={() => setEditingPassword(false)} disabled={passwordSaving}>
-                  취소
-                </PillButton>
+          {/* 소셜 로그인으로만 가입한 계정은 아이디/비밀번호를 직접 입력한 적이 없어(랜덤 비밀번호가 내부적으로 들어있음)
+              "비밀번호 관리" 자체가 의미가 없으므로 버튼을 아예 노출하지 않는다 */}
+          {!isSocialAccount && (
+            !editingPassword ? (
+              <button
+                type="button"
+                onClick={startEditPassword}
+                className="w-full rounded-full py-2 text-[15px] font-bold mb-6 transition-opacity hover:opacity-80"
+                style={{ background: T.accent, color: "#fff" }}
+              >
+                비밀번호 관리
+              </button>
+            ) : (
+              <div className="mb-5 flex flex-col gap-2 text-left">
+                <input
+                  type="password"
+                  placeholder="현재 비밀번호"
+                  value={draftCurrentPassword}
+                  onChange={(e) => setDraftCurrentPassword(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+                  style={{ borderColor: T.hairline, color: T.textPrimary }}
+                />
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="새 비밀번호"
+                    value={draftNewPassword}
+                    onChange={(e) => setDraftNewPassword(e.target.value)}
+                    onFocus={() => setNewPasswordFocused(true)}
+                    onBlur={() => setNewPasswordFocused(false)}
+                    className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+                    style={{ borderColor: T.hairline, color: T.textPrimary }}
+                  />
+                  {/* 회원가입과 동일한 규칙(길이/영문/숫자/특수문자)을 입력 중에 바로 보여주는 체크리스트 */}
+                  {newPasswordFocused && !newPasswordAllValid && (
+                    <div
+                      className="absolute left-0 z-20 mt-2 w-full rounded-xl p-3 text-left"
+                      style={{ background: T.card, border: `1px solid ${T.hairline}`, boxShadow: "0 10px 24px rgba(36,28,21,0.12)" }}
+                    >
+                      <ul className="flex flex-col gap-1.5">
+                        {PASSWORD_RULES.map((rule) => {
+                          const met = rule.test(draftNewPassword);
+                          return (
+                            <li key={rule.key} className="flex items-center gap-2 text-[12px]" style={{ color: met ? "#2f9e44" : T.textMuted }}>
+                              <span
+                                className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                                style={{ background: met ? "#2f9e44" : T.hairline, color: met ? "#fff" : T.textMuted }}
+                              >
+                                {met ? "✓" : "·"}
+                              </span>
+                              {rule.label}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                  {/* 규칙은 다 지켰지만 지금 쓰고 있는 비밀번호와 같을 때 안내 */}
+                  {newPasswordFocused && newPasswordAllValid && isNewPasswordSameAsCurrent && (
+                    <div
+                      className="absolute left-0 z-20 mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-[12px] font-medium"
+                      style={{ background: T.card, border: `1px solid ${T.hairline}`, boxShadow: "0 10px 24px rgba(36,28,21,0.12)", color: T.danger }}
+                    >
+                      <span
+                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                        style={{ background: "#ffe3e3", color: T.danger }}
+                      >
+                        ·
+                      </span>
+                      현재 사용중인 비밀번호와 동일합니다
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="password"
+                  placeholder="새 비밀번호 확인"
+                  value={draftNewPasswordConfirm}
+                  onChange={(e) => setDraftNewPasswordConfirm(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2.5 text-[14px] outline-none"
+                  style={{ borderColor: T.hairline, color: T.textPrimary }}
+                />
+                {passwordError && <p className="text-[12px]" style={{ color: T.danger }}>{passwordError}</p>}
+                <div className="flex gap-2">
+                  <PillButton onClick={handleSavePassword} disabled={passwordSaving}>
+                    {passwordSaving ? "저장 중..." : "저장"}
+                  </PillButton>
+                  <PillButton variant="ghost" onClick={() => setEditingPassword(false)} disabled={passwordSaving}>
+                    취소
+                  </PillButton>
+                </div>
               </div>
-            </div>
+            )
           )}
 
           {/* ---------- 계정 정보 ---------- */}

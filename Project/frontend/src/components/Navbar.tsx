@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 import type { NotificationItem } from "../types/chat";
-import { API_ORIGIN, getMyConfirmedHouse, respondChatRequest } from "../api";
+import { API_ORIGIN, getMyConfirmedHouse, getMyProfile, respondChatRequest } from "../api";
 import "./Navbar.css";
 import LoginModal from "./LoginModal";
 import MatchingLoadingOverlay from "./MatchingLoadingOverlay";
@@ -17,7 +17,7 @@ import { FREE_BOARD_CATEGORIES } from "../data/BoardCategories";
 const PROFILE_MENU_ITEMS = NAV_ITEMS.filter((item) => item.icon !== "bell");
 
 // 배경 자체가 진한 오렌지 그라데이션인 페이지 — 네비바는 연한 필로 반전해서 대비를 준다.
-const VIVID_BACKGROUND_PATHS = new Set(["/", "/signup", "/complete-profile"]);
+const VIVID_BACKGROUND_PATHS = new Set(["/", "/signup", "/complete-profile", "/find-id", "/reset-password"]);
 
 function Navbar() {
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ function Navbar() {
       return;
     }
 
-    goToMatching(token);
+    goToMatching(token, user?.missingMatchingFields ?? []);
   };
 
   // 비회원 전용 안내 페이지(하우스 진입, 문의 게시판)로 보내는 대신, 로그인 모달을 바로 띄운다.
@@ -367,12 +367,14 @@ function Navbar() {
             setRedirectAfterLogin(false);
             setPendingNavPath(null);
           }}
-          onLoginSuccess={(token) => {
+          onLoginSuccess={async (token) => {
             login(token);
             setIsLoginOpen(false);
             if (redirectAfterLogin) {
               setRedirectAfterLogin(false);
-              goToMatching(token);
+              // 방금 로그인해서 AuthContext의 user가 아직 채워지기 전이라, 매칭 가능 여부를 판단하려면 직접 조회해야 함
+              const freshUser = await getMyProfile(token).catch(() => null);
+              goToMatching(token, freshUser?.missingMatchingFields ?? []);
             } else if (pendingNavPath) {
               const path = pendingNavPath;
               setPendingNavPath(null);

@@ -24,5 +24,6 @@ public record UserResponse(
         Boolean emailVerified,
         Boolean isAdmin,
         Boolean needsAdditionalInfo,
-        List<String> linkedProviders
+        List<String> linkedProviders,
+        List<String> missingMatchingFields
 ) {}

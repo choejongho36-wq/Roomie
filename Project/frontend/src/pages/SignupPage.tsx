@@ -9,6 +9,7 @@ import {
   confirmEmailVerification,
 } from "../api";
 import RegionPicker, { type RegionToken } from "../components/RegionPicker";
+import { PASSWORD_PATTERN, PASSWORD_RULES } from "../utils/passwordRules";
 import "./SignupPage.css";
 
 function EyeIcon() {
@@ -38,7 +39,6 @@ const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const getDaysInMonth = (year: number, month: number): number => {
   return new Date(year, month, 0).getDate();
 };
-const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 const LOGIN_ID_PATTERN = /^[a-z0-9]{4,20}$/;
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
 const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,10}$/;
@@ -66,19 +66,6 @@ const STRENGTH_META: Record<PasswordStrength, { label: string; color: string }> 
   3: { label: "강함", color: "#2f9e44" },
   4: { label: "매우 강함", color: "#1971c2" },
 };
-
-type PasswordRule = {
-  key: string;
-  label: string;
-  test: (pw: string) => boolean;
-};
-
-const PASSWORD_RULES: PasswordRule[] = [
-  { key: "length", label: "8자 이상 24자 이하", test: (pw) => pw.length >= 8 && pw.length <= 24 },
-  { key: "letter", label: "영문 포함", test: (pw) => /[A-Za-z]/.test(pw) },
-  { key: "number", label: "숫자 포함", test: (pw) => /[0-9]/.test(pw) },
-  { key: "special", label: "특수문자 포함", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
-];
 
 type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 

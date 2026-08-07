@@ -100,6 +100,9 @@ function FindIdPage() {
             <Link to="/" className="btn btn-primary account-recovery-link-btn">
               홈으로 가기
             </Link>
+            <p className="account-recovery-footer">
+            <Link to="/reset-password">비밀번호를 잊으셨나요?</Link>
+          </p>
           </>
         )}
 

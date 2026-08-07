@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import axios from "axios";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   API_ORIGIN,
@@ -11,6 +11,7 @@ import {
   sendChatRequest,
 } from "../api";
 import type { RecommendationResult, SurveyComparisonResult } from "../types/survey";
+import { showToast } from "../components/Toast";
 import defaultAvatar from "../assets/Roomie_logo.png";
 import "./RecommendationPage.css";
 
@@ -33,7 +34,8 @@ const GAUGE_TICKS = Array.from({ length: GAUGE_TICK_COUNT }, (_, i) => ({
 }));
 
 function RecommendationPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const [recommendations, setRecommendations] = useState<RecommendationResult[] | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -49,6 +51,14 @@ function RecommendationPage() {
   const [aiExplanationLoading, setAiExplanationLoading] = useState(false);
   const [aiExplanationError, setAiExplanationError] = useState("");
   const [error, setError] = useState("");
+
+  // 네비바 버튼 말고 URL로 직접 /recommend에 들어온 경우도 대비 (지역/흡연 등 매칭 필수정보 누락 시 마이페이지로)
+  useEffect(() => {
+    if (user && user.missingMatchingFields.length > 0) {
+      showToast(`매칭을 시작하려면 마이페이지에서 ${user.missingMatchingFields.join(", ")}을(를) 먼저 입력해주세요.`);
+      navigate("/mypage", { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     if (!token) {

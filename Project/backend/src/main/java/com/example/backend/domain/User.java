@@ -273,8 +273,16 @@ public class User {
         return !"LOCAL".equals(this.provider);
     }
 
+    // 회원가입/추가정보 입력 단계에서 반드시 있어야 하는 최소 정보 (지역/흡연은 여기서 제외됨)
     public boolean needsAdditionalInfo() {
-        return this.gender == null || this.birthDate == null || this.region == null || this.job == null
-                || this.smoking == null;
+        return this.gender == null || this.birthDate == null || this.job == null;
+    }
+
+    // 매칭에 필요한 정보(지역/흡연)까지 다 채워졌는지. 부족하면 어떤 항목이 없는지 함께 알려준다.
+    public java.util.List<String> missingMatchingFields() {
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        if (this.region == null || this.region.isBlank()) missing.add("지역");
+        if (this.smoking == null || this.smoking.isBlank()) missing.add("흡연 여부");
+        return missing;
     }
 }

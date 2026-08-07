@@ -17,4 +17,5 @@ export interface User {
   isAdmin: boolean;
   needsAdditionalInfo: boolean;
   linkedProviders: string[];
+  missingMatchingFields: string[];
 }
