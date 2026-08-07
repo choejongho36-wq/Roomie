@@ -1,8 +1,12 @@
 /* 이 페이지가 떠 있는 동안(ProfileBoardPage.tsx가 마운트 시 #root에 이 클래스를 붙였다 뗌)
-   페이지 전체 스크롤 대신 뷰포트 높이에 맞춰서 헤더~푸터가 한 화면에 다 보이게 한다. */
+   페이지 전체 스크롤 대신 뷰포트 높이에 맞춰서 헤더~푸터가 한 화면에 다 보이게 한다.
+   단, 자기소개를 최대 길이로 꽉 채우는 등 내용이 한 화면보다 커지면 overflow:hidden 때문에
+   아래쪽(태그/버튼/푸터)이 잘리거나 푸터와 겹쳐 보였다. overflow-y:auto로 바꿔서, 내용이
+   한 화면 안에 들어갈 때는 기존과 똑같이 보이고(스크롤바 없음), 넘칠 때만 스크롤이 생겨
+   푸터가 그 아래로 자연스럽게 밀려나게 한다. */
 #root.profile-board-viewport-lock {
   height: 100svh;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .profile-board-page {
@@ -184,6 +188,7 @@
   border: 1px solid rgba(255, 102, 0, 0.2);
   border-radius: 16px;
   padding: 40px;
+  margin-bottom: 24px;
   box-shadow: 0 10px 26px rgba(89, 55, 30, 0.05);
   box-sizing: border-box;
 }
