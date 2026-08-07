@@ -17,6 +17,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     long countByReceiverIdAndReadFalse(Long receiverId);
 
+    long countByReceiverIdAndSenderIdAndReadFalse(Long receiverId, Long senderId);
+
     boolean existsBySenderIdAndReceiverIdOrSenderIdAndReceiverId(
             Long senderId1, Long receiverId1, Long senderId2, Long receiverId2);
 

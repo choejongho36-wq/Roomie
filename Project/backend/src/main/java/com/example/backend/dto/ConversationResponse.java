@@ -8,5 +8,6 @@ public record ConversationResponse(
         String partnerProfileImageUrl,
         boolean partnerVerified,
         String lastMessage,
-        LocalDateTime lastMessageAt
+        LocalDateTime lastMessageAt,
+        long unreadCount
 ) {}
