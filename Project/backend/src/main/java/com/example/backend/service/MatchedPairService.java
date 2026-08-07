@@ -17,6 +17,7 @@ public class MatchedPairService {
 
     private final MatchedPairRepository matchedPairRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // 이미 같은 두 사람 사이에 페어가 있으면 그걸 그대로 반환하고, 없으면 새로 만듦
     // (채팅에서 "룸메이트 확정"을 실수로 여러 번 눌러도 안전하게 하나로만 유지됨)
@@ -62,6 +63,18 @@ public class MatchedPairService {
                 .stream()
                 .findFirst()
                 .map(pair -> toResponse(pair, requestUserId));
+    }
+
+    // "하우스 해산" 버튼을 누르면 호출. 페어를 아예 삭제해서, 두 사람 다 하우스 접근이 끊기고
+    // 원하면 채팅에서 "룸메이트 확정"을 다시 눌러 새 페어를 시작할 수 있게 한다.
+    public void disband(Long pairId, Long requestUserId) {
+        MatchedPair pair = findPairForUser(pairId, requestUserId);
+        Long partnerId = pair.getUserAId().equals(requestUserId) ? pair.getUserBId() : pair.getUserAId();
+        User me = userRepository.findById(requestUserId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        matchedPairRepository.delete(pair);
+        notificationService.createHouseDisbandedNotification(
+                partnerId, requestUserId, me.getNickname() + "님이 하우스를 해산했습니다.");
     }
 
     private MatchedPair findPairForUser(Long pairId, Long requestUserId) {

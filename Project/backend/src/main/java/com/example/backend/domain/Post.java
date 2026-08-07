@@ -64,13 +64,9 @@ public class Post {
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
-    // 공지/이벤트 관리에서 목록 맨 위에 고정하는 기능. 고정된 것들끼리는 pinOrder 오름차순으로
-    // 보여주고(작을수록 위), 고정 안 된 글들은 기존처럼 최신순으로 그 아래에 나온다.
-    @Column(nullable = false)
-    private boolean pinned = false;
-
-    @Column(name = "pin_order")
-    private Integer pinOrder;
+    // 게시글 고정(어느 게시판에 몇 번째 순서로 고정됐는지)은 한 글이 여러 게시판에 동시에 고정될
+    // 수 있어야 해서 이 엔티티의 단일 컬럼이 아니라 별도 테이블(PostPin)로 관리한다.
+    // DB에는 예전에 쓰던 pinned/pin_order 컬럼이 남아있지만 더는 매핑하지 않는다(사용 안 함).
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -129,19 +125,5 @@ public class Post {
 
     public void increaseViewCount() {
         this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
-    }
-
-    public void pin(int order) {
-        this.pinned = true;
-        this.pinOrder = order;
-    }
-
-    public void unpin() {
-        this.pinned = false;
-        this.pinOrder = null;
-    }
-
-    public void changePinOrder(int order) {
-        this.pinOrder = order;
     }
 }

@@ -54,7 +54,8 @@ public class ChatService {
                             partner.getProfileImageUrl(),
                             Boolean.TRUE.equals(partner.getIsVerified()),
                             lastMessage.getContent(),
-                            lastMessage.getCreatedAt());
+                            lastMessage.getCreatedAt(),
+                            chatMessageRepository.countByReceiverIdAndSenderIdAndReadFalse(userId, entry.getKey()));
                 })
                 .toList();
     }

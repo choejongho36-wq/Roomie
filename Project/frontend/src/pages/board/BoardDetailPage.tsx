@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, toggleRecommend, updateComment } from "../../api";
 import type { Comment, Post } from "../../types/board";
+import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardDetailPage.css";
 
@@ -305,22 +306,23 @@ function BoardDetailPage() {
   }, [post]);
 
   const isAuthor = Boolean(post && user && post.userId === user.userId);
+  const isSpecialBoard = Boolean(post?.boardType && SPECIAL_BOARDS.includes(post.boardType));
 
   const handleToggleBookmark = async () => {
     if (!post) return;
     if (!token) {
-      setInfoModal("찜하려면 로그인이 필요해요.");
+      setInfoModal("북마크하려면 로그인이 필요해요.");
       return;
     }
     if (isAuthor) {
-      setInfoModal("본인이 작성한 글은 찜할 수 없어요.");
+      setInfoModal("본인이 작성한 글은 북마크할 수 없어요.");
       return;
     }
     try {
       const updated = await toggleBookmark(token, post.postId);
       setPost(updated);
     } catch {
-      setInfoModal("찜 처리에 실패했어요. 잠시 후 다시 시도해주세요.");
+      setInfoModal("북마크 처리에 실패했어요. 잠시 후 다시 시도해주세요.");
     }
   };
 
@@ -458,10 +460,9 @@ function BoardDetailPage() {
               isAuthor ? " is-own-post" : ""
             }`}
             onClick={handleToggleBookmark}
-            title={isAuthor ? "본인이 작성한 글은 찜할 수 없어요" : undefined}
+            title={isAuthor ? "본인이 작성한 글은 북마크할 수 없어요" : undefined}
           >
-            <span aria-hidden="true">{post.bookmarked ? "🧡" : "🤍"}</span>
-            찜 {post.bookmarkCount}
+            북마크 {post.bookmarkCount}
           </button>
           {!isAuthor && (
             <button
@@ -469,7 +470,6 @@ function BoardDetailPage() {
               className={`board-detail-recommend-button${post.recommended ? " is-active" : ""}`}
               onClick={handleToggleRecommend}
             >
-              <span aria-hidden="true">👍</span>
               추천 {post.recommendCount}
             </button>
           )}
@@ -575,9 +575,11 @@ function BoardDetailPage() {
             </button>
           </>
         ) : (
-          <button className="btn btn-outline" onClick={handleReportPost}>
-            신고
-          </button>
+          !isSpecialBoard && (
+            <button className="btn btn-outline" onClick={handleReportPost}>
+              신고
+            </button>
+          )
         )}
         <button className="btn btn-outline" onClick={handleGoToList}>
           목록

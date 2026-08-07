@@ -34,13 +34,13 @@ function BoardWritePage() {
   const [searchParams] = useSearchParams();
   const isEdit = Boolean(postId);
 
-  // 공지사항/이벤트 게시판 목록에서 "글쓰기"로 들어온 경우 ?type=공지사항 처럼 넘어온다.
-  // 이 값이 있으면 자유게시판 카테고리 대신 공지사항/이벤트 드롭다운을 보여준다.
+  // 특정 게시판(예: ?type=잡담, ?type=공지사항) 목록에서 "글쓰기"로 들어온 경우 그 게시판이
+  // 이미 정해진 것이므로, 게시판 선택 UI 없이 해당 게시판으로 바로 등록되게 고정한다.
+  // "전체" 목록(type 없음)에서 들어온 경우에만 게시판을 직접 고르게 한다.
   const presetBoardType = searchParams.get("type");
+  const isPresetValid = Boolean(presetBoardType) && [...FREE_BOARD_CATEGORIES, ...SPECIAL_BOARDS].includes(presetBoardType!);
 
-  const [selectedBoard, setSelectedBoard] = useState<string | null>(
-    presetBoardType && SPECIAL_BOARDS.includes(presetBoardType) ? presetBoardType : null
-  );
+  const [selectedBoard, setSelectedBoard] = useState<string | null>(isPresetValid ? presetBoardType : null);
   const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -103,7 +103,7 @@ function BoardWritePage() {
     );
   }
 
-  // 수정 중이면 불러온 글의 boardType, 새 글이면 선택된(혹은 URL로 넘어온) 카테고리 기준으로
+  // 수정 중이면 불러온 글의 boardType, 새 글이면 선택된(혹은 URL로 넘어온) 게시판 기준으로
   // 지금 쓰고 있는 게 공지사항/이벤트 글인지 판단해서 드롭다운 목록과 안내 문구를 바꾼다.
   const isSpecialBoard = SPECIAL_BOARDS.includes(selectedBoard ?? presetBoardType ?? "");
   const boardOptions = isSpecialBoard ? SPECIAL_BOARDS : FREE_BOARD_CATEGORIES;
@@ -153,7 +153,7 @@ function BoardWritePage() {
     event.preventDefault();
 
     if (!selectedBoard) {
-      showError("카테고리를 선택해주세요.");
+      showError("게시판을 선택해주세요.");
       return;
     }
     if (!title.trim()) {
@@ -201,39 +201,45 @@ function BoardWritePage() {
         <div>
           <h1>{isSpecialBoard ? "공지/이벤트 작성" : "글쓰기"}</h1>
           <p className="board-write-subtitle">
-            {isSpecialBoard
-              ? "공지사항 또는 이벤트 카테고리를 선택하고 작성해주세요."
-              : "카테고리를 선택하고 자유롭게 글을 남겨보세요."}
+            {isPresetValid
+              ? `'${selectedBoard}' 게시판에 글을 남겨보세요.`
+              : isSpecialBoard
+              ? "공지사항 또는 이벤트 게시판을 선택하고 작성해주세요."
+              : "게시판을 선택하고 자유롭게 글을 남겨보세요."}
           </p>
         </div>
 
-        <div className="board-write-board-select" ref={boardMenuRef}>
-          <button
-            type="button"
-            className={`board-write-board-button${selectedBoard ? " is-selected" : ""}`}
-            onClick={() => setIsBoardMenuOpen((prev) => !prev)}
-          >
-            {selectedBoard ?? "카테고리를 선택하세요"}
-            <span aria-hidden="true">▾</span>
-          </button>
-          {isBoardMenuOpen && (
-            <div className="board-write-board-menu">
-              {boardOptions.map((board) => (
-                <button
-                  key={board}
-                  type="button"
-                  className={`board-write-board-option${selectedBoard === board ? " is-active" : ""}`}
-                  onClick={() => {
-                    setSelectedBoard(board);
-                    setIsBoardMenuOpen(false);
-                  }}
-                >
-                  {board}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {isPresetValid ? (
+          <span className="board-write-board-locked">{selectedBoard}</span>
+        ) : (
+          <div className="board-write-board-select" ref={boardMenuRef}>
+            <button
+              type="button"
+              className={`board-write-board-button${selectedBoard ? " is-selected" : ""}`}
+              onClick={() => setIsBoardMenuOpen((prev) => !prev)}
+            >
+              {selectedBoard ?? "게시판을 선택해주세요"}
+              <span aria-hidden="true">▾</span>
+            </button>
+            {isBoardMenuOpen && (
+              <div className="board-write-board-menu">
+                {boardOptions.map((board) => (
+                  <button
+                    key={board}
+                    type="button"
+                    className={`board-write-board-option${selectedBoard === board ? " is-active" : ""}`}
+                    onClick={() => {
+                      setSelectedBoard(board);
+                      setIsBoardMenuOpen(false);
+                    }}
+                  >
+                    {board}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {error && <p className="mypage-error">{error}</p>}

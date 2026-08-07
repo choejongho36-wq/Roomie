@@ -201,9 +201,18 @@ function MatchedPairPage() {
         {pair.myConfirmed ? (
           <p className="matched-pair-hint">상대방이 확정하면 자동으로 하우스로 이동해요. 잠시만 기다려주세요.</p>
         ) : (
-          <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirming}>
-            {confirming ? "처리 중..." : "하우스로 이동"}
-          </button>
+          <div className="matched-pair-confirm-actions">
+            <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirming}>
+              {confirming ? "처리 중..." : "하우스로 이동"}
+            </button>
+            <button
+              className="btn btn-outline"
+              onClick={() => navigate(`/mypage/chat?userId=${pair.partner.userId}`)}
+              disabled={confirming}
+            >
+              확정 취소하기
+            </button>
+          </div>
         )}
       </section>
     </div>

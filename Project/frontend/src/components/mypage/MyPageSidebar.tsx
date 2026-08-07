@@ -92,6 +92,15 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M6 10v9a1 1 0 001 1h4v-6h2v6h4a1 1 0 001-1v-9" />
     </>
   ),
+  plus: <path d="M12 5v14M5 12h14" strokeLinecap="round" />,
+  // 고객센터(문의 게시판) 메뉴용 — 물음표 아이콘
+  support: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.5 1.7-2.5 3.5" strokeLinecap="round" />
+      <path d="M12 17h.01" strokeLinecap="round" />
+    </>
+  ),
   smile: (
     <>
       <circle cx="12" cy="12" r="9" />

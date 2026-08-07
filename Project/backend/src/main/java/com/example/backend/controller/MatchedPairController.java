@@ -53,6 +53,14 @@ public class MatchedPairController {
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
+    // 하우스 화면의 "하우스 해산" 버튼을 누르면 호출. 매칭 페어를 삭제해 두 사람 모두 하우스에서 나가진다.
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> disband(Authentication authentication, @PathVariable Long id) {
+        User me = findUser(authentication);
+        matchedPairService.disband(id, me.getUserId());
+        return ResponseEntity.noContent().build();
+    }
+
     // 공동 방 탐색 화면에서 희망지역/예산/입주희망일 같은 공통 조건을 저장할 때 사용
     @PutMapping("/{id}/conditions")
     public ResponseEntity<MatchedPairResponse> updateConditions(

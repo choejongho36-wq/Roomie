@@ -43,6 +43,11 @@ public class SecurityConfig {
         @Value("${cors.allowed-origins:http://localhost:5174}")
         private String[] allowedOrigins;
 
+        // 관리자 로그아웃 후 돌아갈 Roomie 서비스(React 프론트) 주소. OAuth2 로그인 성공/실패
+        // 핸들러에서 쓰는 것과 같은 프로퍼티를 그대로 재사용한다.
+        @Value("${app.frontend-url}")
+        private String frontendUrl;
+
         // CustomOAuth2UserService(계정 연동 처리)에서 RequestContextHolder로 현재 요청/세션에 접근하는데,
         // 이게 시큐리티 필터 체인 안에서는 자동으로 안 걸려있을 수 있어서 명시적으로 가장 먼저 등록해줌
         @Bean
@@ -63,6 +68,10 @@ public class SecurityConfig {
                 http
                                 .securityMatcher("/admin/**")
                                 .authenticationProvider(adminAuthProvider)
+                                // 세션이 만료된 채로(쿠키는 있는데 서버 세션은 사라진 상태) 다시 요청이 오면
+                                // 그냥 익명 처리해서 로그인 화면으로 튕기는 게 아니라, "세션 만료" 안내가
+                                // 붙은 로그인 화면으로 보낸다(server.servlet.session.timeout 만큼 미사용 시 발생).
+                                .sessionManagement(session -> session.invalidSessionUrl("/admin/login?expired"))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/admin/login").permitAll()
                                                 .anyRequest().hasRole("ADMIN"))
@@ -77,7 +86,8 @@ public class SecurityConfig {
                                                 .logoutRequestMatcher(request -> "GET"
                                                                 .equalsIgnoreCase(request.getMethod())
                                                                 && "/admin/logout".equals(request.getRequestURI()))
-                                                .logoutSuccessUrl("/admin/login?logout"));
+                                                // 로그아웃하면 관리자 로그인 화면이 아니라 Roomie 서비스(프론트) 홈으로 나간다.
+                                                .logoutSuccessUrl(frontendUrl));
                 return http.build();
         }
 

@@ -109,6 +109,9 @@ function Navbar() {
       setChatRequestModal(notification);
       return;
     }
+    if (notification.type === "HOUSE_DISBANDED") {
+      return;
+    }
     removeNotification(notification.notificationId);
     if (notification.type === "COMMENT_REPLY" && notification.targetId) {
       navigate(`/board/${notification.targetId}`);
@@ -237,27 +240,6 @@ function Navbar() {
               ))}
             </div>
           </div>
-          <div className="navbar-dropdown">
-            <button
-              type="button"
-              className={`navbar-menu-link navbar-dropdown-trigger${openMenu === "support" ? " is-open" : ""}`}
-              onClick={() => toggleMenu("support")}
-              aria-expanded={openMenu === "support"}
-            >
-              고객센터
-            </button>
-            <div className={`navbar-dropdown-menu${openMenu === "support" ? " is-open" : ""}`}>
-              <Link to="/inquiry" className="navbar-dropdown-item" onClick={(e) => handleGatedLinkClick(e, "/inquiry")}>
-                문의 게시판
-              </Link>
-              <Link to="/terms" className="navbar-dropdown-item">
-                이용약관
-              </Link>
-              <Link to="/privacy" className="navbar-dropdown-item">
-                개인정보처리방침
-              </Link>
-            </div>
-          </div>
         </nav>
         <div className="navbar-auth">
           {token ? (
@@ -356,6 +338,10 @@ function Navbar() {
                     관리자 페이지
                   </a>
                 )}
+                <Link to="/support" className="navbar-profile-dropdown-item">
+                  <Icon name="support" />
+                  고객센터
+                </Link>
                 <button
                   type="button"
                   className="navbar-profile-dropdown-item navbar-profile-dropdown-item-logout"

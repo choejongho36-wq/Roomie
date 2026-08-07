@@ -5,7 +5,7 @@ import "./SupportPage.css";
 const FAQS = [
   {
     q: "룸메이트 매칭은 어떻게 이루어지나요?",
-    a: "설문에 답하시면 AI가 생활 패턴, 청결도, 가치관, 선호도를 종합 분석해서 궁합 점수가 가장 높은 상대를 추천해드려요.",
+    a: "설문에 답하시면 Roomie가 생활 패턴, 청결도, 가치관, 선호도를 종합 분석해서 궁합 점수가 가장 높은 상대를 추천해드려요.",
   },
   {
     q: "설문 답변을 다시 수정할 수 있나요?",
@@ -48,7 +48,7 @@ function SupportPage() {
           <section className="support-card">
             <h2>챗봇 안내</h2>
             <p>
-              화면 오른쪽 아래 채팅 아이콘 버튼을 누르면 챗봇 상담을 이용할 수 있어요.
+              AI 챗봇이 24시간 상담을 도와드려요. 궁금한 점을 물어보세요.
             </p>
             <p className="support-note">챗봇 상담 기능은 현재 준비 중이에요.</p>
           </section>
@@ -56,7 +56,10 @@ function SupportPage() {
           <section className="support-card">
             <h2>문의 게시판 안내</h2>
             <p>
-              전화 연결이 어려우시다면 문의 게시판에 글을 남겨주세요. 확인 후 답변을 등록해드려요.
+              전화 연결이 어려우시다면 문의 게시판에 글을 남겨주세요.
+            </p>
+            <p>
+              확인 후 답변을 등록해드려요.
             </p>
             <Link to="/inquiry" className="support-link-button">
               문의 게시판 가기
