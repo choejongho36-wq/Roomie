@@ -75,7 +75,7 @@ function ChatPage() {
   const [matchedPairStatus, setMatchedPairStatus] = useState<MatchedPair | null>(null);
   const [confirmRoommateModalOpen, setConfirmRoommateModalOpen] = useState(false);
   const [confirmingHouse, setConfirmingHouse] = useState(false);
-  const [findRoomModalOpen, setFindRoomModalOpen] = useState(false);
+  const [findRoomPanelOpen, setFindRoomPanelOpen] = useState(false);
   const [findRoomRegionTokens, setFindRoomRegionTokens] = useState<RegionToken[]>([]);
   const [findRoomDepositMax, setFindRoomDepositMax] = useState("");
   const [findRoomMonthlyRentMax, setFindRoomMonthlyRentMax] = useState("");
@@ -133,6 +133,8 @@ function ChatPage() {
   }, [conversations]);
 
   useEffect(() => {
+    // 대화 상대를 바꾸면 이전 상대의 방찾기 패널이 그대로 떠 있으면 안 되니 같이 닫는다
+    setFindRoomPanelOpen(false);
     if (!token || !activePartner) {
       setMessages([]);
       setLeftByPartner(false);
@@ -254,8 +256,13 @@ function ChatPage() {
     }
   };
 
-  // "방찾기" 버튼 — 아직 페어가 없으면(룸메이트 확정을 한 번도 안 누른 상태) 조용히 만들어서 연다
-  const handleOpenFindRoomModal = async () => {
+  // "방찾기" 버튼 — 채팅 옆 패널을 열고/닫음. 처음 열 때, 아직 페어가 없으면
+  // (룸메이트 확정을 한 번도 안 누른 상태) 조용히 만들어서 연다
+  const handleToggleFindRoomPanel = async () => {
+    if (findRoomPanelOpen) {
+      setFindRoomPanelOpen(false);
+      return;
+    }
     if (!token || !activePartner) return;
     let pair = matchedPairStatus;
     if (!pair) {
@@ -272,7 +279,7 @@ function ChatPage() {
     setFindRoomDepositMax(pair.depositMax != null ? String(pair.depositMax) : "");
     setFindRoomMonthlyRentMax(pair.monthlyRentMax != null ? String(pair.monthlyRentMax) : "");
     setConditionsSaveMessage("");
-    setFindRoomModalOpen(true);
+    setFindRoomPanelOpen(true);
   };
 
   const handleSaveConditions = async () => {
@@ -381,7 +388,7 @@ function ChatPage() {
       
       {error && <p className="mypage-error">{error}</p>}
 
-      <div className="chat-layout">
+      <div className={`chat-layout${findRoomPanelOpen ? " has-room-finder" : ""}`}>
         <aside className="chat-sidebar">
           <div className="chat-sidebar-header">
             <span className="chat-sidebar-title">채팅</span>
@@ -607,7 +614,11 @@ function ChatPage() {
                     </button>
                   )}
                   {!leftByPartner && (
-                    <button type="button" className="btn btn-outline" onClick={handleOpenFindRoomModal}>
+                    <button
+                      type="button"
+                      className={`btn btn-outline${findRoomPanelOpen ? " is-active" : ""}`}
+                      onClick={handleToggleFindRoomPanel}
+                    >
                       방찾기
                     </button>
                   )}
@@ -619,6 +630,71 @@ function ChatPage() {
             </>
           )}
         </section>
+
+        {findRoomPanelOpen && matchedPairStatus && (
+          <aside className="chat-room-finder-panel">
+            <button
+              type="button"
+              className="chat-feature-modal-close"
+              onClick={() => setFindRoomPanelOpen(false)}
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+            <h2>함께 살 방 찾기</h2>
+            <div className="matched-pair-reference">
+              <span>{matchedPairStatus.me.nickname}: {matchedPairStatus.me.region ?? "설정 안 함"}</span>
+              <span>{matchedPairStatus.partner.nickname}: {matchedPairStatus.partner.region ?? "설정 안 함"}</span>
+            </div>
+            <div className="matched-pair-form">
+              <label>
+                희망 지역
+                <RegionPicker
+                  selected={findRoomRegionTokens}
+                  onChange={setFindRoomRegionTokens}
+                  multiple={false}
+                  variant="inline"
+                  triggerLabel="지역 선택"
+                  emptyHint="지역을 선택해주세요."
+                />
+              </label>
+              <div className="matched-pair-form-row">
+                <label>
+                  보증금 최대 (만원)
+                  <input
+                    type="number"
+                    value={findRoomDepositMax}
+                    onChange={(event) => setFindRoomDepositMax(event.target.value)}
+                    placeholder="예) 1000"
+                  />
+                </label>
+                <label>
+                  월세 최대 (만원)
+                  <input
+                    type="number"
+                    value={findRoomMonthlyRentMax}
+                    onChange={(event) => setFindRoomMonthlyRentMax(event.target.value)}
+                    placeholder="예) 58"
+                  />
+                </label>
+              </div>
+              <button className="btn btn-primary" onClick={handleSaveConditions} disabled={conditionsSaving}>
+                {conditionsSaving ? "저장 중..." : "조건 저장"}
+              </button>
+              {conditionsSaveMessage && <p className="matched-pair-save-message">{conditionsSaveMessage}</p>}
+            </div>
+            <div className="matched-pair-links">
+              <a
+                href={matchedPairStatus.dabangMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+              >
+                다방 지도에서 매물 보기
+              </a>
+            </div>
+          </aside>
+        )}
       </div>
 
       {infoModal && (
@@ -701,77 +777,6 @@ function ChatPage() {
         </div>
       )}
 
-      {findRoomModalOpen && matchedPairStatus && (
-        <div className="info-modal-backdrop" onClick={() => setFindRoomModalOpen(false)}>
-          <div
-            className="info-modal chat-feature-modal"
-            role="dialog"
-            aria-modal="true"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="chat-feature-modal-close"
-              onClick={() => setFindRoomModalOpen(false)}
-              aria-label="닫기"
-            >
-              ✕
-            </button>
-            <h2>함께 살 방 찾기</h2>
-            <div className="matched-pair-reference">
-              <span>{matchedPairStatus.me.nickname}: {matchedPairStatus.me.region ?? "설정 안 함"}</span>
-              <span>{matchedPairStatus.partner.nickname}: {matchedPairStatus.partner.region ?? "설정 안 함"}</span>
-            </div>
-            <div className="matched-pair-form">
-              <label>
-                희망 지역
-                <RegionPicker
-                  selected={findRoomRegionTokens}
-                  onChange={setFindRoomRegionTokens}
-                  multiple={false}
-                  variant="inline"
-                  triggerLabel="지역 선택"
-                  emptyHint="지역을 선택해주세요."
-                />
-              </label>
-              <div className="matched-pair-form-row">
-                <label>
-                  보증금 최대 (만원)
-                  <input
-                    type="number"
-                    value={findRoomDepositMax}
-                    onChange={(event) => setFindRoomDepositMax(event.target.value)}
-                    placeholder="예) 1000"
-                  />
-                </label>
-                <label>
-                  월세 최대 (만원)
-                  <input
-                    type="number"
-                    value={findRoomMonthlyRentMax}
-                    onChange={(event) => setFindRoomMonthlyRentMax(event.target.value)}
-                    placeholder="예) 58"
-                  />
-                </label>
-              </div>
-              <button className="btn btn-primary" onClick={handleSaveConditions} disabled={conditionsSaving}>
-                {conditionsSaving ? "저장 중..." : "조건 저장"}
-              </button>
-              {conditionsSaveMessage && <p className="matched-pair-save-message">{conditionsSaveMessage}</p>}
-            </div>
-            <div className="matched-pair-links">
-              <a
-                href={matchedPairStatus.dabangMapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-outline"
-              >
-                다방 지도에서 매물 보기
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -54,6 +54,11 @@ public class MatchedPairService {
         MatchedPair pair = findPairForUser(pairId, requestUserId);
         pair.updateConditions(request.region(), request.depositMax(), request.monthlyRentMax());
         matchedPairRepository.save(pair);
+
+        // 채팅 옆 "방찾기" 패널을 열어둔 상대방이 새로고침 없이 바로 최신 조건을 보게, 각자 시점 기준으로 push
+        sessionRegistry.send(pair.getUserAId(), toResponse(pair, pair.getUserAId()));
+        sessionRegistry.send(pair.getUserBId(), toResponse(pair, pair.getUserBId()));
+
         return toResponse(pair, requestUserId);
     }
 

@@ -8,6 +8,29 @@
   margin: 0 auto;
 }
 
+/* "방찾기" 패널이 열리면 채팅을 좁히지 않고 오른쪽에 세 번째 칸을 더 만들어준다 */
+.chat-layout.has-room-finder {
+  grid-template-columns: 280px 1fr 320px;
+  max-width: 1300px;
+}
+
+.chat-room-finder-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 20px 18px;
+  overflow-y: auto;
+}
+
+.chat-room-finder-panel h2 {
+  font-size: 16px;
+  margin: 0 24px 0 0;
+}
+
 .chat-sidebar {
   display: flex;
   flex-direction: column;
@@ -335,6 +358,12 @@
   gap: 8px;
 }
 
+.chat-footer-actions .btn.is-active {
+  background: #f16526;
+  border-color: #f16526;
+  color: #fff;
+}
+
 .chat-leave-btn {
   border: none;
   background: none;
@@ -609,10 +638,12 @@
 }
 
 @media (max-width: 720px) {
-  .chat-layout {
+  .chat-layout,
+  .chat-layout.has-room-finder {
     grid-template-columns: 1fr;
     height: auto;
     max-height: none;
+    max-width: 100%;
   }
 
   .chat-sidebar {
@@ -621,5 +652,18 @@
 
   .chat-message-list {
     max-height: 360px;
+  }
+
+  /* 화면이 좁을 땐 세 번째 칸을 만들 자리가 없어서, 패널을 채팅 위에 덮이는 드로어로 띄운다 */
+  .chat-room-finder-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 0;
+    z-index: 60;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.18);
   }
 }
