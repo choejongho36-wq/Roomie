@@ -68,14 +68,29 @@ function BoardListPage() {
   const filteredPosts = useMemo(() => {
     if (!posts) return [];
 
-    // 관리자가 고정한 공지사항/이벤트는 지금 보고 있는 게시판이 무엇이든(자유 게시판이든
-    // 공지사항/이벤트 탭이든) 항상 맨 위에 먼저 보여준다. 문의 게시판은 이 컴포넌트를
-    // 아예 쓰지 않으니 자연히 대상에서 빠진다.
+    // 한 글이 여러 게시판에 동시에(중복으로) 고정될 수 있다. 공지사항/이벤트도 다른 게시판과
+    // 동일하게, 지금 보고 있는 그 게시판 안에서만 상단 고정으로 뜬다(더 이상 전역 노출 특례
+    // 없음). 다만 "전체"(boardType 없음) 화면에서는 어느 게시판에든 고정된 글을 다 모아서
+    // 보여준다. 문의 게시판은 이 컴포넌트를 아예 쓰지 않으니 자연히 대상에서 빠진다.
     const pinnedPosts = posts
-      .filter((post) => post.pinned && post.boardType && SPECIAL_BOARDS.includes(post.boardType))
-      // pinOrder가 같은 경우(정상적으로는 안 생기지만 혹시를 대비해) postId로 한 번 더 정렬해서,
-      // 관리자 페이지와 항상 같은 순서로 보이게 한다.
-      .sort((a, b) => (a.pinOrder ?? 0) - (b.pinOrder ?? 0) || a.postId - b.postId);
+      .filter((post) => {
+        if (!post.pins || post.pins.length === 0) return false;
+        if (!boardType) return true;
+        return post.pins.some((pin) => pin.boardType === boardType);
+      })
+      .sort((a, b) => {
+        const orderOf = (post: Post) => {
+          if (boardType) {
+            return post.pins.find((pin) => pin.boardType === boardType)?.pinOrder ?? 0;
+          }
+          // "전체"에서는 게시판마다 고정 순서가 따로 놀아서 하나로 합칠 기준이 없다. 그 글이
+          // 가진 고정 순서 중 가장 작은 값(=어느 게시판에서든 가장 앞쪽인 순서)을 대표로 쓴다.
+          return Math.min(...post.pins.map((pin) => pin.pinOrder));
+        };
+        // 순서가 같은 경우(정상적으로는 안 생기지만 혹시를 대비해) postId로 한 번 더 정렬해서,
+        // 관리자 페이지와 항상 같은 순서로 보이게 한다.
+        return orderOf(a) - orderOf(b) || a.postId - b.postId;
+      });
     const pinnedIds = new Set(pinnedPosts.map((post) => post.postId));
 
     const rest = posts
@@ -164,10 +179,8 @@ function BoardListPage() {
                   {/* 관리자 페이지(게시글 관리)의 ID 열과 값을 일치시키기 위해, 화면에 다시 계산한
                       순번이 아니라 실제 게시글 고유 id(postId)를 그대로 보여준다. */}
                   <td className="board-table-number-cell">
-                    {post.pinned ? (
-                      <span className="board-table-pinned-badge">
-                        {post.boardType === "이벤트" ? "이벤트" : "공지"}
-                      </span>
+                    {post.pins && post.pins.length > 0 ? (
+                      <span className="board-table-pinned-badge">고정</span>
                     ) : (
                       post.postId
                     )}

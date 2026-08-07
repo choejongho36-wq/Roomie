@@ -4,6 +4,7 @@ import com.example.backend.domain.Post;
 import com.example.backend.domain.PostBookmark;
 import com.example.backend.domain.PostView;
 import com.example.backend.domain.User;
+import com.example.backend.dto.PostPinInfo;
 import com.example.backend.dto.PostRequest;
 import com.example.backend.dto.PostResponse;
 import com.example.backend.repository.PostRepository;
@@ -15,9 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +32,7 @@ public class PostService {
     private final PostViewRepository postViewRepository;
     private final PostReportService postReportService;
     private final CommentService commentService;
+    private final PostPinService postPinService;
 
     public Page<PostResponse> getPosts(Pageable pageable) {
         Page<Post> posts = postRepository.findAllActive(pageable);
@@ -41,9 +40,11 @@ public class PostService {
         Map<Long, User> authors = authorsOf(posts.getContent().stream().map(Post::getUserId).toList());
         Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
         Map<Long, Long> recommendCounts = postRecommendService.countsFor(postIds);
+        Map<Long, List<PostPinInfo>> pinsByPost = postPinService.pinsForPosts(postIds);
         return posts.map(p -> toResponse(p, authors.get(p.getUserId()),
                 bookmarkCounts.getOrDefault(p.getPostId(), 0L), false,
-                recommendCounts.getOrDefault(p.getPostId(), 0L), false));
+                recommendCounts.getOrDefault(p.getPostId(), 0L), false,
+                pinsByPost.getOrDefault(p.getPostId(), List.of())));
     }
 
     public PostResponse getPost(Long postId, Long viewerUserId) {
@@ -68,7 +69,7 @@ public class PostService {
         boolean bookmarked = postBookmarkService.isBookmarked(postId, viewerUserId);
         long recommendCount = postRecommendService.countFor(postId);
         boolean recommended = postRecommendService.isRecommended(postId, viewerUserId);
-        return toResponse(post, author, bookmarkCount, bookmarked, recommendCount, recommended);
+        return toResponse(post, author, bookmarkCount, bookmarked, recommendCount, recommended, postPinService.pinsOf(postId));
     }
 
     public PostResponse create(Long userId, PostRequest request) {
@@ -78,7 +79,7 @@ public class PostService {
                 request.moveInDate(), request.moveInMonthMin(), request.moveInMonthMax(), request.roomType(),
                 recruitCountOrDefault(request), request.description(), request.tags(), request.boardType()
         ));
-        return toResponse(post, authorOf(userId), 0, false, 0, false);
+        return toResponse(post, authorOf(userId), 0, false, 0, false, List.of());
     }
 
     public PostResponse update(Long userId, Long postId, PostRequest request) {
@@ -94,7 +95,7 @@ public class PostService {
         boolean bookmarked = postBookmarkService.isBookmarked(postId, userId);
         long recommendCount = postRecommendService.countFor(postId);
         boolean recommended = postRecommendService.isRecommended(postId, userId);
-        return toResponse(post, authorOf(userId), bookmarkCount, bookmarked, recommendCount, recommended);
+        return toResponse(post, authorOf(userId), bookmarkCount, bookmarked, recommendCount, recommended, postPinService.pinsOf(postId));
     }
 
     public void reportPost(Long postId, Long userId, String reason) {
@@ -138,7 +139,7 @@ public class PostService {
                 recruitCountOrDefault(request), request.description(), request.tags(), request.boardType());
     }
 
-    // 게시글을 지울 때 딸린 댓글/답글/찜/신고 기록까지 함께 정리해서 고아 데이터가 남지 않게 한다.
+    // 게시글을 지울 때 딸린 댓글/답글/찜/신고/고정 기록까지 함께 정리해서 고아 데이터가 남지 않게 한다.
     // 회원 탈퇴 경로가 아니라 게시글 삭제 경로(본인 삭제 · 관리자 삭제) 양쪽에서 공용으로 쓴다.
     private void deleteRelatedData(Long postId) {
         commentService.deleteAllForPost(postId);
@@ -146,6 +147,7 @@ public class PostService {
         postRecommendService.deleteAllForPost(postId);
         postViewRepository.deleteByPostId(postId);
         postReportService.deleteAllForPost(postId);
+        postPinService.deleteAllForPost(postId);
     }
 
     // 마이페이지 "찜목록" 화면용. 최근에 찜한 글이 위로 오도록 정렬해서 반환한다.
@@ -161,6 +163,7 @@ public class PostService {
         Map<Long, User> authors = authorsOf(postsById.values().stream().map(Post::getUserId).toList());
         Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
         Map<Long, Long> recommendCounts = postRecommendService.countsFor(postIds);
+        Map<Long, List<PostPinInfo>> pinsByPost = postPinService.pinsForPosts(postIds);
 
         // postRepository.findAllById는 순서를 보장하지 않아서, 찜한 순서(postIds)를 기준으로 다시 나열한다.
         // 찜한 뒤 글이 삭제됐거나, 그 글 작성자가 탈퇴했으면 건너뛴다.
@@ -172,7 +175,8 @@ public class PostService {
                     return author != null && !"WITHDRAWN".equals(author.getStatus());
                 })
                 .map(p -> toResponse(p, authors.get(p.getUserId()), bookmarkCounts.getOrDefault(p.getPostId(), 0L), true,
-                        recommendCounts.getOrDefault(p.getPostId(), 0L), postRecommendService.isRecommended(p.getPostId(), userId)))
+                        recommendCounts.getOrDefault(p.getPostId(), 0L), postRecommendService.isRecommended(p.getPostId(), userId),
+                        pinsByPost.getOrDefault(p.getPostId(), List.of())))
                 .toList();
     }
 
@@ -182,10 +186,12 @@ public class PostService {
         List<Long> postIds = posts.stream().map(Post::getPostId).toList();
         Map<Long, Long> bookmarkCounts = postBookmarkService.countsFor(postIds);
         Map<Long, Long> recommendCounts = postRecommendService.countsFor(postIds);
+        Map<Long, List<PostPinInfo>> pinsByPost = postPinService.pinsForPosts(postIds);
         User author = authorOf(userId);
         return posts.stream()
                 .map(p -> toResponse(p, author, bookmarkCounts.getOrDefault(p.getPostId(), 0L), false,
-                        recommendCounts.getOrDefault(p.getPostId(), 0L), false))
+                        recommendCounts.getOrDefault(p.getPostId(), 0L), false,
+                        pinsByPost.getOrDefault(p.getPostId(), List.of())))
                 .toList();
     }
 
@@ -197,7 +203,8 @@ public class PostService {
         PostBookmarkService.BookmarkResult result = postBookmarkService.toggle(postId, userId);
         long recommendCount = postRecommendService.countFor(postId);
         boolean recommended = postRecommendService.isRecommended(postId, userId);
-        return toResponse(post, authorOf(post.getUserId()), result.count(), result.bookmarked(), recommendCount, recommended);
+        return toResponse(post, authorOf(post.getUserId()), result.count(), result.bookmarked(), recommendCount, recommended,
+                postPinService.pinsOf(postId));
     }
 
     // 다른 사람 글에만 누를 수 있는 "추천" 토글. 본인 글은 프론트에서 버튼 자체를 숨기지만,
@@ -210,7 +217,8 @@ public class PostService {
         PostRecommendService.RecommendResult result = postRecommendService.toggle(postId, userId);
         long bookmarkCount = postBookmarkService.countFor(postId);
         boolean bookmarked = postBookmarkService.isBookmarked(postId, userId);
-        return toResponse(post, authorOf(post.getUserId()), bookmarkCount, bookmarked, result.count(), result.recommended());
+        return toResponse(post, authorOf(post.getUserId()), bookmarkCount, bookmarked, result.count(), result.recommended(),
+                postPinService.pinsOf(postId));
     }
 
     private void validate(PostRequest request) {
@@ -247,7 +255,7 @@ public class PostService {
     }
 
     private PostResponse toResponse(Post p, User author, long bookmarkCount, boolean bookmarked,
-            long recommendCount, boolean recommended) {
+            long recommendCount, boolean recommended, List<PostPinInfo> pins) {
         String nickname = author != null ? author.getNickname() : "알 수 없음";
         String authorProfileImageUrl = author != null ? author.getProfileImageUrl() : null;
         return new PostResponse(
@@ -255,68 +263,7 @@ public class PostService {
                 p.getBudgetMin(), p.getBudgetMax(), p.getMoveInDate(), p.getMoveInMonthMin(), p.getMoveInMonthMax(),
                 p.getRoomType(), p.getRecruitCount(), p.getDescription(), p.getTags(), p.getBoardType(),
                 p.getStatus(), p.getViewCount(), bookmarkCount, bookmarked, p.getCreatedAt(), p.getUpdatedAt(),
-                p.isPinned(), p.getPinOrder(), recommendCount, recommended
+                pins, recommendCount, recommended
         );
-    }
-
-    // 고정 기능을 쓰는 게시판 종류. 공지사항/이벤트를 하나의 고정 순서로 함께 관리한다.
-    private static final List<String> PINNABLE_BOARD_TYPES = List.of("공지사항", "이벤트");
-
-    // 관리자 전용. 공지/이벤트 목록 맨 위 고정을 켜고 끈다.
-    // 새로 고정할 때는 공지사항·이벤트를 통틀어 가장 마지막(맨 아래)에 붙인다.
-    @Transactional
-    public void adminSetPinned(Long postId, boolean pinned) {
-        Post post = findPost(postId);
-        List<Post> currentlyPinned = orderedPinned();
-        if (pinned) {
-            if (!currentlyPinned.contains(post)) {
-                currentlyPinned.add(post);
-            }
-        } else {
-            currentlyPinned.remove(post);
-            post.unpin();
-        }
-        renumberPins(currentlyPinned);
-    }
-
-    // 관리자 전용. 공지사항·이벤트를 통틀어 고정된 글끼리 순서를 한 칸 위/아래로 바꾼다.
-    @Transactional
-    public void adminMovePinOrder(Long postId, boolean moveUp) {
-        Post post = findPost(postId);
-        if (!post.isPinned()) {
-            return;
-        }
-        List<Post> pinned = orderedPinned();
-        int index = pinned.indexOf(post);
-        int targetIndex = moveUp ? index - 1 : index + 1;
-        if (index < 0 || targetIndex < 0 || targetIndex >= pinned.size()) {
-            return;
-        }
-        Collections.swap(pinned, index, targetIndex);
-        renumberPins(pinned);
-    }
-
-    // 현재 고정된 글들을 pinOrder 오름차순(순서가 같으면 postId 오름차순으로 확정)으로 가져온다.
-    // pinOrder에 중복/빈 값이 남아있어도 postId를 2차 기준으로 써서 항상 같은 순서가 나오게 한다.
-    private List<Post> orderedPinned() {
-        return postRepository.findByBoardTypeInAndPinnedTrueOrderByPinOrderAsc(PINNABLE_BOARD_TYPES).stream()
-                .sorted(Comparator
-                        .comparing((Post p) -> p.getPinOrder() == null ? Integer.MAX_VALUE : p.getPinOrder())
-                        .thenComparing(Post::getPostId))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    // 넘겨받은 순서 그대로 pinOrder를 1부터 다시 매긴다. 고정 등록/해제/순서변경마다 항상 다시
-    // 매겨서, 혹시 남아있는 중복이나 빈틈이 있어도 그때그때 정리(자체 치유)되게 한다.
-    private void renumberPins(List<Post> pinnedInOrder) {
-        int order = 1;
-        for (Post p : pinnedInOrder) {
-            if (!p.isPinned()) {
-                p.pin(order);
-            } else {
-                p.changePinOrder(order);
-            }
-            order++;
-        }
     }
 }

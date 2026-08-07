@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>새 글쓰기 - 공지/이벤트 관리 - Roomie Admin</title>
+        <title>새 글쓰기 - 게시글 고정 관리 - Roomie Admin</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet" />
         <link th:href="@{/startbootstrap-sb-admin-gh-pages/css/styles.css}" rel="stylesheet" />
@@ -61,7 +61,7 @@
                             </a>
                             <a class="nav-link active" th:href="@{/admin/notices}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-bullhorn"></i></div>
-                                공지/이벤트 관리
+                                게시글 고정 관리
                             </a>
                         </div>
                     </div>
@@ -77,7 +77,7 @@
                         <h1 class="mt-4" th:text="${notice != null} ? '공지/이벤트 수정' : '새 글쓰기'">새 글쓰기</h1>
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a th:href="@{/admin/notices}">공지/이벤트 관리</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin/notices}">게시글 고정 관리</a></li>
                             <li class="breadcrumb-item active" th:text="${notice != null} ? '수정' : '새 글쓰기'">새 글쓰기</li>
                         </ol>
 
