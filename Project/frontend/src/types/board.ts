@@ -1,3 +1,10 @@
+// 한 글이 여러 게시판에 동시에(중복으로) 고정될 수 있어서, 고정 정보는 단일
+// boolean/순서가 아니라 "이 글이 고정된 게시판들" 리스트로 내려온다.
+export interface PostPinInfo {
+  boardType: string;
+  pinOrder: number;
+}
+
 export interface Post {
   postId: number;
   userId: number;
@@ -21,8 +28,7 @@ export interface Post {
   bookmarked: boolean;
   createdAt: string;
   updatedAt: string | null;
-  pinned: boolean;
-  pinOrder: number | null;
+  pins: PostPinInfo[];
   recommendCount: number;
   recommended: boolean;
 }
