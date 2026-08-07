@@ -33,13 +33,13 @@ function InterestsPage() {
     if (!token) return;
     getBookmarkedPosts(token)
       .then(setPosts)
-      .catch(() => setError("찜목록을 불러오지 못했습니다."));
+      .catch(() => setError("북마크 목록을 불러오지 못했습니다."));
   }, [token]);
 
   return (
     <div className="mypage-panel">
       <h1 className="mypage-panel-title">관심 목록</h1>
-      <p className="mypage-panel-desc">찜한 게시글을 최근에 찜한 순서대로 확인할 수 있어요.</p>
+      <p className="mypage-panel-desc">북마크한 게시글을 최근에 북마크한 순서대로 확인할 수 있어요.</p>
 
       {error && <p className="mypage-error">{error}</p>}
 
@@ -47,7 +47,7 @@ function InterestsPage() {
 
       {posts !== null && posts.length === 0 && (
         <div className="mypage-empty">
-          <p>아직 찜한 게시글이 없어요.</p>
+          <p>아직 북마크한 게시글이 없어요.</p>
         </div>
       )}
 
@@ -69,14 +69,14 @@ function InterestsPage() {
                 <th>작성자</th>
                 <th>작성일</th>
                 <th>조회수</th>
-                <th>찜</th>
+                <th>북마크</th>
               </tr>
             </thead>
             <tbody>
               {posts.map((post, index) => (
                 <tr key={post.postId} className="board-table-row">
-                  {/* 찜한 순서(최신순)를 기준으로 번호를 매긴다. 백엔드가 이미
-                      최근에 찜한 글을 앞쪽에 두고 내려주므로 그대로 순번만 매기면 된다. */}
+                  {/* 북마크한 순서(최신순)를 기준으로 번호를 매긴다. 백엔드가 이미
+                      최근에 북마크한 글을 앞쪽에 두고 내려주므로 그대로 순번만 매기면 된다. */}
                   <td className="board-table-number-cell">{posts.length - index}</td>
                   <td className="board-table-title-cell">
                     <Link to={`/board/${post.postId}`}>{post.title || post.region || "제목 없음"}</Link>

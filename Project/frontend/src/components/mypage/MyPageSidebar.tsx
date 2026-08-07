@@ -92,6 +92,7 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M6 10v9a1 1 0 001 1h4v-6h2v6h4a1 1 0 001-1v-9" />
     </>
   ),
+  plus: <path d="M12 5v14M5 12h14" strokeLinecap="round" />,
   smile: (
     <>
       <circle cx="12" cy="12" r="9" />

@@ -186,7 +186,7 @@ function MyActivityDashboardPage() {
                     </span>
                     <p className="activity-row-content">{post.title || post.region || "제목 없음"}</p>
                     <span className="activity-row-source">
-                      조회 {post.viewCount} · 찜 {post.bookmarkCount}
+                      조회 {post.viewCount} · 북마크 {post.bookmarkCount}
                     </span>
                   </Link>
                 </div>

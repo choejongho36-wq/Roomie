@@ -67,6 +67,7 @@ function ChatPage() {
   const [error, setError] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [leftByPartner, setLeftByPartner] = useState(false);
   const [infoModal, setInfoModal] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
@@ -126,6 +127,7 @@ function ChatPage() {
       .then((data) => {
         setMessages(data);
         refreshChatUnreadCount();
+        loadConversations();
       })
       .catch(() => setError("대화 내용을 불러오지 못했습니다."));
     getChatStatus(token, activePartner.userId)
@@ -151,6 +153,7 @@ function ChatPage() {
     setActivePartner(partner);
     setSearchParams({ userId: String(partner.userId) });
     setShowEmojiPicker(false);
+    setShowAttachMenu(false);
   };
 
   const acknowledgeNotice = () => {
@@ -173,6 +176,11 @@ function ChatPage() {
   const handleEmojiSelect = (emoji: string) => {
     setDraft((prev) => prev + emoji);
     setShowEmojiPicker(false);
+  };
+
+  const handleAttachImage = () => {
+    setShowAttachMenu(false);
+    setInfoModal("현재 미구현 기능입니다.");
   };
 
   const doConfirmRoommate = async () => {
@@ -355,6 +363,11 @@ function ChatPage() {
                     <span className="chat-conversation-name">{conversation.partnerNickname}</span>
                     <span className="chat-conversation-preview">{conversation.lastMessage}</span>
                   </span>
+                  {conversation.unreadCount > 0 && (
+                    <span className="chat-conversation-badge">
+                      {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -440,6 +453,25 @@ function ChatPage() {
               </div>
 
               <form className="chat-composer" onSubmit={handleSend}>
+                <div className="chat-attach-wrapper">
+                  <button
+                    type="button"
+                    className="chat-attach-btn"
+                    aria-label="파일 첨부"
+                    onClick={() => setShowAttachMenu((prev) => !prev)}
+                    disabled={leftByPartner}
+                  >
+                    <Icon name="plus" />
+                  </button>
+                  {showAttachMenu && (
+                    <div className="chat-attach-menu">
+                      <button type="button" className="chat-attach-menu-item" onClick={handleAttachImage}>
+                        <Icon name="image" />
+                        이미지 전송
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <div className="chat-emoji-wrapper">
                   <button
                     type="button"

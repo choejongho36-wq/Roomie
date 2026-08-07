@@ -117,7 +117,7 @@ function BoardListPage() {
         </div>
         {canWrite && (
           <Link
-            to={boardType && SPECIAL_BOARDS.includes(boardType) ? `/board/write?type=${encodeURIComponent(boardType)}` : "/board/write"}
+            to={boardType ? `/board/write?type=${encodeURIComponent(boardType)}` : "/board/write"}
             className="btn btn-primary"
           >
             글쓰기

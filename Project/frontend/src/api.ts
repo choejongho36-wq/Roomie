@@ -533,6 +533,11 @@ export const confirmMatchedPair = async (token: string, pairId: number): Promise
   return response.data;
 };
 
+// "하우스 해산" 버튼을 누르면 호출. 매칭 페어를 삭제해 두 사람 모두 하우스에서 나가진다.
+export const disbandHouse = async (token: string, pairId: number): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/matched-pairs/${pairId}`, authHeader(token));
+};
+
 // 네비바 "하우스" 메뉴 클릭 시 내가 확정한 하우스를 찾을 때 사용 (없으면 null, 204)
 export const getMyConfirmedHouse = async (token: string): Promise<MatchedPair | null> => {
   const response = await axios.get<MatchedPair>(`${API_BASE_URL}/matched-pairs/me/confirmed`, authHeader(token));

@@ -13,6 +13,7 @@ export interface Conversation {
   partnerVerified: boolean;
   lastMessage: string;
   lastMessageAt: string;
+  unreadCount: number;
 }
 
 export interface NotificationItem {
