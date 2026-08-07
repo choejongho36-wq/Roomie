@@ -234,11 +234,6 @@
   white-space: nowrap;
 }
 
-.activity-row-source-title {
-  color: #f16526;
-  font-weight: 600;
-}
-
 .activity-comment-list {
   box-sizing: border-box;
   max-width: 980px;

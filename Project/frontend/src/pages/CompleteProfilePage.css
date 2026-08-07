@@ -60,12 +60,6 @@
   color: #333;
 }
 
-.complete-profile-optional {
-  font-weight: 400;
-  color: #999;
-  font-size: 12px;
-}
-
 .complete-profile-box input,
 .complete-profile-box select {
   padding: 10px 12px;

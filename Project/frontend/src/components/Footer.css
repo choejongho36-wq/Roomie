@@ -32,19 +32,80 @@
   color: #f16526;
 }
 
-.footer-links {
+.footer-right {
   display: flex;
-  gap: 24px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
 }
 
-.footer-links a {
-  font-size: 14px;
+.footer-support-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.footer-column-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer-column-title:hover {
+  color: #f16526;
+}
+
+.footer-support-row a:not(.footer-column-title) {
+  font-size: 13px;
   color: #ccc;
   text-decoration: none;
 }
 
-.footer-links a:hover {
+.footer-support-row a:not(.footer-column-title):hover {
   color: #f16526;
+}
+
+.footer-business-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.footer-business-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.footer-business-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #999;
+}
+
+.footer-social-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-social-icon {
+  display: flex;
+  color: #f16526;
+}
+
+.footer-social-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footer-business-detail {
+  font-size: 12px;
+  color: #666;
 }
 
 .footer-copyright {
@@ -55,7 +116,7 @@
 }
 
 /* 768px 이하에서는 마이페이지/하우스의 하단 고정 탭바(MyPageSidebar.css)가
-   화면 맨 아래 떠 있어서, 그 페이지를 끝까지 스크롤하면 푸터의 "오류 제보" 링크가
+   화면 맨 아래 떠 있어서, 그 페이지를 끝까지 스크롤하면 푸터 맨 아래 내용이
    탭바에 바로 붙어 보였다. 탭바가 없는 다른 페이지에선 여백이 조금 더 생기는
    정도라 크게 문제없어서, 페이지별로 나누지 않고 여기서 한 번에 처리한다. */
 @media (max-width: 768px) {
@@ -75,11 +136,18 @@
   .footer-top {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
   }
 
-  .footer-links {
-    flex-wrap: wrap;
-    gap: 12px 20px;
+  .footer-right {
+    align-items: flex-start;
+  }
+
+  .footer-support-row {
+    gap: 12px 16px;
+  }
+
+  .footer-business-row {
+    text-align: left;
   }
 }

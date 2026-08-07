@@ -4,7 +4,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, toggleRecommend, updateComment } from "../../api";
 import type { Comment, Post } from "../../types/board";
-import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardDetailPage.css";
 
@@ -356,11 +355,13 @@ function BoardDetailPage() {
       navigate("/board");
       return;
     }
-    // 자유게시판 글의 boardType은 "잡담" 같은 카테고리라, 그 값을 그대로 목록 필터로
-    // 쓰면 "자유 게시판" 대신 카테고리 이름이 게시판인 것처럼 나온다. 공지사항/이벤트처럼
-    // 별도 게시판인 경우만 그 타입으로 돌아가고, 나머지는 자유 게시판으로 돌아간다.
-    const listType = post.boardType && SPECIAL_BOARDS.includes(post.boardType) ? post.boardType : "자유 게시판";
-    navigate(`/board?type=${encodeURIComponent(listType)}`);
+    // 카테고리(고민상담/잡담/정보공유/생활 꿀팁)든 공지사항/이벤트든, 이제는 각자
+    // 독립된 게시판 필터라 글의 boardType을 그대로 목록 필터로 써서 돌아가면 된다.
+    if (!post.boardType) {
+      navigate("/board");
+      return;
+    }
+    navigate(`/board?type=${encodeURIComponent(post.boardType)}`);
   };
 
   const handleReportPost = () => {
