@@ -9,15 +9,19 @@ import {
   getConversations,
   createOrGetMatchedPair,
   getMatchedPairByPartner,
+  confirmMatchedPair,
+  updateMatchedPairConditions,
   getChatStatus,
   leaveChat,
 } from "../../api";
 import type { ChatMessage, Conversation } from "../../types/chat";
 import type { MatchedPair } from "../../types/matchedPair";
 import { Icon } from "../../components/mypage/MyPageSidebar";
+import RegionPicker, { type RegionToken, parseRegionToken } from "../../components/RegionPicker";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./MyPageContent.css";
 import "./ChatPage.css";
+import "../MatchedPairPage.css";
 
 const getAvatarSrc = (url: string | null) => (url ? `${API_ORIGIN}${url}` : defaultAvatar);
 
@@ -69,6 +73,14 @@ function ChatPage() {
   const [error, setError] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [matchedPairStatus, setMatchedPairStatus] = useState<MatchedPair | null>(null);
+  const [confirmRoommateModalOpen, setConfirmRoommateModalOpen] = useState(false);
+  const [confirmingHouse, setConfirmingHouse] = useState(false);
+  const [findRoomModalOpen, setFindRoomModalOpen] = useState(false);
+  const [findRoomRegionTokens, setFindRoomRegionTokens] = useState<RegionToken[]>([]);
+  const [findRoomDepositMax, setFindRoomDepositMax] = useState("");
+  const [findRoomMonthlyRentMax, setFindRoomMonthlyRentMax] = useState("");
+  const [conditionsSaving, setConditionsSaving] = useState(false);
+  const [conditionsSaveMessage, setConditionsSaveMessage] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [leftByPartner, setLeftByPartner] = useState(false);
@@ -151,6 +163,13 @@ function ChatPage() {
     }
   }, [lastMatchedPairUpdate, activePartner]);
 
+  // 두 사람 다 확정되면(내가 방금 확정했든, 웹소켓으로 상대방 확정 소식을 받았든) 3초 뒤 하우스로 이동
+  useEffect(() => {
+    if (!matchedPairStatus || matchedPairStatus.status !== "CONFIRMED") return;
+    const timer = setTimeout(() => navigate(`/house/${matchedPairStatus.id}`), 3000);
+    return () => clearTimeout(timer);
+  }, [matchedPairStatus?.status, matchedPairStatus?.id, navigate]);
+
   useEffect(() => {
     if (!lastMessage || !myUserId) return;
     const partnerId = lastMessage.senderId === myUserId ? lastMessage.receiverId : lastMessage.senderId;
@@ -205,7 +224,8 @@ function ChatPage() {
     setError("");
     try {
       const pair = await createOrGetMatchedPair(token, activePartner.userId);
-      navigate(`/matched/${pair.id}`);
+      setMatchedPairStatus(pair);
+      setConfirmRoommateModalOpen(true);
     } catch {
       setError("룸메이트 확정에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
@@ -220,6 +240,58 @@ function ChatPage() {
       confirmLabel: "확정",
       onConfirm: doConfirmRoommate,
     });
+  };
+
+  // 확정 현황 모달의 "하우스로 이동" 버튼 — 내 몫만 확정 처리(상대방도 확정해야 실제로 CONFIRMED가 됨)
+  const handleConfirmHouse = async () => {
+    if (!token || !matchedPairStatus) return;
+    setConfirmingHouse(true);
+    try {
+      const updated = await confirmMatchedPair(token, matchedPairStatus.id);
+      setMatchedPairStatus(updated);
+    } finally {
+      setConfirmingHouse(false);
+    }
+  };
+
+  // "방찾기" 버튼 — 아직 페어가 없으면(룸메이트 확정을 한 번도 안 누른 상태) 조용히 만들어서 연다
+  const handleOpenFindRoomModal = async () => {
+    if (!token || !activePartner) return;
+    let pair = matchedPairStatus;
+    if (!pair) {
+      try {
+        pair = await createOrGetMatchedPair(token, activePartner.userId);
+        setMatchedPairStatus(pair);
+      } catch {
+        setError("정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+    }
+    const parsed = parseRegionToken(pair.region);
+    setFindRoomRegionTokens(parsed ? [parsed] : []);
+    setFindRoomDepositMax(pair.depositMax != null ? String(pair.depositMax) : "");
+    setFindRoomMonthlyRentMax(pair.monthlyRentMax != null ? String(pair.monthlyRentMax) : "");
+    setConditionsSaveMessage("");
+    setFindRoomModalOpen(true);
+  };
+
+  const handleSaveConditions = async () => {
+    if (!token || !matchedPairStatus) return;
+    setConditionsSaving(true);
+    setConditionsSaveMessage("");
+    try {
+      const updated = await updateMatchedPairConditions(token, matchedPairStatus.id, {
+        region: findRoomRegionTokens[0]?.label ?? null,
+        depositMax: findRoomDepositMax ? Number(findRoomDepositMax) : null,
+        monthlyRentMax: findRoomMonthlyRentMax ? Number(findRoomMonthlyRentMax) : null,
+      });
+      setMatchedPairStatus(updated);
+      setConditionsSaveMessage("조건이 저장됐어요. 아래 검색 링크도 새 조건으로 갱신됐어요.");
+    } catch {
+      setConditionsSaveMessage("저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setConditionsSaving(false);
+    }
   };
 
   const handleReportUser = () => {
@@ -444,16 +516,13 @@ function ChatPage() {
                     </svg>
                   </span>
                 )}
-                {!leftByPartner && matchedPairStatus?.status !== "CONFIRMED" && (
-                  <button
-                    type="button"
-                    className="btn btn-outline chat-confirm-roommate-btn"
-                    onClick={handleConfirmRoommateClick}
-                    disabled={confirming}
-                  >
-                    {confirming ? "처리 중..." : "룸메이트 확정"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="btn btn-outline chat-header-action-btn chat-report-btn"
+                  onClick={handleReportUser}
+                >
+                  신고
+                </button>
               </div>
 
               <div className="chat-message-list" ref={messageListRef}>
@@ -526,13 +595,23 @@ function ChatPage() {
               </form>
 
               <div className="chat-thread-footer">
-                <button
-                  type="button"
-                  className="btn btn-outline chat-header-action-btn chat-report-btn"
-                  onClick={handleReportUser}
-                >
-                  신고
-                </button>
+                <div className="chat-footer-actions">
+                  {!leftByPartner && matchedPairStatus?.status !== "CONFIRMED" && (
+                    <button
+                      type="button"
+                      className="btn btn-outline chat-confirm-roommate-btn"
+                      onClick={handleConfirmRoommateClick}
+                      disabled={confirming}
+                    >
+                      {confirming ? "처리 중..." : "룸메이트 확정"}
+                    </button>
+                  )}
+                  {!leftByPartner && (
+                    <button type="button" className="btn btn-outline" onClick={handleOpenFindRoomModal}>
+                      방찾기
+                    </button>
+                  )}
+                </div>
                 <button type="button" className="chat-leave-btn" onClick={handleLeaveChat}>
                   채팅방 나가기
                 </button>
@@ -572,6 +651,123 @@ function ChatPage() {
               >
                 {confirmModal.confirmLabel ?? "확인"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmRoommateModalOpen && matchedPairStatus && (
+        <div className="info-modal-backdrop" onClick={() => setConfirmRoommateModalOpen(false)}>
+          <div
+            className="info-modal chat-feature-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="chat-feature-modal-close"
+              onClick={() => setConfirmRoommateModalOpen(false)}
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+            <h2>방을 구하셨나요?</h2>
+            <p className="matched-pair-hint">
+              함께 살 방이 정해졌다면, 하우스 공간으로 넘어가서 정산/청소 관리를 시작해보세요.
+              <br />
+              두 분 모두 확정해야 하우스가 열려요.
+            </p>
+            <div className="matched-pair-confirm-status">
+              <span className={matchedPairStatus.myConfirmed ? "matched-pair-confirm-done" : ""}>
+                {matchedPairStatus.me.nickname}: {matchedPairStatus.myConfirmed ? "확정함 ✓" : "미확정"}
+              </span>
+              <span className={matchedPairStatus.partnerConfirmed ? "matched-pair-confirm-done" : ""}>
+                {matchedPairStatus.partner.nickname}: {matchedPairStatus.partnerConfirmed ? "확정함 ✓" : "미확정"}
+              </span>
+            </div>
+            {matchedPairStatus.status === "CONFIRMED" ? (
+              <p className="matched-pair-hint">확정됐어요! 잠시 후 하우스로 이동할게요.</p>
+            ) : matchedPairStatus.myConfirmed ? (
+              <p className="matched-pair-hint">상대방이 확정하면 자동으로 하우스로 이동해요. 잠시만 기다려주세요.</p>
+            ) : (
+              <div className="matched-pair-confirm-actions">
+                <button className="btn btn-primary" onClick={handleConfirmHouse} disabled={confirmingHouse}>
+                  {confirmingHouse ? "처리 중..." : "하우스로 이동"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {findRoomModalOpen && matchedPairStatus && (
+        <div className="info-modal-backdrop" onClick={() => setFindRoomModalOpen(false)}>
+          <div
+            className="info-modal chat-feature-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="chat-feature-modal-close"
+              onClick={() => setFindRoomModalOpen(false)}
+              aria-label="닫기"
+            >
+              ✕
+            </button>
+            <h2>함께 살 방 찾기</h2>
+            <div className="matched-pair-reference">
+              <span>{matchedPairStatus.me.nickname}: {matchedPairStatus.me.region ?? "설정 안 함"}</span>
+              <span>{matchedPairStatus.partner.nickname}: {matchedPairStatus.partner.region ?? "설정 안 함"}</span>
+            </div>
+            <div className="matched-pair-form">
+              <label>
+                희망 지역
+                <RegionPicker
+                  selected={findRoomRegionTokens}
+                  onChange={setFindRoomRegionTokens}
+                  multiple={false}
+                  variant="inline"
+                  triggerLabel="지역 선택"
+                  emptyHint="지역을 선택해주세요."
+                />
+              </label>
+              <div className="matched-pair-form-row">
+                <label>
+                  보증금 최대 (만원)
+                  <input
+                    type="number"
+                    value={findRoomDepositMax}
+                    onChange={(event) => setFindRoomDepositMax(event.target.value)}
+                    placeholder="예) 1000"
+                  />
+                </label>
+                <label>
+                  월세 최대 (만원)
+                  <input
+                    type="number"
+                    value={findRoomMonthlyRentMax}
+                    onChange={(event) => setFindRoomMonthlyRentMax(event.target.value)}
+                    placeholder="예) 58"
+                  />
+                </label>
+              </div>
+              <button className="btn btn-primary" onClick={handleSaveConditions} disabled={conditionsSaving}>
+                {conditionsSaving ? "저장 중..." : "조건 저장"}
+              </button>
+              {conditionsSaveMessage && <p className="matched-pair-save-message">{conditionsSaveMessage}</p>}
+            </div>
+            <div className="matched-pair-links">
+              <a
+                href={matchedPairStatus.dabangMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+              >
+                다방 지도에서 매물 보기
+              </a>
             </div>
           </div>
         </div>

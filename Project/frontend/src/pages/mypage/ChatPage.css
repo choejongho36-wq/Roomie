@@ -302,6 +302,7 @@
 }
 
 .chat-header-action-btn {
+  margin-left: auto;
   padding: 6px 12px;
   font-size: 13px;
   white-space: nowrap;
@@ -319,7 +320,6 @@
 }
 
 .chat-confirm-roommate-btn {
-  margin-left: auto;
   white-space: nowrap;
 }
 
@@ -328,6 +328,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 18px 14px;
+}
+
+.chat-footer-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .chat-leave-btn {
@@ -383,6 +388,38 @@
 .info-modal-actions .btn {
   width: auto;
   flex: 1;
+}
+
+/* 룸메이트 확정/방찾기처럼 폼·리스트가 들어가는 모달은 기본 info-modal보다 넓고 왼쪽 정렬이 필요해서
+   info-modal에 이 클래스를 같이 붙여서 폭/정렬만 오버라이드한다 */
+.chat-feature-modal {
+  position: relative;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.chat-feature-modal h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+.chat-feature-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.chat-feature-modal-close:hover {
+  color: #666;
 }
 
 .chat-message-list {
