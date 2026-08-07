@@ -2,15 +2,12 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getCategoryWeights, getMySurveys, saveCategoryWeights } from "../../api";
-import { surveyQuestions } from "../../data/SurveyQuestions";
+import { surveyQuestions, SMOKING_QUESTION_ID } from "../../data/SurveyQuestions";
 import "./SurveyPage.css";
 import "./SurveyWeightsPage.css";
 
 const TIER_LABELS: Record<number, string> = { 1: "낮음", 2: "보통", 3: "높음" };
 
-// 흡연은 CompatibilityCalculator 채점 루프에서 아예 제외되는 문항이라
-// (실제 흡연 여부는 추천 필터링에만 쓰임) 가중치를 조절해도 점수에 영향이 없어 노출하지 않는다.
-const SMOKING_QUESTION_ID = 12;
 const weightableQuestions = surveyQuestions.filter((q) => q.id !== SMOKING_QUESTION_ID);
 
 function SurveyWeightsPage() {
