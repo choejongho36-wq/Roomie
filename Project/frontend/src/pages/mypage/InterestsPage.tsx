@@ -38,7 +38,7 @@ function InterestsPage() {
 
   return (
     <div className="mypage-panel">
-      <h1 className="mypage-panel-title">관심 목록</h1>
+      <h1 className="mypage-panel-title">북마크 목록</h1>
       <p className="mypage-panel-desc">북마크한 게시글을 최근에 북마크한 순서대로 확인할 수 있어요.</p>
 
       {error && <p className="mypage-error">{error}</p>}
@@ -69,7 +69,7 @@ function InterestsPage() {
                 <th>작성자</th>
                 <th>작성일</th>
                 <th>조회수</th>
-                <th>북마크</th>
+                <th>추천</th>
               </tr>
             </thead>
             <tbody>
@@ -89,7 +89,7 @@ function InterestsPage() {
                   </td>
                   <td>{formatShortDate(post.createdAt)}</td>
                   <td>{post.viewCount}</td>
-                  <td>{post.bookmarkCount}</td>
+                  <td>{post.recommendCount}</td>
                 </tr>
               ))}
             </tbody>

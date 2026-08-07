@@ -121,7 +121,7 @@ export function Icon({ name }: { name: string }) {
 export const NAV_ITEMS = [
   { to: "/mypage", label: "내 프로필", icon: "person", end: true },
   { to: "/mypage/my-activity", label: "내 활동", icon: "sliders" },
-  { to: "/mypage/interests", label: "관심 목록", icon: "heart" },
+  { to: "/mypage/interests", label: "북마크 목록", icon: "heart" },
   { to: "/mypage/chat", label: "채팅", icon: "chat" },
   { to: "/mypage/activity", label: "설문 기록", icon: "clock" },
 ];
