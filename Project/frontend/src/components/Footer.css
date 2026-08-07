@@ -74,10 +74,33 @@
   text-align: right;
 }
 
+.footer-business-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .footer-business-name {
   font-size: 13px;
   font-weight: 700;
   color: #999;
+}
+
+.footer-social-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-social-icon {
+  display: flex;
+  color: #f16526;
+}
+
+.footer-social-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .footer-business-detail {

@@ -25,7 +25,28 @@ function Footer() {
 
           {/* 실제 사업자 정보가 아니라, 다른 서비스의 표기 양식만 따온 가상의 정보입니다. */}
           <div className="footer-business-row">
-            <span className="footer-business-name">(주)병아리반</span>
+            <div className="footer-business-name-row">
+              <div className="footer-social-icons">
+                <span className="footer-social-icon" aria-label="카카오톡">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4C6.48 4 2 7.35 2 11.5c0 2.65 1.83 4.97 4.58 6.31-.2.73-.73 2.66-.84 3.07-.13.5.18.5.39.36.16-.11 2.6-1.76 3.66-2.48.71.11 1.45.17 2.21.17 5.52 0 10-3.35 10-7.43S17.52 4 12 4z" />
+                  </svg>
+                </span>
+                <span className="footer-social-icon" aria-label="인스타그램">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <rect x="3" y="3" width="18" height="18" rx="6" />
+                    <circle cx="12" cy="12" r="4.2" />
+                    <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
+                <span className="footer-social-icon" aria-label="네이버">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 5v14M6 5l12 14M18 5v14" />
+                  </svg>
+                </span>
+              </div>
+              <span className="footer-business-name">(주)병아리반</span>
+            </div>
             <span className="footer-business-detail">
               사업자등록번호 : 214-86-12345&nbsp;|&nbsp;대표 : 최병아리&nbsp;|&nbsp;주소 : 서울특별시 강남구 테헤란로 411
             </span>
