@@ -53,6 +53,16 @@ public class MatchedPairController {
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
+    // 채팅방 진입 시, 이 상대와 이미 페어가 있는지(그리고 확정됐는지) 조회만 할 때 사용
+    // (createOrGet과 달리 페어를 새로 만들지 않음 — 채팅방을 열기만 해도 페어가 생기면 안 되므로)
+    @GetMapping("/by-partner/{partnerUserId}")
+    public ResponseEntity<MatchedPairResponse> getByPartner(Authentication authentication, @PathVariable Long partnerUserId) {
+        User me = findUser(authentication);
+        return matchedPairService.getByPartner(me.getUserId(), partnerUserId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     // 하우스 화면의 "하우스 해산" 버튼을 누르면 호출. 매칭 페어를 삭제해 두 사람 모두 하우스에서 나가진다.
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> disband(Authentication authentication, @PathVariable Long id) {

@@ -6,6 +6,7 @@ import com.example.backend.dto.MatchedPairConditionsRequest;
 import com.example.backend.dto.MatchedPairResponse;
 import com.example.backend.repository.MatchedPairRepository;
 import com.example.backend.repository.UserRepository;
+import com.example.backend.websocket.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class MatchedPairService {
     private final MatchedPairRepository matchedPairRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final WebSocketSessionRegistry sessionRegistry;
 
     // 이미 같은 두 사람 사이에 페어가 있으면 그걸 그대로 반환하고, 없으면 새로 만듦
     // (채팅에서 "룸메이트 확정"을 실수로 여러 번 눌러도 안전하게 하나로만 유지됨)
@@ -33,6 +35,14 @@ public class MatchedPairService {
                 .orElseGet(() -> matchedPairRepository.save(new MatchedPair(userAId, userBId)));
 
         return toResponse(pair, myUserId);
+    }
+
+    // 채팅 페이지에서 상대방과 이미 페어가 있는지 조회만 할 때 사용 (createOrGet과 달리 없으면 새로 만들지 않음)
+    public Optional<MatchedPairResponse> getByPartner(Long myUserId, Long partnerUserId) {
+        Long userAId = Math.min(myUserId, partnerUserId);
+        Long userBId = Math.max(myUserId, partnerUserId);
+        return matchedPairRepository.findByUserAIdAndUserBId(userAId, userBId)
+                .map(pair -> toResponse(pair, myUserId));
     }
 
     public MatchedPairResponse getById(Long pairId, Long requestUserId) {
@@ -53,6 +63,12 @@ public class MatchedPairService {
         MatchedPair pair = findPairForUser(pairId, requestUserId);
         pair.confirmBy(requestUserId);
         matchedPairRepository.save(pair);
+
+        // 수락현황 화면(MatchedPairPage)이 폴링 없이 즉시 갱신되도록, 관련된 두 사람 모두에게
+        // 각자 시점 기준 응답을 웹소켓으로 밀어준다 (알림함에 남길 필요는 없어서 Notification은 안 만듦)
+        sessionRegistry.send(pair.getUserAId(), toResponse(pair, pair.getUserAId()));
+        sessionRegistry.send(pair.getUserBId(), toResponse(pair, pair.getUserBId()));
+
         return toResponse(pair, requestUserId);
     }
 
