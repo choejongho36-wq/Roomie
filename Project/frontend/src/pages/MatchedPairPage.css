@@ -135,6 +135,12 @@
   margin-top: 4px;
 }
 
+.matched-pair-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .matched-pair-confirm-status {
   display: flex;
   gap: 16px;

@@ -192,7 +192,7 @@ public class PostService {
     public PostResponse toggleBookmark(Long postId, Long userId) {
         Post post = findPost(postId);
         if (post.getUserId().equals(userId)) {
-            throw new IllegalArgumentException("본인이 작성한 글은 찜할 수 없습니다.");
+            throw new IllegalArgumentException("본인이 작성한 글은 북마크할 수 없습니다.");
         }
         PostBookmarkService.BookmarkResult result = postBookmarkService.toggle(postId, userId);
         long recommendCount = postRecommendService.countFor(postId);

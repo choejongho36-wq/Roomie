@@ -64,6 +64,13 @@ public class MatchedPairService {
                 .map(pair -> toResponse(pair, requestUserId));
     }
 
+    // "하우스 해산" 버튼을 누르면 호출. 페어를 아예 삭제해서, 두 사람 다 하우스 접근이 끊기고
+    // 원하면 채팅에서 "룸메이트 확정"을 다시 눌러 새 페어를 시작할 수 있게 한다.
+    public void disband(Long pairId, Long requestUserId) {
+        MatchedPair pair = findPairForUser(pairId, requestUserId);
+        matchedPairRepository.delete(pair);
+    }
+
     private MatchedPair findPairForUser(Long pairId, Long requestUserId) {
         MatchedPair pair = matchedPairRepository.findById(pairId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 매칭 페어입니다."));

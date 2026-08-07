@@ -75,6 +75,60 @@
   }
 }
 
+.house-disband-button {
+  display: block;
+  margin: 32px auto 0;
+  padding: 10px 20px;
+  border: 1px solid #f03e3e;
+  border-radius: 8px;
+  background: none;
+  color: #f03e3e;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.house-disband-button:hover {
+  background: #fff0f0;
+}
+
+.info-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.info-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px 20px;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.info-modal p {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.5;
+}
+
+.info-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.info-modal-actions .btn {
+  width: auto;
+  flex: 1;
+}
+
 .house-entry-cta {
   display: inline-block;
   margin-top: 20px;
