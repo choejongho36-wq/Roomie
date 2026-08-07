@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { API_ORIGIN, createComment, deleteComment, deletePost, getComments, getPost, getPosts, reportPost, toggleBookmark, toggleRecommend, updateComment } from "../../api";
 import type { Comment, Post } from "../../types/board";
+import { SPECIAL_BOARDS } from "../../data/BoardCategories";
 import defaultAvatar from "../../assets/Roomie_logo.png";
 import "./BoardDetailPage.css";
 
@@ -305,6 +306,7 @@ function BoardDetailPage() {
   }, [post]);
 
   const isAuthor = Boolean(post && user && post.userId === user.userId);
+  const isSpecialBoard = Boolean(post?.boardType && SPECIAL_BOARDS.includes(post.boardType));
 
   const handleToggleBookmark = async () => {
     if (!post) return;
@@ -573,9 +575,11 @@ function BoardDetailPage() {
             </button>
           </>
         ) : (
-          <button className="btn btn-outline" onClick={handleReportPost}>
-            신고
-          </button>
+          !isSpecialBoard && (
+            <button className="btn btn-outline" onClick={handleReportPost}>
+              신고
+            </button>
+          )
         )}
         <button className="btn btn-outline" onClick={handleGoToList}>
           목록
