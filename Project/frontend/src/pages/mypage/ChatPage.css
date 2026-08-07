@@ -8,10 +8,9 @@
   margin: 0 auto;
 }
 
-/* "방찾기" 패널이 열리면 채팅을 좁히지 않고 오른쪽에 세 번째 칸을 더 만들어준다 */
+/* "방찾기" 패널이 열리면 전체 폭은 그대로 두고(페이지가 옆으로 넘치지 않게) 채팅 칸을 줄여서 세 번째 칸을 만든다 */
 .chat-layout.has-room-finder {
   grid-template-columns: 280px 1fr 320px;
-  max-width: 1300px;
 }
 
 .chat-room-finder-panel {
@@ -19,16 +18,55 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* 그리드 아이템은 기본적으로 내용물(지역 표/입력창)보다 좁아지질 못해서 320px를 넘겨 페이지 전체가
+     옆으로 밀리는 문제가 있었음 — min-width:0으로 실제 배정된 칸 너비를 지키게 함 */
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #fff;
   border: 1px solid #eee;
   border-radius: 16px;
-  padding: 20px 18px;
-  overflow-y: auto;
+  padding: 18px;
 }
 
-.chat-room-finder-panel h2 {
+.chat-room-finder-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0ece8;
+}
+
+.chat-room-finder-panel-header h2 {
   font-size: 16px;
-  margin: 0 24px 0 0;
+  margin: 0;
+}
+
+.chat-room-finder-panel-close {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.chat-room-finder-panel-close:hover {
+  color: #666;
+}
+
+.chat-room-finder-panel .matched-pair-reference {
+  font-size: 13px;
+  color: #888;
+}
+
+/* 320px짜리 좁은 패널에서 보증금/월세를 나란히 두면 입력칸이 너무 좁아져서 세로로 쌓는다 */
+.chat-room-finder-panel .matched-pair-form-row {
+  flex-direction: column;
+  gap: 14px;
 }
 
 .chat-sidebar {
