@@ -96,11 +96,59 @@
 .footer-social-icon {
   display: flex;
   color: #f16526;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .footer-social-icon svg {
   width: 16px;
   height: 16px;
+}
+
+.footer-social-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(16, 13, 10, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.footer-social-modal {
+  position: relative;
+  width: min(320px, 100%);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px 28px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.footer-social-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.footer-social-modal-text {
+  margin: 0;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .footer-business-detail {
