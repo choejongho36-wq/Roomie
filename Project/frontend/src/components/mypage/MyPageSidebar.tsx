@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { API_ORIGIN } from "../../api";
 import "./MyPageSidebar.css";
 
 const ICONS: Record<string, ReactNode> = {
@@ -127,7 +128,7 @@ export const NAV_ITEMS = [
 ];
 
 function MyPageSidebar() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -151,6 +152,26 @@ function MyPageSidebar() {
             <span className="mypage-nav-label">{item.label}</span>
           </NavLink>
         ))}
+        <NavLink
+          to="/mypage/support"
+          className={({ isActive }) =>
+            `mypage-nav-item${isActive ? " mypage-nav-item-active" : ""}`
+          }
+        >
+          <Icon name="support" />
+          <span className="mypage-nav-label">고객센터</span>
+        </NavLink>
+        {user?.isAdmin && (
+          <a
+            href={`${API_ORIGIN}/admin/login`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mypage-nav-item"
+          >
+            <Icon name="gear" />
+            <span className="mypage-nav-label">관리자 페이지</span>
+          </a>
+        )}
       </nav>
       <button className="mypage-nav-item mypage-nav-item-logout" onClick={handleLogout}>
         <Icon name="logout" />

@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { updateTags, updateBio, updateSmoking, updateRegion, changePassword, getMySurveys, withdraw, API_ORIGIN, createLinkIntent } from "../../api";
+import { updateTags, updateBio, updateSmoking, updateRegion, updateJob, changePassword, getMySurveys, withdraw, API_ORIGIN, createLinkIntent } from "../../api";
 import RegionPicker, { parseRegionToken, type RegionToken } from "../../components/RegionPicker";
 import {
   PROFILE_TAG_GROUPS,
@@ -47,6 +47,7 @@ const formatSmokingLabel = (smoking?: string | null, smokingType?: string | null
   return null;
 };
 const MAX_BIO_LENGTH = 70;
+const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
 
 function getAge(birthDate: string) {
   const birth = new Date(birthDate);
@@ -155,6 +156,10 @@ function MyProfilePage() {
   const [draftRegionTokens, setDraftRegionTokens] = useState<RegionToken[]>([]);
   const [regionSaving, setRegionSaving] = useState(false);
   const [regionError, setRegionError] = useState("");
+  const [editingJob, setEditingJob] = useState(false);
+  const [draftJob, setDraftJob] = useState("");
+  const [jobSaving, setJobSaving] = useState(false);
+  const [jobError, setJobError] = useState("");
   const [profilePublic, setProfilePublic] = useState(true);
   const [bioError, setBioError] = useState("");
   const [editingNickname, setEditingNickname] = useState(false);
@@ -288,6 +293,8 @@ function MyProfilePage() {
     setDraftSmokingType(user?.smokingType ?? "");
     setSmokingError("");
     setEditingSmoking(true);
+    setEditingRegion(false);
+    setEditingJob(false);
   };
 
   const handleSaveSmoking = async () => {
@@ -317,6 +324,8 @@ function MyProfilePage() {
     setDraftRegionTokens(parseRegionTokens(user.region));
     setRegionError("");
     setEditingRegion(true);
+    setEditingSmoking(false);
+    setEditingJob(false);
   };
 
   const handleSaveRegion = async () => {
@@ -335,6 +344,33 @@ function MyProfilePage() {
       setRegionError(extractErrorMessage(err, "지역 저장에 실패했습니다."));
     } finally {
       setRegionSaving(false);
+    }
+  };
+
+  const startEditJob = () => {
+    setDraftJob(user.job ?? "");
+    setJobError("");
+    setEditingJob(true);
+    setEditingSmoking(false);
+    setEditingRegion(false);
+  };
+
+  const handleSaveJob = async () => {
+    if (!token) return;
+    if (!draftJob) {
+      setJobError("직업을 선택해주세요.");
+      return;
+    }
+    setJobSaving(true);
+    setJobError("");
+    try {
+      const updated = await updateJob(token, draftJob);
+      setUser(updated);
+      setEditingJob(false);
+    } catch (err) {
+      setJobError(extractErrorMessage(err, "직업 저장에 실패했습니다."));
+    } finally {
+      setJobSaving(false);
     }
   };
 
@@ -423,13 +459,10 @@ function MyProfilePage() {
               to="/survey"
               className="mb-6 flex items-center gap-3 rounded-2xl px-4 py-3.5 no-underline transition-transform hover:scale-[1.02]"
               style={{
-                background: `linear-gradient(135deg, ${T.accent}, #FFAA66)`,
-                boxShadow: "0 8px 20px rgba(242,121,58,0.35)",
+                background: T.danger,
+                boxShadow: "0 8px 20px rgba(224,49,49,0.35)",
               }}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/25">
-                <Sparkles size={18} color="#fff" strokeWidth={2.2} />
-              </span>
               <span className="flex-1">
                 <p className="text-[13px] font-bold text-white leading-snug">설문조사를 아직 안 하셨어요!</p>
                 <p className="text-[12px] text-white/85 leading-snug">완료하면 매칭이 시작돼요</p>
@@ -438,17 +471,14 @@ function MyProfilePage() {
             </Link>
           )}
 
-          {/* 매칭에 필요한데 아직 안 채운 항목(지역/흡연 여부)을 알려줌 — 아래 칩에서 바로 채울 수 있음 */}
+          {/* 매칭에 필요한데 아직 안 채운 항목(지역/흡연 여부/직업)을 알려줌 — 아래 칩에서 바로 채울 수 있음 */}
           {(user.missingMatchingFields ?? []).length > 0 && (
             <div
               className="mb-6 flex items-center gap-3 rounded-2xl px-4 py-3.5"
-              style={{ background: T.accentSoft }}
+              style={{ background: "#FDECEC" }}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white">
-                <MapPin size={18} color={T.accent} strokeWidth={2.2} />
-              </span>
               <span className="flex-1">
-                <p className="text-[13px] font-bold leading-snug" style={{ color: T.textPrimary }}>
+                <p className="text-[13px] font-bold leading-snug" style={{ color: T.danger }}>
                   매칭을 시작하려면 {user.missingMatchingFields.join(", ")}을(를) 입력해주세요
                 </p>
                 <p className="text-[12px] leading-snug" style={{ color: T.textMuted }}>
@@ -525,18 +555,10 @@ function MyProfilePage() {
               {[`${getAge(user.birthDate)}세`, GENDER_LABEL[user.gender] ?? user.gender, user.job].filter(Boolean).join(" · ")}
             </p>
 
-            {/* 흡연 여부 + 선호 지역 — 칩을 클릭하면 바로 편집 모드로 전환 */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {!editingSmoking ? (
-                <button
-                  type="button"
-                  onClick={startEditSmoking}
-                  aria-label="흡연여부 편집"
-                  className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#FDEDE2] text-[#F2793A] transition-colors hover:bg-[#F2793A] hover:text-white"
-                >
-                  {smokingLabel ?? "흡연 여부를 설정해주세요"}
-                </button>
-              ) : (
+            {/* 흡연 여부 + 선호 지역 + 직업설정 — 칩을 클릭하면 바로 편집 모드로 전환.
+                셋 중 편집 중인 것이 있으면 그것만 위에 펼쳐 보여주고, 나머지(닫힌 칩)는 그 아래 줄로 내려서 보여준다. */}
+            <div className="flex flex-col items-center gap-2">
+              {editingSmoking && (
                 <div className="w-full max-w-[280px] text-left flex flex-col gap-2">
                   <select
                     className="w-full rounded-xl border px-3 py-2 text-[13px]"
@@ -576,18 +598,7 @@ function MyProfilePage() {
                 </div>
               )}
 
-              {/* 선호 지역 — 칩을 클릭하면 바로 편집 모드로 전환 */}
-              {!editingRegion ? (
-                <button
-                  type="button"
-                  onClick={startEditRegion}
-                  aria-label="선호 지역 편집"
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#EEF1FB] text-[#4A5A9E] transition-colors hover:bg-[#4A5A9E] hover:text-white"
-                >
-                  <MapPin size={14} strokeWidth={2.2} />
-                  {user.region ?? "선호 지역을 설정해주세요"}
-                </button>
-              ) : (
+              {editingRegion && (
                 <div className="w-full max-w-[280px] text-left flex flex-col gap-2">
                   <RegionPicker
                     selected={draftRegionTokens}
@@ -609,6 +620,67 @@ function MyProfilePage() {
                   </div>
                 </div>
               )}
+
+              {editingJob && (
+                <div className="w-full max-w-[280px] text-left flex flex-col gap-2">
+                  <select
+                    className="w-full rounded-xl border px-3 py-2 text-[13px]"
+                    style={{ borderColor: T.hairline, color: T.textPrimary }}
+                    value={draftJob}
+                    onChange={(e) => setDraftJob(e.target.value)}
+                  >
+                    <option value="" disabled>선택해주세요</option>
+                    {JOB_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                  {jobError && <p className="text-[12px]" style={{ color: T.danger }}>{jobError}</p>}
+                  <div className="flex gap-2">
+                    <PillButton onClick={handleSaveJob} disabled={jobSaving}>
+                      {jobSaving ? "저장 중..." : "저장"}
+                    </PillButton>
+                    <PillButton variant="ghost" onClick={() => setEditingJob(false)} disabled={jobSaving}>
+                      취소
+                    </PillButton>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {!editingSmoking && (
+                  <button
+                    type="button"
+                    onClick={startEditSmoking}
+                    aria-label="흡연여부 편집"
+                    className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#FDEDE2] text-[#F2793A] transition-colors hover:bg-[#F2793A] hover:text-white"
+                  >
+                    {smokingLabel ?? "흡연 여부를 설정해주세요"}
+                  </button>
+                )}
+
+                {!editingRegion && (
+                  <button
+                    type="button"
+                    onClick={startEditRegion}
+                    aria-label="선호 지역 편집"
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#EEF1FB] text-[#4A5A9E] transition-colors hover:bg-[#4A5A9E] hover:text-white"
+                  >
+                    <MapPin size={14} strokeWidth={2.2} />
+                    {user.region ?? "선호 지역을 설정해주세요"}
+                  </button>
+                )}
+
+                {!editingJob && (
+                  <button
+                    type="button"
+                    onClick={startEditJob}
+                    aria-label="직업설정 편집"
+                    className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#F6EEF8] text-[#8C4F96] transition-colors hover:bg-[#8C4F96] hover:text-white"
+                  >
+                    {user.job ?? "직업을 설정해주세요"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

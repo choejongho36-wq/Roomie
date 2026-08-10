@@ -310,6 +310,15 @@ export const updateRegion = async (token: string, region: string): Promise<User>
   return response.data;
 };
 
+export const updateJob = async (token: string, job: string): Promise<User> => {
+  const response = await axios.put<User>(
+    `${API_BASE_URL}/users/me/job`,
+    { job },
+    authHeader(token)
+  );
+  return response.data;
+};
+
 export const updateBio = async (token: string, bio: string): Promise<User> => {
   const response = await axios.put<User>(
     `${API_BASE_URL}/users/me/bio`,

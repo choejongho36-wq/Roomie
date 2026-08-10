@@ -10,7 +10,6 @@ const YEAR_OPTIONS = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const PHONE_PATTERN = /^[0-9]{10,11}$/;
 const NICKNAME_PATTERN = /^[a-zA-Z0-9가-힣]{2,10}$/;
-const JOB_OPTIONS = ["직장인", "학생", "프리랜서", "자영업", "무직", "기타"];
 
 type CheckStatus = "idle" | "checking" | "available" | "taken" | "error";
 
@@ -35,7 +34,6 @@ function CompleteProfilePage() {
   const [birthMonth, setBirthMonth] = useState("");
   const [birthDay, setBirthDay] = useState("");
   const [phone, setPhone] = useState("");
-  const [job, setJob] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [error, setError] = useState("");
@@ -94,10 +92,6 @@ function CompleteProfilePage() {
       setError("휴대폰 번호는 숫자만 10~11자리로 입력해주세요.");
       return;
     }
-    if (!job) {
-      setError("직업을 선택해주세요.");
-      return;
-    }
     if (!agreeTerms || !agreePrivacy) {
       setError("이용약관과 개인정보처리방침에 모두 동의해주세요.");
       return;
@@ -113,10 +107,11 @@ function CompleteProfilePage() {
       setSubmitting(true);
       if (ticket) {
         // 신규 소셜가입: 이 요청이 성공해야 그제서야 DB에 계정이 만들어짐
-        const issuedToken = await completeSocialSignup(ticket, nickname, gender, birthDate, phone, job);
+        // 직업은 이 단계에서 더 이상 받지 않는다(빈 문자열로 보내면 백엔드가 무시하고 null로 둠).
+        const issuedToken = await completeSocialSignup(ticket, nickname, gender, birthDate, phone, "");
         login(issuedToken);
       } else {
-        const updatedUser = await completeAdditionalInfo(token!, nickname, gender, birthDate, phone, job);
+        const updatedUser = await completeAdditionalInfo(token!, nickname, gender, birthDate, phone, "");
         setUser(updatedUser);
       }
       navigate("/", { replace: true });
@@ -245,20 +240,6 @@ function CompleteProfilePage() {
             maxLength={11}
             required
           />
-        </label>
-
-        <label>
-          직업
-          <select value={job} onChange={(e) => setJob(e.target.value)} required>
-            <option value="" disabled>
-              선택해주세요
-            </option>
-            {JOB_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
         </label>
 
         <p className="complete-profile-hint">
