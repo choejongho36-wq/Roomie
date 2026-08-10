@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Camera, ChevronRight, LogOut, MapPin, Pencil, Plus, X } from "lucide-react";
@@ -174,6 +174,14 @@ function MyProfilePage() {
   const [withdrawPassword, setWithdrawPassword] = useState("");
   const [withdrawError, setWithdrawError] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
+
+  // 흡연여부 편집 박스가 열릴 때(특히 알림창을 눌러서 열었을 때) 화면 세로 중앙으로 스크롤해서 보여준다
+  const smokingEditRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (editingSmoking) {
+      smokingEditRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [editingSmoking]);
 
   useEffect(() => {
     if (!token) return;
@@ -476,13 +484,13 @@ function MyProfilePage() {
             <button
               type="button"
               onClick={startEditSmoking}
-              className="mb-6 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-transform hover:scale-[1.02]"
+              className="mb-6 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 transition-transform hover:scale-[1.02]"
               style={{
                 background: T.danger,
                 boxShadow: "0 8px 20px rgba(224,49,49,0.35)",
               }}
             >
-              <span className="flex-1">
+              <span className="flex-1 text-center">
                 <p className="text-[13px] font-bold text-white leading-snug">
                   흡연여부, 지역, 직업을 입력해주세요
                 </p>
@@ -565,7 +573,7 @@ function MyProfilePage() {
                 셋 중 편집 중인 것이 있으면 그것만 위에 펼쳐 보여주고, 나머지(닫힌 칩)는 그 아래 줄로 내려서 보여준다. */}
             <div className="flex flex-col items-center gap-2">
               {editingSmoking && (
-                <div className="w-full max-w-[280px] text-left flex flex-col gap-2">
+                <div ref={smokingEditRef} className="w-full max-w-[280px] text-left flex flex-col gap-2">
                   <select
                     className="w-full rounded-xl border px-3 py-2 text-[13px]"
                     style={{ borderColor: T.hairline, color: T.textPrimary }}
