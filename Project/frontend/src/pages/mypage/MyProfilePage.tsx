@@ -471,21 +471,27 @@ function MyProfilePage() {
             </Link>
           )}
 
-          {/* 매칭에 필요한데 아직 안 채운 항목(지역/흡연 여부/직업)을 알려줌 — 아래 칩에서 바로 채울 수 있음 */}
+          {/* 매칭에 필요한데 아직 안 채운 항목(지역/흡연 여부/직업)을 알려줌 — 누르면 흡연여부 편집이 바로 열림 */}
           {(user.missingMatchingFields ?? []).length > 0 && (
-            <div
-              className="mb-6 flex items-center gap-3 rounded-2xl px-4 py-3.5"
-              style={{ background: "#FDECEC" }}
+            <button
+              type="button"
+              onClick={startEditSmoking}
+              className="mb-6 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-transform hover:scale-[1.02]"
+              style={{
+                background: T.danger,
+                boxShadow: "0 8px 20px rgba(224,49,49,0.35)",
+              }}
             >
               <span className="flex-1">
-                <p className="text-[13px] font-bold leading-snug" style={{ color: T.danger }}>
-                  매칭을 시작하려면 {user.missingMatchingFields.join(", ")}을(를) 입력해주세요
+                <p className="text-[13px] font-bold text-white leading-snug">
+                  흡연여부, 지역, 직업을 입력해주세요
                 </p>
-                <p className="text-[12px] leading-snug" style={{ color: T.textMuted }}>
+                <p className="text-[12px] text-white/85 leading-snug">
                   아래 프로필에서 바로 채울 수 있어요
                 </p>
               </span>
-            </div>
+              <ChevronRight size={18} color="#fff" strokeWidth={2.4} className="shrink-0" />
+            </button>
           )}
 
           {/* ---------- 헤더: 아바타 + 이름 + 기본정보 ---------- */}
@@ -646,40 +652,42 @@ function MyProfilePage() {
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {!editingSmoking && (
-                  <button
-                    type="button"
-                    onClick={startEditSmoking}
-                    aria-label="흡연여부 편집"
-                    className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#FDEDE2] text-[#F2793A] transition-colors hover:bg-[#F2793A] hover:text-white"
-                  >
-                    {smokingLabel ?? "흡연 여부를 설정해주세요"}
-                  </button>
-                )}
+              <div className="w-full max-w-full overflow-x-auto">
+                <div className="flex flex-nowrap items-center justify-center gap-2 w-max mx-auto">
+                  {!editingSmoking && (
+                    <button
+                      type="button"
+                      onClick={startEditSmoking}
+                      aria-label="흡연여부 편집"
+                      className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#FDEDE2] text-[#F2793A] transition-colors hover:bg-[#F2793A] hover:text-white"
+                    >
+                      {smokingLabel ?? "흡연 여부를 설정해주세요"}
+                    </button>
+                  )}
 
-                {!editingRegion && (
-                  <button
-                    type="button"
-                    onClick={startEditRegion}
-                    aria-label="선호 지역 편집"
-                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#EEF1FB] text-[#4A5A9E] transition-colors hover:bg-[#4A5A9E] hover:text-white"
-                  >
-                    <MapPin size={14} strokeWidth={2.2} />
-                    {user.region ?? "선호 지역을 설정해주세요"}
-                  </button>
-                )}
+                  {!editingRegion && (
+                    <button
+                      type="button"
+                      onClick={startEditRegion}
+                      aria-label="선호 지역 편집"
+                      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#EEF1FB] text-[#4A5A9E] transition-colors hover:bg-[#4A5A9E] hover:text-white"
+                    >
+                      <MapPin size={14} strokeWidth={2.2} className="shrink-0" />
+                      <span className="max-w-[130px] truncate">{user.region ?? "선호 지역을 설정해주세요"}</span>
+                    </button>
+                  )}
 
-                {!editingJob && (
-                  <button
-                    type="button"
-                    onClick={startEditJob}
-                    aria-label="직업설정 편집"
-                    className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#F6EEF8] text-[#8C4F96] transition-colors hover:bg-[#8C4F96] hover:text-white"
-                  >
-                    {user.job ?? "직업을 설정해주세요"}
-                  </button>
-                )}
+                  {!editingJob && (
+                    <button
+                      type="button"
+                      onClick={startEditJob}
+                      aria-label="직업설정 편집"
+                      className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium bg-[#F6EEF8] text-[#8C4F96] transition-colors hover:bg-[#8C4F96] hover:text-white"
+                    >
+                      {user.job ?? "직업을 설정해주세요"}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
