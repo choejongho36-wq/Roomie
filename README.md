@@ -29,15 +29,38 @@
 - MySQL(Amazon RDS)
 - Docker Compose, Nginx(리버스 프록시), AWS EC2
 
-전체 아키텍처 다이어그램은 [`Project/docs/architecture.drawio`](Project/docs/architecture.drawio)에서 draw.io로 확인할 수 있습니다.
+
+## 사전 준비 사항
+
+로컬에서 `docker-compose up`으로 실행하려면 아래가 준비되어 있어야 합니다.
+
+- **Docker / Docker Compose**
+- **MySQL 접속 정보**: 직접 구축했거나 Amazon RDS 등에서 발급받은 MySQL 인스턴스 (이 프로젝트는 DB 컨테이너를 직접 띄우지 않고 외부 MySQL에 연결하는 구조)
+- **카카오 개발자 앱**: [Kakao Developers](https://developers.kakao.com)에서 앱 등록 후 REST API 키(Client ID) 발급, Redirect URI 등록
+- **Groq API 키**: [console.groq.com](https://console.groq.com)에서 발급 (설문 매칭·추천 기능에 사용)
+- **메일 발송 계정**: Gmail 등 SMTP 계정 + 앱 비밀번호 (이메일 인증 발송용)
+
+`Project/.env`에 아래 환경변수를 설정해야 합니다.
+
+| `DB_URL` | MySQL 접속 URL (`jdbc:mysql://...`) | ✅ |
+| `DB_USERNAME` / `DB_PASSWORD` | DB 계정 정보 | ✅ |
+| `JWT_SECRET` | JWT 서명용 비밀키 | ✅ |
+| `KAKAO_CLIENT_ID` | 카카오 REST API 키 | ✅ |
+| `KAKAO_CLIENT_SECRET` | 카카오 클라이언트 시크릿 | (기본값 `not-used`) |
+| `GROQ_API_KEY` | Groq API 키 | ✅ |
+| `GROQ_MODEL` | 사용할 Groq 모델명 | (기본값 `openai/gpt-oss-20b`) |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | 이메일 발송 계정 | ✅ |
+| `CORS_ALLOWED_ORIGINS` | CORS 허용 origin | (기본값 `http://localhost:5174`) |
+| `FRONTEND_URL` | 프론트엔드 base URL (OAuth 리다이렉트 등에 사용) | (기본값 `http://localhost`) |
+| `FRONTEND_PORT` | 프론트엔드 컨테이너 노출 포트 | 선택 (기본값 `80`) |
 
 ## 실행 방법
 
 ```bash
 cd Project
-# .env 파일에 DB, JWT, 카카오, Groq, 메일 등 환경변수 설정 필요
+# .env 파일에 위 환경변수 설정 필요
 docker-compose up -d
 ```
 
-- 프론트엔드: `http://localhost` (기본 포트 80)
+- 프론트엔드: `http://localhost:5174` (기본 포트 80)
 - 백엔드 API: `http://localhost/api`
