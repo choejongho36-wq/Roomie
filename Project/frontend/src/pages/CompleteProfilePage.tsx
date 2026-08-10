@@ -242,10 +242,6 @@ function CompleteProfilePage() {
           />
         </label>
 
-        <p className="complete-profile-hint">
-          거주 지역과 흡연 여부는 나중에 마이페이지에서 입력하시면 돼요. (매칭을 시작하려면 그때 필요해요)
-        </p>
-
         <div className="signup-terms">
           <label className="signup-terms-all">
             <input
