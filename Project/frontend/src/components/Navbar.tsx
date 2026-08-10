@@ -338,7 +338,7 @@ function Navbar() {
                     관리자 페이지
                   </a>
                 )}
-                <Link to="/support" className="navbar-profile-dropdown-item">
+                <Link to="/mypage/support" className="navbar-profile-dropdown-item">
                   <Icon name="support" />
                   고객센터
                 </Link>

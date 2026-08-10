@@ -228,6 +228,10 @@ public class User {
         this.region = region;
     }
 
+    public void updateJob(String job) {
+        this.job = job;
+    }
+
     public void markEmailVerified() {
         this.emailVerified = true;
     }
@@ -273,16 +277,20 @@ public class User {
         return !"LOCAL".equals(this.provider);
     }
 
-    // 회원가입/추가정보 입력 단계에서 반드시 있어야 하는 최소 정보 (지역/흡연은 여기서 제외됨)
+    // 회원가입/추가정보 입력 단계에서 반드시 있어야 하는 최소 정보 (지역/흡연/직업은 여기서 제외됨).
+    // 직업은 예전엔 소셜 로그인 "거의 다 됐어요!" 화면에서 필수로 받았는데, 그 화면에서 항목을
+    // 빼면서 여기 조건에도 남아있으면 소셜 로그인 사용자가 job을 영영 채울 방법이 없어 이 단계를
+    // 절대 통과 못 하는 무한 리다이렉트에 빠진다. 그래서 job도 필수 조건에서 뺐다.
     public boolean needsAdditionalInfo() {
-        return this.gender == null || this.birthDate == null || this.job == null;
+        return this.gender == null || this.birthDate == null;
     }
 
-    // 매칭에 필요한 정보(지역/흡연)까지 다 채워졌는지. 부족하면 어떤 항목이 없는지 함께 알려준다.
+    // 매칭에 필요한 정보(지역/흡연/직업)까지 다 채워졌는지. 부족하면 어떤 항목이 없는지 함께 알려준다.
     public java.util.List<String> missingMatchingFields() {
         java.util.List<String> missing = new java.util.ArrayList<>();
         if (this.region == null || this.region.isBlank()) missing.add("지역");
         if (this.smoking == null || this.smoking.isBlank()) missing.add("흡연 여부");
+        if (this.job == null || this.job.isBlank()) missing.add("직업");
         return missing;
     }
 }

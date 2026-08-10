@@ -93,6 +93,7 @@ function App() {
                 <Route path="my-activity" element={<MyActivityDashboardPage />} />
                 <Route path="interests" element={<InterestsPage />} />
                 <Route path="chat" element={<ChatPage />} />
+                <Route path="support" element={<SupportPage />} />
                 <Route path="settings" element={<PlaceholderPage title="계정 설정" />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />

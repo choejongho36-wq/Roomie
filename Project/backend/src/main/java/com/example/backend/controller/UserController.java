@@ -12,6 +12,7 @@ import com.example.backend.dto.UserResponse;
 import com.example.backend.dto.UserSearchResponse;
 import com.example.backend.dto.WithdrawRequest;
 import com.example.backend.dto.RegionRequest;
+import com.example.backend.dto.JobRequest;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.repository.SurveyComparisonExplanationRepository;
 import com.example.backend.repository.SurveyResultRepository;
@@ -266,6 +267,17 @@ public class UserController {
         }
         User user = findUser(authentication);
         user.updateRegion(request.region());
+        userRepository.save(user);
+        return toResponse(user);
+    }
+
+    @PutMapping("/me/job")
+    public UserResponse updateJob(Authentication authentication, @RequestBody JobRequest request) {
+        if (request.job() == null || request.job().isBlank()) {
+            throw new IllegalArgumentException("직업을 선택해주세요.");
+        }
+        User user = findUser(authentication);
+        user.updateJob(request.job());
         userRepository.save(user);
         return toResponse(user);
     }
