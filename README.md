@@ -1,98 +1,43 @@
-# Roomie 팀 Git 커밋 컨벤션
+# Roomie
 
-이 문서는 Roomie 프로젝트 팀원 전원이 따르는 커밋 메시지 및 브랜치 규칙입니다.
-레포 루트에 `CONTRIBUTING.md`로 커밋해두고, 새 팀원이 합류하면 이 파일부터 공유하세요.
+생활 성향 설문을 기반으로 잘 맞는 룸메이트를 찾아주고, 매칭 이후에는 함께 사는 생활(청소·공과금·규칙 등)까지 관리할 수 있는 룸메이트 매칭 서비스입니다.
 
----
+## 주요 기능
 
-## 1. 커밋 메시지 형식
+- **회원가입 / 로그인**: 이메일 인증, 카카오 소셜 로그인(OAuth2)
+- **성향 설문 & 매칭**: 생활 패턴 설문 응답을 바탕으로 AI(Groq LLM)가 호환도를 계산해 룸메이트를 추천
+- **매칭 관리**: 매칭 요청 발송/수락, 매칭된 페어(MatchedPair) 관리
+- **실시간 채팅**: WebSocket 기반 1:1 채팅
+- **프로필 게시판 / 커뮤니티**: 룸메이트 모집글 작성, 게시글·댓글, 북마크·신고
+- **하우스 관리**: 매칭된 룸메이트끼리 청소 당번, 공과금 정산, 생활 규칙, 생활용품, 사진 앨범, 계약서 공유
+- **마이페이지**: 활동 내역, 관심사, 프로필 관리
+- **1:1 문의 / 알림**
+- **관리자 페이지**: 운영자용 서버사이드 렌더링 대시보드(Thymeleaf)
 
-```
-<타입>: <제목>
+## 기술 스택
 
-<본문 (선택)>
-```
+**Frontend**
+- React 19, TypeScript, Vite
+- TailwindCSS, React Router
 
-- 제목은 **50자 이내**, 끝에 마침표 없음
-- 제목은 **명령문**으로 작성 ("~했음"이 아니라 "~한다" 톤: "회원가입 API 추가" O / "회원가입 API 추가함" X)
-- 본문이 필요하면 제목 아래 한 줄 띄우고 작성 (왜 이 변경이 필요했는지, 무엇을 했는지)
+**Backend**
+- Spring Boot(Java 21), Spring Security + JWT + OAuth2 Client(카카오)
+- Spring Data JPA, WebSocket, Thymeleaf(관리자 페이지)
+- Groq LLM API 연동(설문 매칭·추천), Spring Mail(이메일 인증)
 
-## 2. 타입(Type) 목록
+**Infra**
+- MySQL(Amazon RDS)
+- Docker Compose, Nginx(리버스 프록시), AWS EC2
 
-| 타입 | 사용 시점 | 예시 |
-|---|---|---|
-| `feat` | 새로운 기능 추가 | `feat: 룸메이트 모집글 작성 API 구현` |
-| `fix` | 버그 수정 | `fix: 로그인 시 토큰 만료 오류 수정` |
-| `docs` | 문서 수정 (README, 주석 등) | `docs: API 명세서 업데이트` |
-| `style` | 코드 포맷팅, 세미콜론 등 (로직 변경 없음) | `style: 들여쓰기 정리` |
-| `refactor` | 리팩토링 (기능 변화 없이 구조 개선) | `refactor: 정산 계산 로직 함수 분리` |
-| `test` | 테스트 코드 추가/수정 | `test: 호환도 점수 계산 단위테스트 추가` |
-| `chore` | 빌드 설정, 패키지 매니저 등 잡무성 변경 | `chore: build.gradle 의존성 추가` |
-| `design` | CSS 등 UI 디자인 변경 | `design: 모집글 카드 레이아웃 수정` |
-| `merge` | 브랜치 병합 커밋 | `merge: develop 브랜치 병합` |
+전체 아키텍처 다이어그램은 [`Project/docs/architecture.drawio`](Project/docs/architecture.drawio)에서 draw.io로 확인할 수 있습니다.
 
-## 3. 커밋 예시
-
-```
-feat: 생활패턴 프로필 등록 기능 구현
-
-흡연 여부, 취침/기상 시간, 청결도, 음주빈도를 입력받는
-PROFILE 테이블 연동 API 추가. 호환도 점수 계산의 입력값으로 사용됨.
-```
-
-```
-fix: 채팅방 목록 조회 시 NPE 발생 수정
-```
-
-## 4. 커밋 단위
-
-- 기능 하나, 버그 하나 = 커밋 하나. 여러 작업을 한 커밋에 몰아넣지 않기
-- "하루 작업분 전체를 커밋 1개로" ❌ → 작업 단위가 끝날 때마다 잘게 커밋
-- 커밋이 작아야 나중에 문제 생겼을 때 `git revert`로 그 부분만 되돌리기 쉬움
-
----
-
-## 5. 브랜치 네이밍
-
-```
-feature/기능명       예: feature/roommate-matching
-fix/버그명           예: fix/login-token-expire
-```
-
-- 개인 이름 대신 **기능 단위**로 브랜치를 나누는 걸 권장 (지금처럼 이름 기반 브랜치를 이미 쓰고 있다면 유지해도 무방, 다만 새로 브랜치 팔 땐 기능명 방식 권장)
-
-## 6. Pull Request 규칙
-
-- **PR 제목도 커밋 컨벤션과 동일한 형식** 사용: `feat: 룸메이트 모집글 검색 기능`
-- PR 본문에 아래 항목 포함:
-  - 무엇을 구현/수정했는지
-  - 테스트 방법 (있다면)
-  - 관련 이슈 번호 (있다면)
-- **main으로의 병합은 Git 담당자(형준님) 승인 후에만 진행**
-- 병합 방식은 **Squash and merge** 권장 (여러 개의 작은 커밋을 하나로 압축해서 main 히스토리를 깔끔하게 유지)
-
-## 7. 하지 말아야 할 것
-
-- ❌ `git commit -m "수정"`, `"ㅁㄴㅇㄹ"`, `"asdf"` 같은 의미 없는 메시지
-- ❌ main 브랜치에 직접 push
-- ❌ 여러 기능을 한 커밋에 몰아넣기
-- ❌ 커밋 메시지에 개인적인 잡담/이모지 남발 (팀 컨벤션 통일성 저해)
-
----
-
-## 8. 자주 쓰는 명령어 모음
+## 실행 방법
 
 ```bash
-# 작업 시작 전 최신화
-git checkout main
-git pull origin main
-git checkout <내브랜치>
-git merge main
-
-# 커밋
-git add .
-git commit -m "feat: 기능 설명"
-
-# 푸시
-git push origin <내브랜치>
+cd Project
+# .env 파일에 DB, JWT, 카카오, Groq, 메일 등 환경변수 설정 필요
+docker-compose up -d
 ```
+
+- 프론트엔드: `http://localhost` (기본 포트 80)
+- 백엔드 API: `http://localhost/api`
